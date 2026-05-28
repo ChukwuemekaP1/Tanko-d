@@ -27,4 +27,13 @@ export const config = {
   cors: {
     origin: process.env.CORS_ORIGIN || '*',
   },
+
+  mail: {
+    host: process.env.SMTP_HOST || '',
+    port: parseInt(process.env.SMTP_PORT || '465', 10),
+    secure: process.env.SMTP_SECURE !== 'false',
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || '',
+    from: process.env.MAIL_FROM || 'Tanko <noreply@tanko.app>',
+  },
 };
