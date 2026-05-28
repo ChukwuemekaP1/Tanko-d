@@ -24,6 +24,25 @@ export const config = {
       process.env.STELLAR_NETWORK_PASSPHRASE || 'Test SDF Network ; September 2015',
   },
 
+  oracle: {
+    // Oracle keypair for signing price payloads
+    // NOTE: In production, store in secure key management system (e.g., AWS Secrets Manager, HashiCorp Vault)
+    publicKey: process.env.ORACLE_PUBLIC_KEY || '',
+    secretKey: process.env.ORACLE_SECRET_KEY || '',
+    // Price fetch configuration
+    enabled: process.env.ORACLE_ENABLED === 'true' || false,
+    // Cron expression for price updates (default: every hour)
+    cronExpression: process.env.ORACLE_CRON || '0 * * * *',
+    // Max age of price data in milliseconds (default: 1 hour)
+    maxPriceAge: parseInt(process.env.ORACLE_MAX_PRICE_AGE || '3600000', 10),
+    // Price API configuration
+    priceApi: {
+      // Using a mock API for v1; replace with real API (PETROIntelligence, CRE, etc.)
+      baseUrl: process.env.PRICE_API_URL || 'https://api.example.com/prices',
+      apiKey: process.env.PRICE_API_KEY || '',
+    },
+  },
+
   cors: {
     origin: process.env.CORS_ORIGIN || '*',
   },

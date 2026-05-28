@@ -13,10 +13,13 @@ import unitRoutes from './routes/unit.routes.js';
 import fuelLogRoutes from './routes/fuelLog.routes.js';
 import configRoutes from './routes/config.routes.js';
 import stationRoutes from './routes/station.routes.js';
+import oracleRoutes from './routes/oracle.routes.js';
 import fs from "fs";
 import yaml from "js-yaml"
 import path from "path";
 import { ZodError } from 'zod';
+import { oracleCronService } from './services/oracle-cron.service.js';
+import { logger } from './utils/logger.js';
 
 const app = express();
 
@@ -57,6 +60,7 @@ app.use('/api/v1', unitRoutes);
 app.use('/api/v1', fuelLogRoutes);
 app.use('/api/v1', configRoutes);
 app.use('/api/v1', stationRoutes);
+app.use('/api/v1', oracleRoutes);
 app.use('/api/v1/helper', helperRoutes);
 
 app.use((req: Request, res: Response) => {
@@ -98,6 +102,26 @@ app.listen(config.port, '0.0.0.0', () => {
 ║  API URL:    ${config.trustlessWork.apiUrl.substring(0, 48).padEnd(48)}║
 ╚══════════════════════════════════════════════════════════════╝
   `);
+
+  // Initialize Oracle service
+  try {
+    oracleCronService.start();
+  } catch (error) {
+    logger.error('Failed to start Oracle service', error);
+  }
+});
+
+// Handle graceful shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down gracefully');
+  oracleCronService.stop();
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT received, shutting down gracefully');
+  oracleCronService.stop();
+  process.exit(0);
 });
 
 export default app;
