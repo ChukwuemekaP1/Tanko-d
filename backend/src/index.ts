@@ -2,7 +2,9 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import { logger } from './utils/logger.js';
 import { config } from './config/index.js';
+import { prisma } from './db/prisma.js';
 import escrowRoutes from './routes/escrow.routes.js';
 import walletRoutes from './routes/wallet.routes.js';
 import helperRoutes from './routes/helper.routes.js';
@@ -28,7 +30,11 @@ app.use(cors({
   credentials: true,
 }));
 app.options('*', cors());
-app.use(morgan('combined'));
+app.use(
+  morgan(':method :url :status - :response-time ms', {
+    stream: { write: (msg) => logger.http(msg.trimEnd()) },
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -79,7 +85,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     });
   }
 
-  console.error(err);
+  logger.error(err?.message ?? String(err), { stack: err?.stack });
 
   res.status(500).json({
     success: false,
@@ -87,17 +93,34 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-app.listen(config.port, '0.0.0.0', () => {
-  console.log(`
-╔══════════════════════════════════════════════════════════════╗
-║                    TANKO-scrow Backend                    ║
-╠══════════════════════════════════════════════════════════════╣
-║  Status:     RUNNING                                          ║
-║  Port:       ${String(config.port).padEnd(48)}║
-║  Network:    ${config.stellar.network.padEnd(48)}║
-║  API URL:    ${config.trustlessWork.apiUrl.substring(0, 48).padEnd(48)}║
-╚══════════════════════════════════════════════════════════════╝
-  `);
+app.listen(config.port, '0.0.0.0', async () => {
+  logger.info('TANKO-scrow Backend started', {
+    port: config.port,
+    network: config.stellar.network,
+    env: config.env,
+  });
+
+  // DB health check
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    logger.info('Database connection OK');
+  } catch (err: any) {
+    logger.warn('Database connection failed', { error: err?.message });
+  }
+
+  // Stellar RPC health check
+  try {
+    const t0 = performance.now();
+    await fetch(config.stellar.horizonUrl);
+    const ms = Math.round(performance.now() - t0);
+    if (ms > 3000) {
+      logger.warn('Stellar Horizon responded slowly', { ms });
+    } else {
+      logger.info('Stellar Horizon reachable', { ms });
+    }
+  } catch (err: any) {
+    logger.warn('Stellar Horizon unreachable', { error: err?.message });
+  }
 });
 
 export default app;
