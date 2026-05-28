@@ -27,7 +27,7 @@ jobs:
         run: DATABASE_URL=postgresql://localhost/tanko_dev npx prisma generate --schema=./backend/prisma/schema.prisma
 
       - name: Lint — frontend
-        run: npm run lint --workspace=frontend
+        run: npm run lint -w frontend
 
       - name: Typecheck — backend
         run: npm run typecheck --workspace=backend
