@@ -1,11 +1,26 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { MapPin, Search, Fuel, Loader2, AlertCircle, Clock } from "lucide-react"
+import { useMemo, useState, useEffect } from "react"
+import dynamic from "next/dynamic"
+import { Search, Fuel, Loader2, AlertCircle, Clock } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { getMappableStations } from "@/lib/maps/stations"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001"
+
+// Dynamically import the map component with no SSR to avoid 'window is not defined' errors from Leaflet
+const StationsMap = dynamic(
+  () => import("@/components/maps/StationsMap"),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full items-center justify-center bg-muted/20">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+)
 
 interface GasStation {
   id: string
@@ -50,6 +65,17 @@ export default function LocationsPage() {
     s.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
     s.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     s.state?.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+  const validStations = useMemo(() => getMappableStations(filtered), [filtered])
+  const coordinatesById = useMemo(
+    () =>
+      new Map(
+        getMappableStations(stations).map((station) => [
+          station.id,
+          { lat: station.lat, lng: station.lng },
+        ]),
+      ),
+    [stations],
   )
 
   if (loading) {
@@ -97,13 +123,31 @@ export default function LocationsPage() {
           </div>
         </CardHeader>
         <CardContent>
+          <div className="mb-6 overflow-hidden rounded-xl border border-border bg-muted/30">
+            <div className="relative h-[320px] w-full sm:h-[420px] lg:h-[520px] z-0">
+              {validStations.length === 0 ? (
+                <div className="flex h-full items-center justify-center px-6 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    No hay estaciones con coordenadas válidas para mostrar en el mapa.
+                  </p>
+                </div>
+              ) : (
+                <div className="absolute inset-0 z-0">
+                  <StationsMap stations={validStations} />
+                </div>
+              )}
+            </div>
+          </div>
+
           {filtered.length === 0 ? (
             <p className="py-8 text-center text-muted-foreground">
               {searchQuery ? "Sin resultados para tu búsqueda" : "No hay gasolineras registradas"}
             </p>
           ) : (
             <div className="space-y-4">
-              {filtered.map((station) => (
+              {filtered.map((station) => {
+                const coordinates = coordinatesById.get(station.id)
+                return (
                 <div
                   key={station.id}
                   className="flex items-start gap-4 rounded-xl border border-border p-4 transition-all hover:border-primary/30"
@@ -119,9 +163,9 @@ export default function LocationsPage() {
                         {[station.city, station.state].filter(Boolean).join(", ")}
                       </p>
                     )}
-                    {station.lat != null && station.lng != null && (
+                    {coordinates && (
                       <p className="mt-1 font-mono text-xs text-muted-foreground">
-                        {station.lat.toFixed(4)}, {station.lng.toFixed(4)}
+                        {coordinates.lat.toFixed(4)}, {coordinates.lng.toFixed(4)}
                       </p>
                     )}
                   </div>
@@ -146,7 +190,8 @@ export default function LocationsPage() {
                     )}
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </CardContent>
