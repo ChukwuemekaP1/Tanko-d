@@ -1,8 +1,7 @@
-import { SorobanServer, Event } from 'stellar-sdk';
+import { Server } from '@stellar/stellar-sdk/rpc';
 import { config } from '../config/index.js';
 import { prisma } from '../db/prisma.js';
-import { FundRequest, EscrowMilestone, ProcessedEvent } from '../generated/prisma/index.js';
-import { Logger } from '../utils/logger.js';
+import { FundRequest, EscrowMilestone, ProcessedEvent } from '../generated/prisma/client.js';
 
 // Define event types for type safety
 export type SorobanEventType = 
@@ -23,19 +22,18 @@ interface ParsedSorobanEvent {
  * Listens to Soroban events and synchronizes state to PostgreSQL
  */
 export class SorobanIndexerService {
-  private sorobanServer: SorobanServer;
+  private sorobanServer: Server;
   private readonly contractId: string;
   private readonly pollIntervalMs: number = 5000; // 5 seconds
   private isRunning: boolean = false;
   private lastProcessedLedger: number = 0;
-  private readonly logger: Logger;
 
   constructor() {
     // Initialize Soroban RPC client
     const rpcUrl = config.soroban?.rpcUrl || config.stellar.horizonUrl.replace('horizon', 'soroban');
     const networkPassphrase = config.soroban?.networkPassphrase || config.stellar.networkPassphrase;
     
-    this.sorobanServer = new SorobanServer(rpcUrl, {
+    this.sorobanServer = new Server(rpcUrl, {
       allowHttp: true, // For testnet
       timeout: 30000,
     });
@@ -46,7 +44,7 @@ export class SorobanIndexerService {
       throw new Error('SOROBAN_CONTRACT_ID environment variable is required for Soroban indexer');
     }
     
-    this.logger = new Logger('SorobanIndexerService');
+    console.info('[SorobanIndexerService] Initialized');
   }
 
   /**
@@ -54,12 +52,12 @@ export class SorobanIndexerService {
    */
   async start(): Promise<void> {
     if (this.isRunning) {
-      this.logger.warn('Indexer already running');
+      console.warn('[SorobanIndexerService] Indexer already running');
       return;
     }
     
     this.isRunning = true;
-    this.logger.info('Starting Soroban event indexer...');
+    console.info('[SorobanIndexerService] Starting Soroban event indexer...');
     
     try {
       // Load last processed ledger from database
@@ -68,9 +66,9 @@ export class SorobanIndexerService {
       // Start polling loop
       this.pollEvents();
       
-      this.logger.info('Soroban event indexer started successfully');
+      console.info('[SorobanIndexerService] Soroban event indexer started successfully');
     } catch (error) {
-      this.logger.error('Failed to start Soroban indexer', error);
+      console.error('[SorobanIndexerService] Failed to start Soroban indexer', error);
       this.isRunning = false;
       throw error;
     }
@@ -83,7 +81,7 @@ export class SorobanIndexerService {
     if (!this.isRunning) return;
     
     this.isRunning = false;
-    this.logger.info('Soroban event indexer stopped');
+    console.info('[SorobanIndexerService] Soroban event indexer stopped');
   }
 
   /**
@@ -98,21 +96,21 @@ export class SorobanIndexerService {
       
       if (lastEvent) {
         this.lastProcessedLedger = lastEvent.ledgerSequence;
-        this.logger.info(`Resuming from ledger ${this.lastProcessedLedger}`);
+        console.info('[SorobanIndexerService] Resuming from ledger', this.lastProcessedLedger);
       } else {
         // Get latest ledger from Soroban to start from current
         const latestLedger = await this.sorobanServer.getLatestLedger();
         this.lastProcessedLedger = Math.max(1, latestLedger.sequence - 100); // Start from recent ledger
-        this.logger.info(`No previous events found, starting from ledger ${this.lastProcessedLedger}`);
+        console.info('[SorobanIndexerService] No previous events found, starting from ledger', this.lastProcessedLedger);
       }
     } catch (error) {
-      this.logger.error('Failed to load last processed ledger', error);
+      console.error('[SorobanIndexerService] Failed to load last processed ledger', error);
       // Fallback to current ledger - 100
       try {
         const latestLedger = await this.sorobanServer.getLatestLedger();
         this.lastProcessedLedger = Math.max(1, latestLedger.sequence - 100);
       } catch (fallbackError) {
-        this.logger.error('Failed to get latest ledger for fallback', fallbackError);
+        console.error('[SorobanIndexerService] Failed to get latest ledger for fallback', fallbackError);
         this.lastProcessedLedger = 1;
       }
     }
@@ -152,13 +150,13 @@ export class SorobanIndexerService {
         
         // Update last processed ledger
         this.lastProcessedLedger = latestLedger.sequence;
-        this.logger.info(`Processed ${events.events.length} events up to ledger ${latestLedger.sequence}`);
+        console.info('[SorobanIndexerService] Processed', events.events.length, 'events up to ledger', latestLedger.sequence);
       } else {
-        this.logger.debug(`No events found in range [${this.lastProcessedLedger + 1}, ${latestLedger.sequence}]`);
+        console.debug('[SorobanIndexerService] No events found in range [', this.lastProcessedLedger + 1, ', ', latestLedger.sequence, ']');
       }
       
     } catch (error) {
-      this.logger.error('Error during event polling', error);
+      console.error('[SorobanIndexerService] Error during event polling', error);
       
       // Exponential backoff on error (1s → 30s)
       const backoffMs = Math.min(30000, 1000 * Math.pow(2, this.pollIntervalMs / 1000));
@@ -173,7 +171,7 @@ export class SorobanIndexerService {
   /**
    * Process a batch of Soroban events
    */
-  private async processEvents(events: Event[]): Promise<void> {
+  private async processEvents(events: any[]): Promise<void> {
     for (const event of events) {
       try {
         // Parse the event
@@ -188,7 +186,7 @@ export class SorobanIndexerService {
         });
         
         if (existingEvent) {
-          this.logger.debug(`Skipping duplicate event ${parsedEvent.eventId}`);
+          console.debug('[SorobanIndexerService] Skipping duplicate event', parsedEvent.eventId);
           continue;
         }
         
@@ -204,10 +202,10 @@ export class SorobanIndexerService {
           },
         });
         
-        this.logger.info(`Processed ${parsedEvent.eventType} event ${parsedEvent.eventId} at ledger ${parsedEvent.ledgerSequence}`);
+        console.info('[SorobanIndexerService] Processed', parsedEvent.eventType, 'event', parsedEvent.eventId, 'at ledger', parsedEvent.ledgerSequence);
         
       } catch (error) {
-        this.logger.error(`Failed to process event ${event.id}`, error);
+        console.error('[SorobanIndexerService] Failed to process event', event.id, error);
       }
     }
   }
@@ -215,13 +213,13 @@ export class SorobanIndexerService {
   /**
    * Parse a Soroban event into our internal format
    */
-  private parseSorobanEvent(event: Event): ParsedSorobanEvent | null {
+  private parseSorobanEvent(event: any): ParsedSorobanEvent | null {
     try {
       // Extract eventId from event.id
       const eventId = event.id || '';
       
       // Extract ledger sequence
-      const ledgerSequence = event.ledgerSequence || 0;
+      const ledgerSequence = event.ledger || 0;
       
       // Extract contract ID
       const contractId = event.contractId || this.contractId;
@@ -256,7 +254,7 @@ export class SorobanIndexerService {
           const decoded = Buffer.from(event.data, 'base64').toString('utf8');
           payload = JSON.parse(decoded);
         } catch (parseError) {
-          this.logger.warn(`Failed to parse event data for ${eventId}: ${parseError.message}`);
+          console.warn('[SorobanIndexerService] Failed to parse event data for', eventId, ':', parseError instanceof Error ? parseError.message : String(parseError));
         }
       }
       
@@ -269,7 +267,7 @@ export class SorobanIndexerService {
       };
       
     } catch (error) {
-      this.logger.error(`Failed to parse Soroban event: ${error}`);
+      console.error('[SorobanIndexerService] Failed to parse Soroban event:', error);
       return null;
     }
   }
@@ -289,7 +287,7 @@ export class SorobanIndexerService {
         await this.handleEscrowSettled(event);
         break;
       default:
-        this.logger.warn(`Unknown event type: ${event.eventType}`);
+        console.warn('[SorobanIndexerService] Unknown event type:', event.eventType);
         break;
     }
   }
@@ -306,13 +304,13 @@ export class SorobanIndexerService {
       });
       
       if (!fundRequest) {
-        this.logger.warn(`No fund request found for contract ID ${event.contractId}`);
+        console.warn('[SorobanIndexerService] No fund request found for contract ID', event.contractId);
         return;
       }
       
       // Validate transition: only allow from PENDING to PENDING_FUNDS
       if (fundRequest.status !== 'PENDING') {
-        this.logger.warn(`Drift detected: escrow_created event for fund request ${fundRequest.id} with status ${fundRequest.status}. Expected PENDING.`);
+        console.warn('[SorobanIndexerService] Drift detected: escrow_created event for fund request', fundRequest.id, 'with status', fundRequest.status, '. Expected PENDING.');
         return;
       }
       
@@ -322,10 +320,10 @@ export class SorobanIndexerService {
         data: { status: 'PENDING_FUNDS' },
       });
       
-      this.logger.info(`Updated fund request ${fundRequest.id} to PENDING_FUNDS`);
+      console.info('[SorobanIndexerService] Updated fund request', fundRequest.id, 'to PENDING_FUNDS');
       
     } catch (error) {
-      this.logger.error(`Failed to handle escrow_created event`, error);
+      console.error('[SorobanIndexerService] Failed to handle escrow_created event', error);
       throw error;
     }
   }
@@ -342,13 +340,13 @@ export class SorobanIndexerService {
       });
       
       if (!fundRequest) {
-        this.logger.warn(`No fund request found for contract ID ${event.contractId}`);
+        console.warn('[SorobanIndexerService] No fund request found for contract ID', event.contractId);
         return;
       }
       
       // Validate transition: only allow from PENDING_FUNDS to ACTIVE_ESCROW
       if (fundRequest.status !== 'PENDING_FUNDS') {
-        this.logger.warn(`Drift detected: funds_locked event for fund request ${fundRequest.id} with status ${fundRequest.status}. Expected PENDING_FUNDS.`);
+        console.warn('[SorobanIndexerService] Drift detected: funds_locked event for fund request', fundRequest.id, 'with status', fundRequest.status, '. Expected PENDING_FUNDS.');
         return;
       }
       
@@ -358,10 +356,10 @@ export class SorobanIndexerService {
         data: { status: 'ACTIVE_ESCROW' },
       });
       
-      this.logger.info(`Updated fund request ${fundRequest.id} to ACTIVE_ESCROW`);
+      console.info('[SorobanIndexerService] Updated fund request', fundRequest.id, 'to ACTIVE_ESCROW');
       
     } catch (error) {
-      this.logger.error(`Failed to handle funds_locked event`, error);
+      console.error('[SorobanIndexerService] Failed to handle funds_locked event', error);
       throw error;
     }
   }
@@ -380,13 +378,13 @@ export class SorobanIndexerService {
       });
       
       if (!fundRequest) {
-        this.logger.warn(`No fund request found for contract ID ${event.contractId}`);
+        console.warn('[SorobanIndexerService] No fund request found for contract ID', event.contractId);
         return;
       }
       
       // Validate transition: only allow from ACTIVE_ESCROW to DISPENSED
       if (fundRequest.status !== 'ACTIVE_ESCROW') {
-        this.logger.warn(`Drift detected: escrow_settled event for fund request ${fundRequest.id} with status ${fundRequest.status}. Expected ACTIVE_ESCROW.`);
+        console.warn('[SorobanIndexerService] Drift detected: escrow_settled event for fund request', fundRequest.id, 'with status', fundRequest.status, '. Expected ACTIVE_ESCROW.');
         return;
       }
       
@@ -407,14 +405,14 @@ export class SorobanIndexerService {
         // Log distributed fuel volume (if available in payload)
         if (event.payload && typeof event.payload === 'object') {
           const liters = event.payload.liters || event.payload.amount || fundRequest.liters;
-          this.logger.info(`Distributed ${liters} liters of fuel for fund request ${fundRequest.id}`);
+          console.info('[SorobanIndexerService] Distributed', liters, 'liters of fuel for fund request', fundRequest.id);
         }
       });
       
-      this.logger.info(`Updated fund request ${fundRequest.id} to DISPENSED and archived milestones`);
+      console.info('[SorobanIndexerService] Updated fund request', fundRequest.id, 'to DISPENSED and archived milestones');
       
     } catch (error) {
-      this.logger.error(`Failed to handle escrow_settled event`, error);
+      console.error('[SorobanIndexerService] Failed to handle escrow_settled event', error);
       throw error;
     }
   }

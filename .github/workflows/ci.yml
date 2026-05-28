@@ -24,7 +24,7 @@ jobs:
         run: npm ci
 
       - name: Generate Prisma client
-        run: npx prisma generate --schema=./backend/prisma/schema.prisma || echo "Prisma schema not found, skipping..."
+        run: DATABASE_URL=postgresql://localhost/tanko_dev npx prisma generate --schema=./backend/prisma/schema.prisma
 
       - name: Lint — frontend
         run: npm run lint --workspace=frontend

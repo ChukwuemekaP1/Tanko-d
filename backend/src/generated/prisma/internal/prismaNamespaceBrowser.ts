@@ -57,7 +57,8 @@ export const ModelName = {
   FundRequest: 'FundRequest',
   GasStation: 'GasStation',
   EscrowConfig: 'EscrowConfig',
-  EscrowMilestone: 'EscrowMilestone'
+  EscrowMilestone: 'EscrowMilestone',
+  ProcessedEvent: 'ProcessedEvent'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -196,6 +197,17 @@ export const EscrowMilestoneScalarFieldEnum = {
 } as const
 
 export type EscrowMilestoneScalarFieldEnum = (typeof EscrowMilestoneScalarFieldEnum)[keyof typeof EscrowMilestoneScalarFieldEnum]
+
+
+export const ProcessedEventScalarFieldEnum = {
+  id: 'id',
+  eventId: 'eventId',
+  ledgerSequence: 'ledgerSequence',
+  contractId: 'contractId',
+  processedAt: 'processedAt'
+} as const
+
+export type ProcessedEventScalarFieldEnum = (typeof ProcessedEventScalarFieldEnum)[keyof typeof ProcessedEventScalarFieldEnum]
 
 
 export const SortOrder = {

@@ -76,3 +76,8 @@ export type EscrowConfig = Prisma.EscrowConfigModel
  * 
  */
 export type EscrowMilestone = Prisma.EscrowMilestoneModel
+/**
+ * Model ProcessedEvent
+ * 
+ */
+export type ProcessedEvent = Prisma.ProcessedEventModel
