@@ -1,3 +1,4 @@
+/** @deprecated Use AuthProvider + @/lib/wallet instead (issue #31). */
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
