@@ -1,0 +1,10 @@
+# This file is used by Prisma Client to track the migrations that have been applied.
+# It is not meant to be edited manually.
+
+[meta]
+version = "5.13.0"
+
+[steps]
+0 = { name = "CreateTable", args = ["ProcessedEvent"] }
+1 = { name = "CreateIndex", args = ["ProcessedEvent_ledgerSequence_idx"] }
+2 = { name = "CreateIndex", args = ["ProcessedEvent_contractId_idx"] }

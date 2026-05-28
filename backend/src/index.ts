@@ -17,6 +17,7 @@ import fs from "fs";
 import yaml from "js-yaml"
 import path from "path";
 import { ZodError } from 'zod';
+import { sorobanIndexerService } from './services/indexer.service.js';
 
 const app = express();
 
@@ -85,6 +86,10 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     success: false,
     error: config.env === 'development' ? err.message : 'Internal server error',
   });
+});
+
+sorobanIndexerService.start().catch((error) => {
+  console.error('Failed to start Soroban indexer:', error);
 });
 
 app.listen(config.port, '0.0.0.0', () => {
