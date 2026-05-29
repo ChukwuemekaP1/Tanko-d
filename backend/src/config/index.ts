@@ -27,4 +27,28 @@ export const config = {
   cors: {
     origin: process.env.CORS_ORIGIN || '*',
   },
+
+  get fx() {
+    return {
+      mxnPerUsd: parseFloat(process.env.FX_MXN_PER_USD || '17.24'),
+      apiUrl: process.env.FX_RATE_API_URL || '',
+    };
+  },
+
+  get oracle() {
+    return {
+      seedPrices: {
+        magna: parseFloat(process.env.ORACLE_SEED_PRICE_MAGNA || '24.00'),
+        premium: parseFloat(process.env.ORACLE_SEED_PRICE_PREMIUM || '28.66'),
+        diesel: parseFloat(process.env.ORACLE_SEED_PRICE_DIESEL || '27.44'),
+      },
+      privateKey: process.env.ORACLE_PRIVATE_KEY || '',
+      publicKey: process.env.ORACLE_PUBLIC_KEY || '',
+      defaultStationId: process.env.ORACLE_DEFAULT_STATION_ID || 'CRE-MX-001',
+      priceSourceUrl: process.env.ORACLE_PRICE_SOURCE_URL || '',
+      workerEnabled: process.env.ORACLE_WORKER_ENABLED !== 'false',
+      workerIntervalMs: parseInt(process.env.ORACLE_WORKER_INTERVAL_MS || '3600000', 10),
+      contractId: process.env.ORACLE_CONTRACT_ID || '',
+    };
+  },
 };

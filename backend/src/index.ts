@@ -13,6 +13,8 @@ import unitRoutes from './routes/unit.routes.js';
 import fuelLogRoutes from './routes/fuelLog.routes.js';
 import configRoutes from './routes/config.routes.js';
 import stationRoutes from './routes/station.routes.js';
+import oracleRoutes from './routes/oracle.routes.js';
+import { startOracleWorker } from './workers/oracle.worker.js';
 import fs from "fs";
 import yaml from "js-yaml"
 import path from "path";
@@ -57,6 +59,7 @@ app.use('/api/v1', unitRoutes);
 app.use('/api/v1', fuelLogRoutes);
 app.use('/api/v1', configRoutes);
 app.use('/api/v1', stationRoutes);
+app.use('/api/v1', oracleRoutes);
 app.use('/api/v1/helper', helperRoutes);
 
 app.use((req: Request, res: Response) => {
@@ -86,6 +89,8 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     error: config.env === 'development' ? err.message : 'Internal server error',
   });
 });
+
+startOracleWorker();
 
 app.listen(config.port, '0.0.0.0', () => {
   console.log(`
