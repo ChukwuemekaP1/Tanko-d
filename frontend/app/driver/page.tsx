@@ -11,10 +11,20 @@ import {
   LogOut,
   Menu,
   X,
+  QrCode,
+  Wifi,
+  WifiOff,
+  MapPin,
+  AlertCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/providers/auth-provider'
+import { useScanner } from '@/hooks/useScanner'
+import { useGeolocation } from '@/hooks/useGeolocation'
+import { useNetwork } from '@/hooks/useNetwork'
+import { ScannerUI } from '@/components/ScannerUI'
+import { toast } from 'sonner'
 
 interface Balance {
   asset: string
@@ -28,6 +38,11 @@ export default function DriverPage() {
   const [balances, setBalances] = useState<Balance[]>([])
   const [loading, setLoading] = useState(true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+
+  // Native Hooks
+  const { startScan, stopScan, isScanning } = useScanner()
+  const { getLocation, location, loading: locationLoading } = useGeolocation()
+  const network = useNetwork()
 
   useEffect(() => {
     if (!isConnecting && !isConnected) {
@@ -65,6 +80,35 @@ export default function DriverPage() {
     fetchBalances()
   }, [address])
 
+  const handleScan = async () => {
+    if (!network.connected) {
+      toast.error('Sin conexión a internet. No se puede validar la estación.')
+      return
+    }
+
+    try {
+      const result = await startScan()
+      if (result) {
+        toast.success(`Estación detectada: ${result}`)
+        
+        // After scanning station, get location to verify
+         try {
+           const coords = await getLocation() as { lat: number; lng: number }
+           toast.success(`Ubicación verificada: ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`)
+          
+          // Proceed to fuel request with station and location
+          // router.push(`/driver/request?station=${result}&lat=${coords.lat}&lng=${coords.lng}`)
+        } catch (locErr) {
+          toast.error('Error al verificar ubicación. Por favor activa el GPS.')
+        }
+      }
+    } catch (err: any) {
+      if (err.message !== 'Scanner stopped') {
+        toast.error(`Error al escanear: ${err.message}`)
+      }
+    }
+  }
+
   function copyAddress() {
     if (address) {
       navigator.clipboard.writeText(address)
@@ -99,6 +143,8 @@ export default function DriverPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #0d1b2a 0%, #1b263b 100%)' }}>
+      {isScanning && <ScannerUI onStop={stopScan} />}
+      
       {isSidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
@@ -140,11 +186,20 @@ export default function DriverPage() {
 
       <div className="flex flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between px-4">
+          <div className="flex items-center gap-2">
+            {!network.connected ? (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
+                <WifiOff className="h-3.5 w-3.5" />
+                <span className="text-[10px] font-bold uppercase tracking-wider">Offline</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">
+                <Wifi className="h-3.5 w-3.5" />
+                <span className="text-[10px] font-bold uppercase tracking-wider">Online</span>
+              </div>
+            )}
+          </div>
           <button className="lg:hidden" onClick={() => setIsSidebarOpen(true)}>
-            <Menu className="h-6 w-6 text-white" />
-          </button>
-          <div className="flex-1" />
-          <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden">
             <Menu className="h-6 w-6 text-white" />
           </button>
         </header>
@@ -215,33 +270,66 @@ export default function DriverPage() {
               </Card>
             </div>
 
-            <Button
-              className="w-full py-6 text-lg font-semibold"
-              style={{ background: '#22c55e' }}
-              onClick={() => router.push('/connect')}
-            >
-              <Wallet className="mr-2 h-5 w-5" />
-              Request Fuel Funds
-              <ChevronRight className="ml-2 h-5 w-5" />
-            </Button>
+            <div className="space-y-3">
+              <Button
+                className="w-full py-7 text-lg font-bold shadow-xl shadow-green-500/20 transition-all active:scale-[0.98]"
+                style={{ background: '#22c55e' }}
+                onClick={handleScan}
+                disabled={isScanning}
+              >
+                <QrCode className="mr-3 h-6 w-6" />
+                Scan Station QR
+                <ChevronRight className="ml-2 h-5 w-5 opacity-50" />
+              </Button>
+
+              <Button
+                variant="outline"
+                className="w-full py-6 text-white/70 border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:text-white"
+                onClick={() => router.push('/connect')}
+              >
+                <Wallet className="mr-2 h-5 w-5" />
+                Manual Request
+              </Button>
+            </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-              <p className="text-sm font-medium text-white mb-3">Quick Actions</p>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-medium text-white">Quick Actions</p>
+                {location && (
+                  <div className="flex items-center gap-1 text-[10px] text-white/40">
+                    <MapPin className="h-3 w-3" />
+                    Verified
+                  </div>
+                )}
+              </div>
               <div className="space-y-2">
-                <button className="flex w-full items-center justify-between rounded-xl bg-white/[0.04] p-3 hover:bg-white/[0.08] transition">
-                  <span className="text-sm text-white/70">Fuel History</span>
+                <button className="flex w-full items-center justify-between rounded-xl bg-white/[0.04] p-3 hover:bg-white/[0.08] transition text-left">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                      <Fuel className="h-4 w-4 text-blue-400" />
+                    </div>
+                    <span className="text-sm text-white/70">Fuel History</span>
+                  </div>
                   <ChevronRight className="h-4 w-4 text-white/30" />
                 </button>
-                <button className="flex w-full items-center justify-between rounded-xl bg-white/[0.04] p-3 hover:bg-white/[0.08] transition">
-                  <span className="text-sm text-white/70">My Vehicle</span>
-                  <ChevronRight className="h-4 w-4 text-white/30" />
-                </button>
-                <button className="flex w-full items-center justify-between rounded-xl bg-white/[0.04] p-3 hover:bg-white/[0.08] transition">
-                  <span className="text-sm text-white/70">Settings</span>
+                <button className="flex w-full items-center justify-between rounded-xl bg-white/[0.04] p-3 hover:bg-white/[0.08] transition text-left">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                      <MapPin className="h-4 w-4 text-orange-400" />
+                    </div>
+                    <span className="text-sm text-white/70">Nearby Stations</span>
+                  </div>
                   <ChevronRight className="h-4 w-4 text-white/30" />
                 </button>
               </div>
             </div>
+
+            {locationLoading && (
+              <div className="flex items-center justify-center gap-2 py-2">
+                <div className="h-3 w-3 animate-spin rounded-full border border-t-transparent border-white/40" />
+                <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Verifying location...</span>
+              </div>
+            )}
           </div>
         </main>
       </div>

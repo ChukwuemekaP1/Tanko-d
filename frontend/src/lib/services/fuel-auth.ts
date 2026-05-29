@@ -1,5 +1,5 @@
 // @ts-ignore
-const { Server } = require('stellar-sdk');
+import { Horizon, TransactionBuilder, Networks, Address, xdr, Operation } from '@stellar/stellar-sdk';
 import axios from 'axios';
 
 const HORIZON_URL = process.env.NEXT_PUBLIC_STELLAR_HORIZON_URL || 'https://horizon-testnet.stellar.org';
@@ -47,12 +47,12 @@ interface TrustlessWorkResponse<T> {
 }
 
 export class FuelAuthorizationService {
-  private horizonServer: Server;
+  private horizonServer: any;
   private contractId: string;
   private escrowId: string;
 
   constructor() {
-    this.horizonServer = new Server(HORIZON_URL);
+    this.horizonServer = new Horizon.Server(HORIZON_URL);
     this.contractId = SOROBAN_CONTRACT_ID || '';
     this.escrowId = ESCROW_ID || '';
   }
@@ -64,30 +64,33 @@ export class FuelAuthorizationService {
     try {
       const account = await this.horizonServer.loadAccount(driverWallet);
       
-      const result = await this.horizonServer.simulateTransaction({
-        source: driverWallet,
-        ops: [
-          {
-            type: 'invokeContract',
-            destination: this.contractId,
-            method: 'verify_tx',
-            parameters: [
-              { name: 'driver', value: { type: 'address', value: driverWallet } },
-              { name: 'station', value: { type: 'address', value: stationWallet } },
-            ],
-          },
-        ],
-      });
+      const tx = new TransactionBuilder(account, {
+        fee: '1000',
+        networkPassphrase: Networks.TESTNET,
+      })
+        .addOperation(
+          Operation.invokeHostFunction({
+            func: xdr.HostFunction.hostFunctionTypeInvokeContract(
+              new xdr.InvokeContractArgs({
+                contractAddress: Address.fromString(this.contractId).toScAddress(),
+                functionName: 'verify_tx',
+                args: [
+                  new Address(driverWallet).toScVal(),
+                  new Address(stationWallet).toScVal(),
+                ],
+              })
+            ),
+            auth: [],
+          })
+        )
+        .setTimeout(0)
+        .build();
+
+      const result = await this.horizonServer.simulateTransaction(tx);
 
       if (result.error) {
         console.error('[CONTRACT] Verification failed:', result.error);
         return false;
-      }
-
-      const authEntries = result.results?.[0]?.auth;
-      if (!authEntries || authEntries.length === 0) {
-        console.log('[CONTRACT] No authorization entries, assuming valid');
-        return true;
       }
 
       return true;

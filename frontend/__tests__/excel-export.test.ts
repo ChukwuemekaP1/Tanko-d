@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import { 
-  exportTransacciones, 
-  exportPeticiones, 
-  exportConductores,
+  exportTransactions, 
+  exportRequests, 
+  exportDrivers,
   generateFilename,
-  TransaccionExport,
-  PeticionExport,
-  ConductorExport
+  TransactionExport,
+  RequestExport,
+  DriverExport
 } from '@/lib/excel/export'
 
 describe('Excel Export Service', () => {
@@ -24,24 +24,24 @@ describe('Excel Export Service', () => {
     })
   })
 
-  describe('exportTransacciones', () => {
-    it('should generate a buffer for transacciones', () => {
-      const data: TransaccionExport[] = [
+  describe('exportTransactions', () => {
+    it('should generate a buffer for transactions', () => {
+      const data: TransactionExport[] = [
         {
           id: 'tx-1',
-          fecha: '2024-03-20T10:00:00Z',
-          tipo: 'RELEASE',
-          monto: 4500,
+          date: '2024-03-20T10:00:00Z',
+          type: 'RELEASE',
+          amount: 4500,
           fee: 13.50,
-          estado: 'CONFIRMADA',
+          status: 'CONFIRMADA',
           txHash: 'abc123',
-          conductor: 'Juan Pérez',
+          driver: 'Juan Pérez',
         },
       ]
 
-      const buffer = exportTransacciones(data, {
-        filename: 'test_transacciones',
-        sheetName: 'Transacciones',
+      const buffer = exportTransactions(data, {
+        filename: 'test_transactions',
+        sheetName: 'Transactions',
       })
 
       expect(buffer).toBeInstanceOf(Buffer)
@@ -49,35 +49,35 @@ describe('Excel Export Service', () => {
     })
 
     it('should handle empty data', () => {
-      const buffer = exportTransacciones([], {
+      const buffer = exportTransactions([], {
         filename: 'test_empty',
-        sheetName: 'Transacciones',
+        sheetName: 'Transactions',
       })
 
       expect(buffer).toBeInstanceOf(Buffer)
     })
   })
 
-  describe('exportPeticiones', () => {
-    it('should generate a buffer for peticiones', () => {
-      const data: PeticionExport[] = [
+  describe('exportRequests', () => {
+    it('should generate a buffer for requests', () => {
+      const data: RequestExport[] = [
         {
           id: 'pet-1',
-          fechaSolicitud: '2024-03-20T10:00:00Z',
-          conductor: 'Juan Pérez',
-          tipoCombustible: 'diesel',
-          litros: 180,
-          montoSolicitado: 4500,
-          montoAprobado: 4500,
-          estado: 'APROBADA',
-          ubicacion: 'Gasolinera Central',
-          motivo: 'Carga de rutina',
+          requestDate: '2024-03-20T10:00:00Z',
+          driver: 'Juan Pérez',
+          fuelType: 'diesel',
+          liters: 180,
+          requestedAmount: 4500,
+          approvedAmount: 4500,
+          status: 'APROBADA',
+          location: 'Gasolinera Central',
+          reason: 'Carga de rutina',
         },
       ]
 
-      const buffer = exportPeticiones(data, {
-        filename: 'test_peticiones',
-        sheetName: 'Peticiones',
+      const buffer = exportRequests(data, {
+        filename: 'test_requests',
+        sheetName: 'Requests',
       })
 
       expect(buffer).toBeInstanceOf(Buffer)
@@ -85,25 +85,25 @@ describe('Excel Export Service', () => {
     })
   })
 
-  describe('exportConductores', () => {
-    it('should generate a buffer for conductores', () => {
-      const data: ConductorExport[] = [
+  describe('exportDrivers', () => {
+    it('should generate a buffer for drivers', () => {
+      const data: DriverExport[] = [
         {
           id: 'cond-1',
-          nombre: 'Juan Pérez',
+          name: 'Juan Pérez',
           email: 'juan@test.com',
-          walletStellar: 'GA2X...',
-          limiteCredito: 5000,
-          totalPeticiones: 10,
-          peticionesPendientes: 2,
-          peticionesAprobadas: 8,
-          peticionesRechazadas: 0,
+          stellarWallet: 'GA2X...',
+          creditLimit: 5000,
+          totalRequests: 10,
+          pendingRequests: 2,
+          approvedRequests: 8,
+          rejectedRequests: 0,
         },
       ]
 
-      const buffer = exportConductores(data, {
-        filename: 'test_conductores',
-        sheetName: 'Conductores',
+      const buffer = exportDrivers(data, {
+        filename: 'test_drivers',
+        sheetName: 'Drivers',
       })
 
       expect(buffer).toBeInstanceOf(Buffer)

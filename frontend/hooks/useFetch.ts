@@ -1,4 +1,17 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Network } from '@capacitor/network'
+import { Capacitor } from '@capacitor/core'
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:3001'
+
+const resolveUrl = (url: string) => {
+  if (url.startsWith('/api/')) {
+    // In mobile/static builds, we call the backend directly
+    // The Next.js API routes are essentially proxies to /api/v1/...
+    return `${BACKEND_URL}${url.replace('/api/', '/api/v1/')}`
+  }
+  return url
+}
 
 interface FetchState<T> {
   data: T | null
@@ -17,7 +30,15 @@ export function useFetch<T>(url: string, options?: RequestInit): FetchState<T> {
     setError(null)
 
     try {
-      const response = await fetch(url, options)
+      // Check network if on native
+      if (Capacitor.isNativePlatform()) {
+        const status = await Network.getStatus()
+        if (!status.connected) {
+          throw new Error('No internet connection')
+        }
+      }
+
+      const response = await fetch(resolveUrl(url), options)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
@@ -46,7 +67,15 @@ export function usePost<T, R>(url: string) {
     setError(null)
 
     try {
-      const response = await fetch(url, {
+      // Check network if on native
+      if (Capacitor.isNativePlatform()) {
+        const status = await Network.getStatus()
+        if (!status.connected) {
+          throw new Error('No internet connection. Cannot submit transaction.')
+        }
+      }
+
+      const response = await fetch(resolveUrl(url), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),

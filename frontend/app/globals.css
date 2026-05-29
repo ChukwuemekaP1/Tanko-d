@@ -119,11 +119,36 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Capacitor Scanner Overlay */
+body.scanner-active {
+  --background: transparent !important;
+  background-color: transparent !important;
+}
+
+body.scanner-active * {
+  visibility: hidden;
+}
+
+body.scanner-active .scanner-ui {
+  visibility: visible;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    /* Safe area handling for mobile */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
   }
+}
+
+html {
+  height: -webkit-fill-available;
 }
