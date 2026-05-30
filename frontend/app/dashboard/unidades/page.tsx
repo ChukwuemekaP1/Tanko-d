@@ -28,9 +28,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/providers/auth-provider"
 import { UnitGrid } from "@/components/UnitGrid"
-import { Unit } from "@/components/UnitCard"
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import {
   Empty,
   EmptyHeader,
@@ -38,7 +35,6 @@ import {
   EmptyTitle,
   EmptyDescription,
 } from "@/components/ui/empty";
-import { useAuth } from "@/providers/auth-provider";
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001";
 
@@ -153,120 +149,6 @@ export default function UnidadesPage() {
               // Here would go the logic to open modals/forms as mentioned in issue
             }}
           />
-        </CardContent>
-      </Card>
-    </div>
-  )
-          {filteredUnits.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {filteredUnits.map((unit) => (
-                <div
-                  key={unit.id}
-                  className="rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-md"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                        <Car className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground">
-                          {unit.make} {unit.model}
-                        </h3>
-                        {unit.year && (
-                          <p className="text-sm text-muted-foreground">
-                            {unit.year}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="mr-2 h-4 w-4" />
-                          Ver detalles
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-
-                  <div className="mt-4 space-y-3">
-                    <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
-                      <span className="text-sm text-muted-foreground">
-                        Placas
-                      </span>
-                      <span className="text-sm font-semibold text-foreground">
-                        {unit.plates}
-                      </span>
-                    </div>
-
-                    {unit.user && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">
-                          {unit.user.name}
-                        </span>
-                      </div>
-                    )}
-
-                    {unit.permitNumber && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">
-                          Permiso: {unit.permitNumber}
-                        </span>
-                      </div>
-                    )}
-
-                    {unit.permitExpiry && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">
-                          Vence:{" "}
-                          {new Date(unit.permitExpiry).toLocaleDateString(
-                            "es-MX",
-                          )}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-end pt-3">
-                      <span
-                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          unit.isActive
-                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                            : "bg-muted text-muted-foreground"
-                        }`}
-                      >
-                        {unit.isActive ? "Activo" : "Inactivo"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <Empty className="border border-dashed border-border my-4">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <Car className="size-5" />
-                </EmptyMedia>
-                <EmptyTitle>
-                  {searchQuery ? "Sin resultados" : "Sin vehículos registrados"}
-                </EmptyTitle>
-                <EmptyDescription>
-                  {searchQuery
-                    ? `No hay vehículos que coincidan con "${searchQuery}". Intenta con otro término.`
-                    : "Aún no has registrado ningún vehículo en la flota. Los vehículos aparecerán aquí una vez que sean agregados."}
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          )}
         </CardContent>
       </Card>
     </div>

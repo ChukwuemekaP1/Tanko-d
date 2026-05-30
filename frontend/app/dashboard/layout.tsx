@@ -83,19 +83,6 @@ const JEFE_ONLY_PREFIXES = [
   "/dashboard/unidades",
   "/dashboard/consumos",
   "/dashboard/ubicaciones",
-  Loader2,
-} from "lucide-react";
-import { useState, useEffect } from "react";
-import { useAuth } from "@/providers/auth-provider";
-import { TankoLogoMinimal } from "@/components/logo";
-import { Button } from "@/components/ui/button";
-
-const navigationJefe = [
-  { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Users", href: "/dashboard/usuarios", icon: Users },
-  { name: "Fleet", href: "/dashboard/unidades", icon: Car },
-  { name: "Fuel Logs", href: "/dashboard/consumos", icon: Receipt },
-  { name: "Locations", href: "/dashboard/ubicaciones", icon: MapPin },
 ];
 
 export default function DashboardLayout({
@@ -127,10 +114,6 @@ export default function DashboardLayout({
       }
     }
   }, [role, pathname, router]);
-    if (pathname === "/dashboard/conductor") {
-      router.push("/dashboard");
-    }
-  }, [pathname, router]);
 
   if (isConnecting || !isConnected) {
     return (
@@ -149,7 +132,6 @@ export default function DashboardLayout({
   const navigation = NAV_ITEMS.filter(
     (item) => item.roles.length === 0 || item.roles.includes(role),
   );
-  const navigation = navigationJefe;
 
   const handleDisconnect = () => {
     disconnect();
@@ -211,7 +193,6 @@ export default function DashboardLayout({
               item.href === "/dashboard"
                 ? pathname === "/dashboard"
                 : pathname.startsWith(item.href);
-            const isActive = pathname === item.href;
             return (
               <Link
                 key={item.name}
@@ -256,8 +237,6 @@ export default function DashboardLayout({
             aria-label="Open sidebar"
           >
             <Menu className="h-6 w-6 text-foreground" />
-          <button className="lg:hidden" onClick={() => setIsSidebarOpen(true)}>
-            <Menu className="h-6 w-6" />
           </button>
           <div className="flex-1" />
           <div className="flex items-center gap-3">
