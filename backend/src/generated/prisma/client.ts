@@ -62,6 +62,11 @@ export type FuelLog = Prisma.FuelLogModel
  */
 export type FundRequest = Prisma.FundRequestModel
 /**
+ * Model GasStation
+ * 
+ */
+export type GasStation = Prisma.GasStationModel
+/**
  * Model EscrowConfig
  * 
  */

@@ -1,23 +1,65 @@
-import { Router } from 'express';
-import { userController } from '../controllers/user.controller.js';
+import { Router } from "express";
+import { userController } from "../controllers/user.controller.js";
+import { validate } from "../middleware/validate.js";
+import {
+  createUserSchema,
+  updateUserSchema,
+  userIdParamSchema,
+  stellarParamSchema,
+} from "../schemas/user.schema.js";
+import { stellarPubKeySchema } from "../schemas/common.schema.js";
+import { z } from "zod";
 
 const router = Router();
 
-router.get('/users', (req, res) => userController.getAll(req, res));
+router.get(
+  "/users",
+  validate(z.object({ role: z.string().optional() }), "query"),
+  userController.getAll,
+);
 
-router.get('/users/drivers', (req, res) => userController.getDriversWithStats(req, res));
+router.get(
+  "/users/drivers",
+  validate(z.object({ managerPubKey: stellarPubKeySchema }), "query"),
+  userController.getDriversWithStats,
+);
 
-router.post('/users/register-driver', (req, res) => userController.registerDriver(req, res));
+router.post(
+  "/users/register-driver",
+  validate(
+    z.object({
+      name: z.string().min(1).max(100),
+      stellarPubKey: stellarPubKeySchema,
+    }),
+  ),
+  userController.registerDriver,
+);
 
-router.get('/users/:id', (req, res) => userController.getById(req, res));
+router.get(
+  "/users/:id",
+  validate(userIdParamSchema, "params"),
+  userController.getById,
+);
 
-router.get('/users/stellar/:publicKey', (req, res) => userController.getByStellarPubKey(req, res));
+router.get(
+  "/users/stellar/:publicKey",
+  validate(stellarParamSchema, "params"),
+  userController.getByStellarPubKey,
+);
 
-router.post('/users', (req, res) => userController.create(req, res));
+router.post("/users", validate(createUserSchema), userController.create);
 
-router.put('/users/:id', (req, res) => userController.update(req, res));
+router.put(
+  "/users/:id",
+  validate(userIdParamSchema, "params"),
+  validate(updateUserSchema),
+  userController.update,
+);
 
-router.delete('/users/:id', (req, res) => userController.delete(req, res));
+router.delete(
+  "/users/:id",
+  validate(userIdParamSchema, "params"),
+  userController.delete,
+);
 
 export default router;
-

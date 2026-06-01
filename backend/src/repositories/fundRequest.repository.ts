@@ -1,4 +1,4 @@
-import { Prisma } from "../generated/prisma/client";
+import { Prisma } from "../generated/prisma/client.js";
 import { prisma } from "../db/prisma.js";
 
 type DateWindow = {
@@ -264,7 +264,7 @@ class FundRequestRepository {
     });
   }
 
-  async create(data: Prisma.FundRequestCreateInput) {
+  async create(data: Prisma.FundRequestUncheckedCreateInput) {
     return prisma.fundRequest.create({
       data,
     });

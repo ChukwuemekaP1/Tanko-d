@@ -27,7 +27,7 @@ export default function ConnectPage() {
       <div className="flex flex-col items-center gap-4 mb-12">
         <div
           className="flex h-20 w-20 items-center justify-center rounded-2xl shadow-2xl"
-          style={{ background: 'linear-gradient(135deg, #F58220, #e06b10)' }}
+          style={{ background: 'linear-gradient(135deg, #22c55e, #e06b10)' }}
         >
           <Fuel className="h-10 w-10 text-white" />
         </div>
@@ -69,7 +69,7 @@ export default function ConnectPage() {
                     className="flex h-12 w-12 items-center justify-center rounded-xl"
                     style={{ background: 'rgba(245,130,32,0.15)' }}
                   >
-                    <Building2 className="h-6 w-6" style={{ color: '#F58220' }} />
+                    <Building2 className="h-6 w-6" style={{ color: '#22c55e' }} />
                   </div>
                   <div className="text-center">
                     <p className="font-semibold text-white">Fleet Manager</p>
@@ -110,7 +110,7 @@ export default function ConnectPage() {
               className="flex h-16 w-16 items-center justify-center rounded-full ring-2"
               style={{ background: 'rgba(245,130,32,0.12)', borderColor: 'rgba(245,130,32,0.3)' }}
             >
-              <Wallet className="h-8 w-8" style={{ color: '#F58220' }} />
+              <Wallet className="h-8 w-8" style={{ color: '#22c55e' }} />
             </div>
             <div>
               <h2 className="text-xl font-semibold text-white">Connect your Freighter</h2>
@@ -129,7 +129,7 @@ export default function ConnectPage() {
             <Button
               size="lg"
               className="w-full font-semibold text-white"
-              style={{ background: '#F58220' }}
+              style={{ background: '#22c55e' }}
               disabled={isConnecting}
               onClick={connect}
             >

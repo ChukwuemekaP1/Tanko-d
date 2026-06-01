@@ -1,4 +1,5 @@
-import { Server } from '@stellar/stellar-sdk';
+// @ts-ignore
+const { Server } = require('stellar-sdk');
 import axios from 'axios';
 
 const HORIZON_URL = process.env.NEXT_PUBLIC_STELLAR_HORIZON_URL || 'https://horizon-testnet.stellar.org';

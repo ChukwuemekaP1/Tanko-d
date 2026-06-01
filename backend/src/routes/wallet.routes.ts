@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { escrowController } from '../controllers/escrow.controller.js';
 import { walletController } from '../controllers/wallet.controller.js';
 
 const router = Router();
@@ -16,6 +15,6 @@ router.get('/wallet/:publicKey/balances', (req, res) => walletController.getBala
 
 router.get('/wallet/validate', (req, res) => walletController.validateAddress(req, res));
 
-router.post('/transaction/sign', (req, res) => escrowController.signAndSubmitTransaction(req, res));
+// TODO: Implement signAndSubmitTransaction in escrowController if needed
 
 export default router;

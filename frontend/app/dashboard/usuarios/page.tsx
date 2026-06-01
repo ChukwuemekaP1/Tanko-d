@@ -1,39 +1,41 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react"
-import { 
-  Search, 
-  Mail, 
+import { useState, useEffect } from "react";
+import {
+  Search,
+  Mail,
   Phone,
   Car,
   Loader2,
   AlertCircle,
-  UserPlus,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+  Users,
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { useAuth } from "@/providers/auth-provider"
-import RegisterDriverForm from "@/components/forms/RegisterDriverForm"
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+} from "@/components/ui/empty";
+import { useAuth } from "@/providers/auth-provider";
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001";
 
 interface User {
-  id: string
-  name: string
-  email: string
-  phone?: string
-  stellarPubKey: string
-  role: string
-  managerId?: string | null
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  stellarPubKey: string;
+  role: string;
   units?: Array<{
     id: string;
     plates: string;
@@ -44,57 +46,37 @@ interface User {
 }
 
 export default function UsersPage() {
-  const { address: walletAddress, role: userRole } = useAuth()
-  const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [dialogOpen, setDialogOpen] = useState(false)
-
-  const fetchUsers = useCallback(async () => {
-    console.log(`[Users] Fetching from ${BACKEND}/api/v1/users`)
-    setLoading(true)
-    setError(null)
-
-    try {
-      const res = await fetch(`${BACKEND}/api/v1/users`)
-      console.log(`[Users] Response status: ${res.status}`)
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`)
-      }
-
-      const data = await res.json()
-      console.log(`[Users] Response:`, data)
-
-      if (data.success && data.data) {
-        setUsers(data.data)
-      } else {
-        setUsers([])
-      }
-    } catch (err) {
-      console.error("[Users] Error fetching data:", err)
-      setError(err instanceof Error ? err.message : "Error de conexión")
-      setUsers([])
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const { address: walletAddress } = useAuth();
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    fetchUsers()
-  }, [walletAddress, fetchUsers])
+    async function fetchUsers() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`${BACKEND}/api/v1/users`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setUsers(data.success && data.data ? data.data : []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error de conexión");
+        setUsers([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchUsers();
+  }, [walletAddress]);
 
-  const handleDriverRegistered = () => {
-    setDialogOpen(false)
-    fetchUsers()
-  }
-
-  const filteredUsers = users.filter(user =>
-    user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.stellarPubKey?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.stellarPubKey?.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   if (loading) {
     return (
@@ -123,39 +105,11 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Usuarios</h1>
-          <p className="text-muted-foreground">Gestionar conductores y usuarios de la wallet de flota</p>
-        </div>
-
-        {/* Register Driver button — only visible for JEFE */}
-        {userRole === "JEFE" && walletAddress && (
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button id="register-driver-btn" className="gap-2">
-                <UserPlus className="h-4 w-4" />
-                Register Driver
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <UserPlus className="h-5 w-5 text-primary" />
-                  Register New Driver
-                </DialogTitle>
-                <DialogDescription>
-                  Add a new driver to your fleet. They will be linked to your manager account.
-                </DialogDescription>
-              </DialogHeader>
-              <RegisterDriverForm
-                managerPubKey={walletAddress}
-                onSuccess={handleDriverRegistered}
-                onCancel={() => setDialogOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
-        )}
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Usuarios</h1>
+        <p className="text-muted-foreground">
+          Gestionar conductores y usuarios de la wallet de flota
+        </p>
       </div>
 
       <Card>
@@ -245,7 +199,8 @@ export default function UsersPage() {
                       </td>
                       <td className="py-4">
                         <code className="text-xs font-mono text-muted-foreground">
-                          {user.stellarPubKey?.slice(0, 12)}...{user.stellarPubKey?.slice(-8)}
+                          {user.stellarPubKey.slice(0, 12)}...
+                          {user.stellarPubKey.slice(-8)}
                         </code>
                       </td>
                       <td className="py-4">
@@ -266,11 +221,6 @@ export default function UsersPage() {
                         >
                           {user.role === "JEFE" ? "Jefe de Flota" : "Conductor"}
                         </span>
-                        {user.managerId && (
-                          <span className="ml-1.5 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                            Managed
-                          </span>
-                        )}
                       </td>
                     </tr>
                   ))}

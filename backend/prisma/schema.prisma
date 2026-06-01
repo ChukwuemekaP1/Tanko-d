@@ -1,6 +1,7 @@
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
+  engineType = "library"
 }
 
 datasource db {
@@ -19,16 +20,12 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  units          Unit[]
+  units           Unit[]
   driverRequests  FundRequest[] @relation("driver")
   managerRequests FundRequest[] @relation("manager")
   fuelLogs        FuelLog[]
-  manager          User?         @relation("ManagerDrivers", fields: [managerId], references: [id])
-  drivers          User[]        @relation("ManagerDrivers")
-  units            Unit[]
-  driverRequests   FundRequest[] @relation("driver")
-  managerRequests  FundRequest[] @relation("manager")
-  fuelLogs         FuelLog[]
+  manager         User?         @relation("ManagerDrivers", fields: [managerId], references: [id])
+  drivers         User[]        @relation("ManagerDrivers")
 
   @@index([managerId])
 }

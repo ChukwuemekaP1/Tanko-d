@@ -1,18 +1,42 @@
-import { Router } from 'express';
-import { unitController } from '../controllers/unit.controller.js';
+import { Router } from "express";
+import { unitController } from "../controllers/unit.controller.js";
+import { validate } from "../middleware/validate.js";
+import {
+  unitIdParamSchema,
+  userIdParamSchema,
+  unitQuerySchema,
+  createUnitSchema,
+  updateUnitSchema,
+} from "../schemas/unit.schema.js";
 
 const router = Router();
 
-router.get('/units', (req, res) => unitController.getAll(req, res));
+router.get("/units", validate(unitQuerySchema, "query"), unitController.getAll);
 
-router.get('/units/:id', (req, res) => unitController.getById(req, res));
+router.get(
+  "/units/:id",
+  validate(unitIdParamSchema, "params"),
+  unitController.getById,
+);
+router.get(
+  "/units/user/:userId",
+  validate(userIdParamSchema, "params"),
+  unitController.getByUserId,
+);
 
-router.get('/units/user/:userId', (req, res) => unitController.getByUserId(req, res));
+router.post("/units", validate(createUnitSchema), unitController.create);
 
-router.post('/units', (req, res) => unitController.create(req, res));
+router.put(
+  "/units/:id",
+  validate(unitIdParamSchema, "params"),
+  validate(updateUnitSchema),
+  unitController.update,
+);
 
-router.put('/units/:id', (req, res) => unitController.update(req, res));
-
-router.delete('/units/:id', (req, res) => unitController.delete(req, res));
+router.delete(
+  "/units/:id",
+  validate(unitIdParamSchema, "params"),
+  unitController.delete,
+);
 
 export default router;

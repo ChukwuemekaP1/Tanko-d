@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import {
   Fuel,
@@ -117,8 +118,14 @@ function Header({ router }: { router: ReturnType<typeof useRouter> }) {
             onClick={() => router.push('/')}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-              <Fuel className="h-5 w-5 text-primary-foreground" />
+            <div className="relative w-32 h-10">
+              <Image 
+                src="/assets/logos/logo_bg_sinc.png" 
+                alt="TANKO" 
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
             <span className="text-xl font-bold text-foreground tracking-tight">
               TANKO
@@ -165,7 +172,7 @@ function Header({ router }: { router: ReturnType<typeof useRouter> }) {
 
 function HeroSection({ router }: { router: ReturnType<typeof useRouter> }) {
   return (
-    <section className="relative overflow-hidden py-20 lg:py-32">
+    <section className="relative overflow-hidden py-20 lg:py-32 bg-gray-100">
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-8">
@@ -173,12 +180,22 @@ function HeroSection({ router }: { router: ReturnType<typeof useRouter> }) {
             <span>Electronic Wallets for Fuel</span>
           </div>
 
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground text-balance mb-6">
+          <div className="relative w-72 h-48 mb-8">
+            <Image 
+              src="/assets/logos/logo_bg_sinc.png" 
+              alt="TANKO" 
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900 text-balance mb-6">
             Electronic Wallets for total control of your fuel consumption with{' '}
             <span className="text-primary">TANKO</span>
           </h1>
 
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10 text-pretty">
+          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mb-10 text-pretty">
             The most complete solution for managing vehicle fleets. Lower fees,
             real-time tracking, and reports that transform data into intelligent
             decisions.

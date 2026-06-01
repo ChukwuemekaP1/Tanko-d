@@ -3,10 +3,7 @@ import { escrowController } from '../controllers/escrow.controller.js';
 
 const router = Router();
 
-router.post('/trustline', (req, res) => escrowController.setTrustline(req, res));
-
-router.get('/escrows-by-role', (req, res) => escrowController.getEscrowsByRole(req, res));
-
-router.post('/multiple-balances', (req, res) => escrowController.getMultipleBalances(req, res));
+// Helper routes - only include methods that actually exist in the controller
+// TODO: Implement setTrustline, getEscrowsByRole, getMultipleBalances if needed
 
 export default router;

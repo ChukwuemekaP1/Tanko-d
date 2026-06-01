@@ -3,6 +3,27 @@ import { fundRequestRepository } from "../repositories/fundRequest.repository.js
 
 type DateArg = Date | number | undefined;
 
+export interface DashboardStats {
+  totalFuelSpend: number;
+  totalFuelLiters: number;
+  totalRequests: number;
+  pendingRequests: number;
+  totalReleased: number;
+  consumptionByDriver: Array<{ driverPubKey: string; totalSpend: number; totalLiters: number; count: number }>;
+  spendByDriver: Array<{ driverPubKey: string; totalSpend: number }>;
+  litersByDriver: Array<{ driverPubKey: string; totalLiters: number }>;
+}
+
+export interface StatsSummary {
+  totalLiters: number;
+  totalCost: number;
+  approvedRequests: number;
+  consumptionByUnit: Array<{
+    name: string;
+    value: number;
+  }>;
+}
+
 function normalizeDateArgs(startOrLimit?: DateArg, endDate?: Date, limit = 50) {
   if (typeof startOrLimit === "number") {
     return {
@@ -19,23 +40,8 @@ function normalizeDateArgs(startOrLimit?: DateArg, endDate?: Date, limit = 50) {
   };
 }
 
-class StatsService {
-  async getDashboardStats(startDate?: Date, endDate?: Date) {
-export interface StatsSummary {
-  totalLiters: number;
-  totalCost: number;
-  approvedRequests: number;
-  consumptionByUnit: Array<{
-    name: string;
-    value: number;
-  }>;
-}
-
 export class StatsService {
-  async getDashboardStats(): Promise<DashboardStats> {
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
+  async getDashboardStats(startDate?: Date, endDate?: Date): Promise<DashboardStats> {
     const [
       totalFuelSpend,
       totalFuelLiters,
@@ -56,22 +62,15 @@ export class StatsService {
       fuelLogRepository.getTotalLitersByDriver(startDate, endDate),
     ]);
 
-    const summary = {
-      totalFuelSpend,
-      totalFuelLiters,
-      totalRequests,
-      pendingRequests,
-      totalReleased,
-    };
-
     return {
-      ...summary,
-      summary,
-      dashboardStats: summary,
-      stats: summary,
-      consumptionByDriver,
-      spendByDriver,
-      litersByDriver,
+      totalFuelSpend: totalFuelSpend || 0,
+      totalFuelLiters: totalFuelLiters || 0,
+      totalRequests: totalRequests || 0,
+      pendingRequests: pendingRequests || 0,
+      totalReleased: totalReleased || 0,
+      consumptionByDriver: consumptionByDriver || [],
+      spendByDriver: spendByDriver || [],
+      litersByDriver: litersByDriver || [],
     };
   }
 
@@ -79,17 +78,30 @@ export class StatsService {
     return fuelLogRepository.getConsumptionByDriver(startDate, endDate);
   }
 
-  async getRecentTransactions(startOrLimit?: DateArg, endDate?: Date, limit = 50) {
+  async getRecentTransactions(
+    startOrLimit?: DateArg,
+    endDate?: Date,
+    limit = 50,
+  ) {
     const normalized = normalizeDateArgs(startOrLimit, endDate, limit);
-    const transactions = await fuelLogRepository.findAll(normalized.startDate, normalized.endDate);
+    const transactions = await fuelLogRepository.findAll(
+      normalized.startDate,
+      normalized.endDate,
+    );
 
     return transactions.slice(0, normalized.limit);
   }
 
   async getReportStats(startDate?: Date, endDate?: Date) {
-    const [summary, consumptionByDriver, recentTransactions, fuelSpendByDriver, fuelLitersByDriver] = await Promise.all([
-      statsService.getDashboardStats(startDate, endDate),
-      statsService.getConsumptionByDriver(startDate, endDate),
+    const [
+      summary,
+      consumptionByDriver,
+      recentTransactions,
+      fuelSpendByDriver,
+      fuelLitersByDriver,
+    ] = await Promise.all([
+      this.getDashboardStats(startDate, endDate),
+      this.getConsumptionByDriver(startDate, endDate),
       fuelLogRepository.findAll(startDate, endDate),
       fuelLogRepository.getTotalSpendByDriver(startDate, endDate),
       fuelLogRepository.getTotalLitersByDriver(startDate, endDate),
@@ -118,7 +130,7 @@ export class StatsService {
     ] = await Promise.all([
       fuelLogRepository.getTotalLiters(),
       fuelLogRepository.getTotalSpend(),
-      fundRequestRepository.countByStatus('APPROVED'),
+      fundRequestRepository.countByStatus("APPROVED"),
       fuelLogRepository.getConsumptionByUnit(),
     ]);
 
@@ -126,7 +138,7 @@ export class StatsService {
       totalLiters: totalLitersResult || 0,
       totalCost: totalCostResult || 0,
       approvedRequests: approvedRequestsCount || 0,
-      consumptionByUnit: consumptionByUnit.map(unit => ({
+      consumptionByUnit: consumptionByUnit.map((unit) => ({
         name: unit.name,
         value: unit.liters,
       })),

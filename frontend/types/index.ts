@@ -8,20 +8,14 @@ declare module 'next-auth' {
       email: string
       name: string
       role: 'ADMIN' | 'CONDUCTOR'
-      stellarAddress?: string | null
-      empresaId?: string | null
-      conductorId?: string | null
     }
   }
 
   interface User {
     id: string
     email: string
-    nombre: string
-    rol: 'ADMIN' | 'CONDUCTOR'
-    stellarAddress?: string | null
-    empresaId?: string | null
-    conductorId?: string | null
+    name: string
+    role: 'ADMIN' | 'CONDUCTOR'
   }
 }
 
@@ -29,9 +23,6 @@ declare module 'next-auth/jwt' {
   interface JWT {
     id: string
     role: 'ADMIN' | 'CONDUCTOR'
-    stellarAddress?: string | null
-    empresaId?: string | null
-    conductorId?: string | null
   }
 }
 

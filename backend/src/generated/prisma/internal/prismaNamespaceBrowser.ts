@@ -55,6 +55,7 @@ export const ModelName = {
   Unit: 'Unit',
   FuelLog: 'FuelLog',
   FundRequest: 'FundRequest',
+  GasStation: 'GasStation',
   EscrowConfig: 'EscrowConfig',
   EscrowMilestone: 'EscrowMilestone'
 } as const
@@ -83,6 +84,7 @@ export const UserScalarFieldEnum = {
   stellarPubKey: 'stellarPubKey',
   role: 'role',
   status: 'status',
+  managerId: 'managerId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -146,6 +148,24 @@ export const FundRequestScalarFieldEnum = {
 } as const
 
 export type FundRequestScalarFieldEnum = (typeof FundRequestScalarFieldEnum)[keyof typeof FundRequestScalarFieldEnum]
+
+
+export const GasStationScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  address: 'address',
+  city: 'city',
+  state: 'state',
+  lat: 'lat',
+  lng: 'lng',
+  hours: 'hours',
+  services: 'services',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type GasStationScalarFieldEnum = (typeof GasStationScalarFieldEnum)[keyof typeof GasStationScalarFieldEnum]
 
 
 export const EscrowConfigScalarFieldEnum = {

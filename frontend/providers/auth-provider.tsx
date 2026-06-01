@@ -44,6 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     freighterInstalled: false,
     role: null,
     userId: null,
+    setRole: (role: UserRole) => setState(prev => ({ ...prev, role })),
+    setUserId: (id: string | null) => setState(prev => ({ ...prev, userId: id })),
   });
 
   useEffect(() => {
@@ -65,6 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               freighterInstalled: false,
               role: storedRole,
               userId: storedUserId,
+              setRole: prev.setRole,
+              setUserId: prev.setUserId,
             }));
           }
           return;
@@ -77,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const { address, error } = await freighter.getAddress();
           if (!error && address) {
             localStorage.setItem(STORAGE_KEYS.ADDRESS, address);
-            setState({
+            setState((prev) => ({
               address,
               isConnected: true,
               isConnecting: false,
@@ -85,7 +89,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               freighterInstalled: true,
               role: storedRole,
               userId: storedUserId,
-            });
+              setRole: prev.setRole,
+              setUserId: prev.setUserId,
+            }));
           }
         } else if (storedAddress) {
           setState((prev) => ({
@@ -95,6 +101,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             freighterInstalled: true,
             role: storedRole,
             userId: storedUserId,
+            setRole: prev.setRole,
+            setUserId: prev.setUserId,
           }));
         }
       } catch (err) {
@@ -118,6 +126,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           freighterInstalled: false,
           error:
             "Freighter is not installed. Install it at freighter.app and reload the page.",
+          setRole: prev.setRole,
+          setUserId: prev.setUserId,
         }));
         return;
       }
@@ -129,6 +139,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ...prev,
           isConnecting: false,
           error: `Freighter denied access: ${error}`,
+          setRole: prev.setRole,
+          setUserId: prev.setUserId,
         }));
         return;
       }
@@ -143,6 +155,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           freighterInstalled: true,
           role: prev.role,
           userId: prev.userId,
+          setRole: prev.setRole,
+          setUserId: prev.setUserId,
         }));
         console.log(`[Tanko] ✅ Freighter connected: ${address}`);
       }
@@ -152,6 +166,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isConnecting: false,
         error:
           err?.message || "Connection error. Make sure Freighter is unlocked.",
+        setRole: prev.setRole,
+        setUserId: prev.setUserId,
       }));
     }
   };
@@ -168,6 +184,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       error: null,
       role: null,
       userId: null,
+      setRole: prev.setRole,
+      setUserId: prev.setUserId,
     }));
     console.log("[Tanko] Wallet disconnected");
   };

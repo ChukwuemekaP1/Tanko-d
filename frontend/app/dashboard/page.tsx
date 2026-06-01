@@ -216,7 +216,7 @@ export default function DashboardPage() {
     {
       title: "Solicitudes Pendientes",
       value: displayStats.pendingRequests.toString(),
-      trend: pendingRequests.length > 0 ? "up" as const : "neutral" as const,
+      trend: (pendingRequests.length > 0 ? "up" : "neutral") as "up" | "down" | "neutral",
       icon: Clock,
       color: "amber"
     },
@@ -348,7 +348,7 @@ export default function DashboardPage() {
                 {stat.trend === "down" && (
                   <ArrowDownRight className="h-3 w-3 text-red-500" />
                 )}
-                <span className={stat.trend === "up" ? "text-emerald-500" : ""}>
+                <span className={stat.trend === "up" ? "text-emerald-500" : stat.trend === "down" ? "text-red-500" : ""}>
                   {stat.title}
                 </span>
               </div>
@@ -446,7 +446,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentTransactions.length > 0 ? recentTransactions.map((tx) => (
+              {(recentTransactions || []).length > 0 ? (recentTransactions || []).map((tx) => (
                 <div
                   key={tx.id}
                   className="flex items-center justify-between rounded-lg border border-border p-3"
@@ -468,7 +468,9 @@ export default function DashboardPage() {
                   </div>
                 </div>
               )) : (
-                <p className="text-sm text-muted-foreground text-center py-4">No hay transacciones aún</p>
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No hay transacciones recientes
+                </p>
               )}
             </div>
           </CardContent>

@@ -198,7 +198,7 @@ export default function DashboardLayout({
                 key={item.name}
                 href={item.href}
                 onClick={() => setIsSidebarOpen(false)}
-                style={isActive ? { backgroundColor: "#F58220" } : undefined}
+                style={isActive ? { backgroundColor: "#22c55e" } : undefined}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                   isActive
                     ? "text-white shadow-md"
@@ -242,9 +242,6 @@ export default function DashboardLayout({
           <div className="flex items-center gap-3">
             <div className="hidden sm:block text-right">
               <p className="text-sm font-medium text-foreground">{roleLabel}</p>
-              <p className="text-sm font-medium">
-                {role === "CONDUCTOR" ? "Driver" : "Fleet Manager"}
-              </p>
               <p className="text-xs text-muted-foreground font-mono">
                 {address?.slice(0, 8)}...{address?.slice(-8)}
               </p>

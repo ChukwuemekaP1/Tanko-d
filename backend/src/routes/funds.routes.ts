@@ -1,26 +1,72 @@
-import { Router } from 'express';
-import { fundsController } from '../controllers/funds.controller.js';
+import { Router } from "express";
+import { fundsController } from "../controllers/funds.controller.js";
+import { validate } from "../middleware/validate.js";
+import {
+  createFundRequestSchema,
+  approveFundRequestSchema,
+  releaseFundsSchema,
+  rejectFundRequestSchema,
+  fundTestnetSchema,
+} from "../schemas/funds.schema.js";
+import { stellarPubKeySchema } from "../schemas/common.schema.js";
+import { z } from "zod";
 
 const router = Router();
 
-router.post('/funds/request', (req, res) => fundsController.createRequest(req, res));
+router.post(
+  "/funds/request",
+  validate(createFundRequestSchema),
+  fundsController.createRequest,
+);
 
-router.post('/funds/approve', (req, res) => fundsController.approveRequest(req, res));
+router.post(
+  "/funds/approve",
+  validate(approveFundRequestSchema),
+  fundsController.approveRequest,
+);
 
-router.post('/funds/release', (req, res) => fundsController.releaseFunds(req, res));
+router.post(
+  "/funds/release",
+  validate(releaseFundsSchema),
+  fundsController.releaseFunds,
+);
 
-router.post('/funds/reject', (req, res) => fundsController.rejectRequest(req, res));
+router.post(
+  "/funds/reject",
+  validate(rejectFundRequestSchema),
+  fundsController.rejectRequest,
+);
 
-router.get('/funds/request/:id', (req, res) => fundsController.getRequest(req, res));
+router.get(
+  "/funds/request/:id",
+  validate(z.object({ id: z.string().uuid() }), "params"),
+  fundsController.getRequest,
+);
 
-router.get('/funds/pending', (req, res) => fundsController.getPendingRequests(req, res));
+router.get(
+  "/funds/pending",
+  validate(z.object({ managerPubKey: stellarPubKeySchema }), "query"),
+  fundsController.getPendingRequests,
+);
 
-router.get('/funds/driver/:publicKey', (req, res) => fundsController.getRequestsByDriver(req, res));
+router.get(
+  "/funds/driver/:publicKey",
+  validate(z.object({ publicKey: stellarPubKeySchema }), "params"),
+  fundsController.getRequestsByDriver,
+);
 
-router.post('/accounts/create', (req, res) => fundsController.createTestnetAccount(req, res));
+router.post(
+  "/accounts/fund",
+  validate(fundTestnetSchema),
+  fundsController.fundTestnetAccount,
+);
 
-router.post('/accounts/fund', (req, res) => fundsController.fundTestnetAccount(req, res));
+router.get(
+  "/escrow/:contractId/status",
+  validate(z.object({ contractId: z.string().min(1) }), "params"),
+  fundsController.getEscrowStatus,
+);
 
-router.get('/escrow/:contractId/status', (req, res) => fundsController.getEscrowStatus(req, res));
+router.post("/accounts/create", fundsController.createTestnetAccount);
 
 export default router;

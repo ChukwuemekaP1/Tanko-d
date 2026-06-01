@@ -5,7 +5,7 @@
 
 :root {
   /* ── TANKO palette ──────────────────────────────────────────────────────── */
-  /* navy #1B2D4F */ /* orange #F58220 */ /* green #2D7D46 */ /* yellow #F5C400 */
+  /* navy #1B2D4F */ /* green #22c55e */ /* gray #6b7280 */ /* yellow #F5C400 */
 
   --background: oklch(0.97 0.005 240);
   --foreground: oklch(0.18 0.05 244);
@@ -13,7 +13,7 @@
   --card-foreground: oklch(0.18 0.05 244);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.05 244);
-  --primary: oklch(0.70 0.19 48);        /* TANKO orange */
+  --primary: oklch(0.55 0.20 145);        /* TANKO green */
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.94 0.02 48);
   --secondary-foreground: oklch(0.18 0.05 244);
@@ -25,9 +25,9 @@
   --destructive-foreground: oklch(1 0 0);
   --border: oklch(0.88 0.02 240);
   --input: oklch(0.93 0.01 240);
-  --ring: oklch(0.70 0.19 48);
-  --chart-1: oklch(0.70 0.19 48);        /* orange */
-  --chart-2: oklch(0.52 0.13 151);       /* green */
+  --ring: oklch(0.55 0.20 145);
+  --chart-1: oklch(0.55 0.20 145);        /* green */
+  --chart-2: oklch(0.52 0.13 151);       /* gray */
   --chart-3: oklch(0.82 0.18 87);        /* yellow */
   --chart-4: oklch(0.28 0.07 244);       /* navy */
   --chart-5: oklch(0.60 0.10 180);       /* teal */
@@ -35,12 +35,12 @@
   /* Sidebar = dark navy from the logo */
   --sidebar: oklch(0.22 0.07 244);
   --sidebar-foreground: oklch(0.93 0.01 240);
-  --sidebar-primary: oklch(0.70 0.19 48);
+  --sidebar-primary: oklch(0.55 0.20 145);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.29 0.07 244);
   --sidebar-accent-foreground: oklch(0.93 0.01 240);
   --sidebar-border: oklch(0.30 0.06 244);
-  --sidebar-ring: oklch(0.70 0.19 48);
+  --sidebar-ring: oklch(0.55 0.20 145);
 }
 
 .dark {

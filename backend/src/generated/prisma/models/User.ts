@@ -32,6 +32,7 @@ export type UserMinAggregateOutputType = {
   stellarPubKey: string | null
   role: string | null
   status: string | null
+  managerId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -44,6 +45,7 @@ export type UserMaxAggregateOutputType = {
   stellarPubKey: string | null
   role: string | null
   status: string | null
+  managerId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -56,6 +58,7 @@ export type UserCountAggregateOutputType = {
   stellarPubKey: number
   role: number
   status: number
+  managerId: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -70,6 +73,7 @@ export type UserMinAggregateInputType = {
   stellarPubKey?: true
   role?: true
   status?: true
+  managerId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -82,6 +86,7 @@ export type UserMaxAggregateInputType = {
   stellarPubKey?: true
   role?: true
   status?: true
+  managerId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -94,6 +99,7 @@ export type UserCountAggregateInputType = {
   stellarPubKey?: true
   role?: true
   status?: true
+  managerId?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -179,6 +185,7 @@ export type UserGroupByOutputType = {
   stellarPubKey: string | null
   role: string
   status: string
+  managerId: string | null
   createdAt: Date
   updatedAt: Date
   _count: UserCountAggregateOutputType | null
@@ -212,12 +219,15 @@ export type UserWhereInput = {
   stellarPubKey?: Prisma.StringNullableFilter<"User"> | string | null
   role?: Prisma.StringFilter<"User"> | string
   status?: Prisma.StringFilter<"User"> | string
+  managerId?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   units?: Prisma.UnitListRelationFilter
   driverRequests?: Prisma.FundRequestListRelationFilter
   managerRequests?: Prisma.FundRequestListRelationFilter
   fuelLogs?: Prisma.FuelLogListRelationFilter
+  manager?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  drivers?: Prisma.UserListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -228,12 +238,15 @@ export type UserOrderByWithRelationInput = {
   stellarPubKey?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  managerId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   units?: Prisma.UnitOrderByRelationAggregateInput
   driverRequests?: Prisma.FundRequestOrderByRelationAggregateInput
   managerRequests?: Prisma.FundRequestOrderByRelationAggregateInput
   fuelLogs?: Prisma.FuelLogOrderByRelationAggregateInput
+  manager?: Prisma.UserOrderByWithRelationInput
+  drivers?: Prisma.UserOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -247,12 +260,15 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   phone?: Prisma.StringNullableFilter<"User"> | string | null
   role?: Prisma.StringFilter<"User"> | string
   status?: Prisma.StringFilter<"User"> | string
+  managerId?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   units?: Prisma.UnitListRelationFilter
   driverRequests?: Prisma.FundRequestListRelationFilter
   managerRequests?: Prisma.FundRequestListRelationFilter
   fuelLogs?: Prisma.FuelLogListRelationFilter
+  manager?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  drivers?: Prisma.UserListRelationFilter
 }, "id" | "email" | "stellarPubKey">
 
 export type UserOrderByWithAggregationInput = {
@@ -263,6 +279,7 @@ export type UserOrderByWithAggregationInput = {
   stellarPubKey?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  managerId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
@@ -281,6 +298,7 @@ export type UserScalarWhereWithAggregatesInput = {
   stellarPubKey?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   role?: Prisma.StringWithAggregatesFilter<"User"> | string
   status?: Prisma.StringWithAggregatesFilter<"User"> | string
+  managerId?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
@@ -299,6 +317,8 @@ export type UserCreateInput = {
   driverRequests?: Prisma.FundRequestCreateNestedManyWithoutDriverInput
   managerRequests?: Prisma.FundRequestCreateNestedManyWithoutManagerInput
   fuelLogs?: Prisma.FuelLogCreateNestedManyWithoutUserInput
+  manager?: Prisma.UserCreateNestedOneWithoutDriversInput
+  drivers?: Prisma.UserCreateNestedManyWithoutManagerInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -309,12 +329,14 @@ export type UserUncheckedCreateInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  managerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   units?: Prisma.UnitUncheckedCreateNestedManyWithoutUserInput
   driverRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutDriverInput
   managerRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutManagerInput
   fuelLogs?: Prisma.FuelLogUncheckedCreateNestedManyWithoutUserInput
+  drivers?: Prisma.UserUncheckedCreateNestedManyWithoutManagerInput
 }
 
 export type UserUpdateInput = {
@@ -331,6 +353,8 @@ export type UserUpdateInput = {
   driverRequests?: Prisma.FundRequestUpdateManyWithoutDriverNestedInput
   managerRequests?: Prisma.FundRequestUpdateManyWithoutManagerNestedInput
   fuelLogs?: Prisma.FuelLogUpdateManyWithoutUserNestedInput
+  manager?: Prisma.UserUpdateOneWithoutDriversNestedInput
+  drivers?: Prisma.UserUpdateManyWithoutManagerNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -341,12 +365,14 @@ export type UserUncheckedUpdateInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  managerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   units?: Prisma.UnitUncheckedUpdateManyWithoutUserNestedInput
   driverRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutDriverNestedInput
   managerRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutManagerNestedInput
   fuelLogs?: Prisma.FuelLogUncheckedUpdateManyWithoutUserNestedInput
+  drivers?: Prisma.UserUncheckedUpdateManyWithoutManagerNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -357,6 +383,7 @@ export type UserCreateManyInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  managerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -381,8 +408,24 @@ export type UserUncheckedUpdateManyInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  managerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type UserNullableScalarRelationFilter = {
+  is?: Prisma.UserWhereInput | null
+  isNot?: Prisma.UserWhereInput | null
+}
+
+export type UserListRelationFilter = {
+  every?: Prisma.UserWhereInput
+  some?: Prisma.UserWhereInput
+  none?: Prisma.UserWhereInput
+}
+
+export type UserOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type UserCountOrderByAggregateInput = {
@@ -393,6 +436,7 @@ export type UserCountOrderByAggregateInput = {
   stellarPubKey?: Prisma.SortOrder
   role?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  managerId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -405,6 +449,7 @@ export type UserMaxOrderByAggregateInput = {
   stellarPubKey?: Prisma.SortOrder
   role?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  managerId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -417,6 +462,7 @@ export type UserMinOrderByAggregateInput = {
   stellarPubKey?: Prisma.SortOrder
   role?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  managerId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -424,6 +470,26 @@ export type UserMinOrderByAggregateInput = {
 export type UserScalarRelationFilter = {
   is?: Prisma.UserWhereInput
   isNot?: Prisma.UserWhereInput
+}
+
+export type UserCreateNestedOneWithoutDriversInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDriversInput, Prisma.UserUncheckedCreateWithoutDriversInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDriversInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserCreateNestedManyWithoutManagerInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutManagerInput, Prisma.UserUncheckedCreateWithoutManagerInput> | Prisma.UserCreateWithoutManagerInput[] | Prisma.UserUncheckedCreateWithoutManagerInput[]
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutManagerInput | Prisma.UserCreateOrConnectWithoutManagerInput[]
+  createMany?: Prisma.UserCreateManyManagerInputEnvelope
+  connect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+}
+
+export type UserUncheckedCreateNestedManyWithoutManagerInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutManagerInput, Prisma.UserUncheckedCreateWithoutManagerInput> | Prisma.UserCreateWithoutManagerInput[] | Prisma.UserUncheckedCreateWithoutManagerInput[]
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutManagerInput | Prisma.UserCreateOrConnectWithoutManagerInput[]
+  createMany?: Prisma.UserCreateManyManagerInputEnvelope
+  connect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
 }
 
 export type StringFieldUpdateOperationsInput = {
@@ -436,6 +502,44 @@ export type NullableStringFieldUpdateOperationsInput = {
 
 export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
+}
+
+export type UserUpdateOneWithoutDriversNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDriversInput, Prisma.UserUncheckedCreateWithoutDriversInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDriversInput
+  upsert?: Prisma.UserUpsertWithoutDriversInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDriversInput, Prisma.UserUpdateWithoutDriversInput>, Prisma.UserUncheckedUpdateWithoutDriversInput>
+}
+
+export type UserUpdateManyWithoutManagerNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutManagerInput, Prisma.UserUncheckedCreateWithoutManagerInput> | Prisma.UserCreateWithoutManagerInput[] | Prisma.UserUncheckedCreateWithoutManagerInput[]
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutManagerInput | Prisma.UserCreateOrConnectWithoutManagerInput[]
+  upsert?: Prisma.UserUpsertWithWhereUniqueWithoutManagerInput | Prisma.UserUpsertWithWhereUniqueWithoutManagerInput[]
+  createMany?: Prisma.UserCreateManyManagerInputEnvelope
+  set?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  disconnect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  delete?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  connect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  update?: Prisma.UserUpdateWithWhereUniqueWithoutManagerInput | Prisma.UserUpdateWithWhereUniqueWithoutManagerInput[]
+  updateMany?: Prisma.UserUpdateManyWithWhereWithoutManagerInput | Prisma.UserUpdateManyWithWhereWithoutManagerInput[]
+  deleteMany?: Prisma.UserScalarWhereInput | Prisma.UserScalarWhereInput[]
+}
+
+export type UserUncheckedUpdateManyWithoutManagerNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutManagerInput, Prisma.UserUncheckedCreateWithoutManagerInput> | Prisma.UserCreateWithoutManagerInput[] | Prisma.UserUncheckedCreateWithoutManagerInput[]
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutManagerInput | Prisma.UserCreateOrConnectWithoutManagerInput[]
+  upsert?: Prisma.UserUpsertWithWhereUniqueWithoutManagerInput | Prisma.UserUpsertWithWhereUniqueWithoutManagerInput[]
+  createMany?: Prisma.UserCreateManyManagerInputEnvelope
+  set?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  disconnect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  delete?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  connect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  update?: Prisma.UserUpdateWithWhereUniqueWithoutManagerInput | Prisma.UserUpdateWithWhereUniqueWithoutManagerInput[]
+  updateMany?: Prisma.UserUpdateManyWithWhereWithoutManagerInput | Prisma.UserUpdateManyWithWhereWithoutManagerInput[]
+  deleteMany?: Prisma.UserScalarWhereInput | Prisma.UserScalarWhereInput[]
 }
 
 export type UserCreateNestedOneWithoutUnitsInput = {
@@ -494,6 +598,166 @@ export type UserUpdateOneRequiredWithoutManagerRequestsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutManagerRequestsInput, Prisma.UserUpdateWithoutManagerRequestsInput>, Prisma.UserUncheckedUpdateWithoutManagerRequestsInput>
 }
 
+export type UserCreateWithoutDriversInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  stellarPubKey?: string | null
+  role?: string
+  status?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  units?: Prisma.UnitCreateNestedManyWithoutUserInput
+  driverRequests?: Prisma.FundRequestCreateNestedManyWithoutDriverInput
+  managerRequests?: Prisma.FundRequestCreateNestedManyWithoutManagerInput
+  fuelLogs?: Prisma.FuelLogCreateNestedManyWithoutUserInput
+  manager?: Prisma.UserCreateNestedOneWithoutDriversInput
+}
+
+export type UserUncheckedCreateWithoutDriversInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  stellarPubKey?: string | null
+  role?: string
+  status?: string
+  managerId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  units?: Prisma.UnitUncheckedCreateNestedManyWithoutUserInput
+  driverRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutDriverInput
+  managerRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutManagerInput
+  fuelLogs?: Prisma.FuelLogUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutDriversInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutDriversInput, Prisma.UserUncheckedCreateWithoutDriversInput>
+}
+
+export type UserCreateWithoutManagerInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  stellarPubKey?: string | null
+  role?: string
+  status?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  units?: Prisma.UnitCreateNestedManyWithoutUserInput
+  driverRequests?: Prisma.FundRequestCreateNestedManyWithoutDriverInput
+  managerRequests?: Prisma.FundRequestCreateNestedManyWithoutManagerInput
+  fuelLogs?: Prisma.FuelLogCreateNestedManyWithoutUserInput
+  drivers?: Prisma.UserCreateNestedManyWithoutManagerInput
+}
+
+export type UserUncheckedCreateWithoutManagerInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  stellarPubKey?: string | null
+  role?: string
+  status?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  units?: Prisma.UnitUncheckedCreateNestedManyWithoutUserInput
+  driverRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutDriverInput
+  managerRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutManagerInput
+  fuelLogs?: Prisma.FuelLogUncheckedCreateNestedManyWithoutUserInput
+  drivers?: Prisma.UserUncheckedCreateNestedManyWithoutManagerInput
+}
+
+export type UserCreateOrConnectWithoutManagerInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutManagerInput, Prisma.UserUncheckedCreateWithoutManagerInput>
+}
+
+export type UserCreateManyManagerInputEnvelope = {
+  data: Prisma.UserCreateManyManagerInput | Prisma.UserCreateManyManagerInput[]
+  skipDuplicates?: boolean
+}
+
+export type UserUpsertWithoutDriversInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutDriversInput, Prisma.UserUncheckedUpdateWithoutDriversInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutDriversInput, Prisma.UserUncheckedCreateWithoutDriversInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutDriversInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutDriversInput, Prisma.UserUncheckedUpdateWithoutDriversInput>
+}
+
+export type UserUpdateWithoutDriversInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  units?: Prisma.UnitUpdateManyWithoutUserNestedInput
+  driverRequests?: Prisma.FundRequestUpdateManyWithoutDriverNestedInput
+  managerRequests?: Prisma.FundRequestUpdateManyWithoutManagerNestedInput
+  fuelLogs?: Prisma.FuelLogUpdateManyWithoutUserNestedInput
+  manager?: Prisma.UserUpdateOneWithoutDriversNestedInput
+}
+
+export type UserUncheckedUpdateWithoutDriversInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  managerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  units?: Prisma.UnitUncheckedUpdateManyWithoutUserNestedInput
+  driverRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutDriverNestedInput
+  managerRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutManagerNestedInput
+  fuelLogs?: Prisma.FuelLogUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserUpsertWithWhereUniqueWithoutManagerInput = {
+  where: Prisma.UserWhereUniqueInput
+  update: Prisma.XOR<Prisma.UserUpdateWithoutManagerInput, Prisma.UserUncheckedUpdateWithoutManagerInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutManagerInput, Prisma.UserUncheckedCreateWithoutManagerInput>
+}
+
+export type UserUpdateWithWhereUniqueWithoutManagerInput = {
+  where: Prisma.UserWhereUniqueInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutManagerInput, Prisma.UserUncheckedUpdateWithoutManagerInput>
+}
+
+export type UserUpdateManyWithWhereWithoutManagerInput = {
+  where: Prisma.UserScalarWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateManyMutationInput, Prisma.UserUncheckedUpdateManyWithoutManagerInput>
+}
+
+export type UserScalarWhereInput = {
+  AND?: Prisma.UserScalarWhereInput | Prisma.UserScalarWhereInput[]
+  OR?: Prisma.UserScalarWhereInput[]
+  NOT?: Prisma.UserScalarWhereInput | Prisma.UserScalarWhereInput[]
+  id?: Prisma.StringFilter<"User"> | string
+  name?: Prisma.StringFilter<"User"> | string
+  email?: Prisma.StringFilter<"User"> | string
+  phone?: Prisma.StringNullableFilter<"User"> | string | null
+  stellarPubKey?: Prisma.StringNullableFilter<"User"> | string | null
+  role?: Prisma.StringFilter<"User"> | string
+  status?: Prisma.StringFilter<"User"> | string
+  managerId?: Prisma.StringNullableFilter<"User"> | string | null
+  createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
+}
+
 export type UserCreateWithoutUnitsInput = {
   id?: string
   name: string
@@ -507,6 +771,8 @@ export type UserCreateWithoutUnitsInput = {
   driverRequests?: Prisma.FundRequestCreateNestedManyWithoutDriverInput
   managerRequests?: Prisma.FundRequestCreateNestedManyWithoutManagerInput
   fuelLogs?: Prisma.FuelLogCreateNestedManyWithoutUserInput
+  manager?: Prisma.UserCreateNestedOneWithoutDriversInput
+  drivers?: Prisma.UserCreateNestedManyWithoutManagerInput
 }
 
 export type UserUncheckedCreateWithoutUnitsInput = {
@@ -517,11 +783,13 @@ export type UserUncheckedCreateWithoutUnitsInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  managerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   driverRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutDriverInput
   managerRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutManagerInput
   fuelLogs?: Prisma.FuelLogUncheckedCreateNestedManyWithoutUserInput
+  drivers?: Prisma.UserUncheckedCreateNestedManyWithoutManagerInput
 }
 
 export type UserCreateOrConnectWithoutUnitsInput = {
@@ -553,6 +821,8 @@ export type UserUpdateWithoutUnitsInput = {
   driverRequests?: Prisma.FundRequestUpdateManyWithoutDriverNestedInput
   managerRequests?: Prisma.FundRequestUpdateManyWithoutManagerNestedInput
   fuelLogs?: Prisma.FuelLogUpdateManyWithoutUserNestedInput
+  manager?: Prisma.UserUpdateOneWithoutDriversNestedInput
+  drivers?: Prisma.UserUpdateManyWithoutManagerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUnitsInput = {
@@ -563,11 +833,13 @@ export type UserUncheckedUpdateWithoutUnitsInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  managerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   driverRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutDriverNestedInput
   managerRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutManagerNestedInput
   fuelLogs?: Prisma.FuelLogUncheckedUpdateManyWithoutUserNestedInput
+  drivers?: Prisma.UserUncheckedUpdateManyWithoutManagerNestedInput
 }
 
 export type UserCreateWithoutFuelLogsInput = {
@@ -583,6 +855,8 @@ export type UserCreateWithoutFuelLogsInput = {
   units?: Prisma.UnitCreateNestedManyWithoutUserInput
   driverRequests?: Prisma.FundRequestCreateNestedManyWithoutDriverInput
   managerRequests?: Prisma.FundRequestCreateNestedManyWithoutManagerInput
+  manager?: Prisma.UserCreateNestedOneWithoutDriversInput
+  drivers?: Prisma.UserCreateNestedManyWithoutManagerInput
 }
 
 export type UserUncheckedCreateWithoutFuelLogsInput = {
@@ -593,11 +867,13 @@ export type UserUncheckedCreateWithoutFuelLogsInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  managerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   units?: Prisma.UnitUncheckedCreateNestedManyWithoutUserInput
   driverRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutDriverInput
   managerRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutManagerInput
+  drivers?: Prisma.UserUncheckedCreateNestedManyWithoutManagerInput
 }
 
 export type UserCreateOrConnectWithoutFuelLogsInput = {
@@ -629,6 +905,8 @@ export type UserUpdateWithoutFuelLogsInput = {
   units?: Prisma.UnitUpdateManyWithoutUserNestedInput
   driverRequests?: Prisma.FundRequestUpdateManyWithoutDriverNestedInput
   managerRequests?: Prisma.FundRequestUpdateManyWithoutManagerNestedInput
+  manager?: Prisma.UserUpdateOneWithoutDriversNestedInput
+  drivers?: Prisma.UserUpdateManyWithoutManagerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutFuelLogsInput = {
@@ -639,11 +917,13 @@ export type UserUncheckedUpdateWithoutFuelLogsInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  managerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   units?: Prisma.UnitUncheckedUpdateManyWithoutUserNestedInput
   driverRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutDriverNestedInput
   managerRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutManagerNestedInput
+  drivers?: Prisma.UserUncheckedUpdateManyWithoutManagerNestedInput
 }
 
 export type UserCreateWithoutDriverRequestsInput = {
@@ -659,6 +939,8 @@ export type UserCreateWithoutDriverRequestsInput = {
   units?: Prisma.UnitCreateNestedManyWithoutUserInput
   managerRequests?: Prisma.FundRequestCreateNestedManyWithoutManagerInput
   fuelLogs?: Prisma.FuelLogCreateNestedManyWithoutUserInput
+  manager?: Prisma.UserCreateNestedOneWithoutDriversInput
+  drivers?: Prisma.UserCreateNestedManyWithoutManagerInput
 }
 
 export type UserUncheckedCreateWithoutDriverRequestsInput = {
@@ -669,11 +951,13 @@ export type UserUncheckedCreateWithoutDriverRequestsInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  managerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   units?: Prisma.UnitUncheckedCreateNestedManyWithoutUserInput
   managerRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutManagerInput
   fuelLogs?: Prisma.FuelLogUncheckedCreateNestedManyWithoutUserInput
+  drivers?: Prisma.UserUncheckedCreateNestedManyWithoutManagerInput
 }
 
 export type UserCreateOrConnectWithoutDriverRequestsInput = {
@@ -694,6 +978,8 @@ export type UserCreateWithoutManagerRequestsInput = {
   units?: Prisma.UnitCreateNestedManyWithoutUserInput
   driverRequests?: Prisma.FundRequestCreateNestedManyWithoutDriverInput
   fuelLogs?: Prisma.FuelLogCreateNestedManyWithoutUserInput
+  manager?: Prisma.UserCreateNestedOneWithoutDriversInput
+  drivers?: Prisma.UserCreateNestedManyWithoutManagerInput
 }
 
 export type UserUncheckedCreateWithoutManagerRequestsInput = {
@@ -704,11 +990,13 @@ export type UserUncheckedCreateWithoutManagerRequestsInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  managerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   units?: Prisma.UnitUncheckedCreateNestedManyWithoutUserInput
   driverRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutDriverInput
   fuelLogs?: Prisma.FuelLogUncheckedCreateNestedManyWithoutUserInput
+  drivers?: Prisma.UserUncheckedCreateNestedManyWithoutManagerInput
 }
 
 export type UserCreateOrConnectWithoutManagerRequestsInput = {
@@ -740,6 +1028,8 @@ export type UserUpdateWithoutDriverRequestsInput = {
   units?: Prisma.UnitUpdateManyWithoutUserNestedInput
   managerRequests?: Prisma.FundRequestUpdateManyWithoutManagerNestedInput
   fuelLogs?: Prisma.FuelLogUpdateManyWithoutUserNestedInput
+  manager?: Prisma.UserUpdateOneWithoutDriversNestedInput
+  drivers?: Prisma.UserUpdateManyWithoutManagerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDriverRequestsInput = {
@@ -750,11 +1040,13 @@ export type UserUncheckedUpdateWithoutDriverRequestsInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  managerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   units?: Prisma.UnitUncheckedUpdateManyWithoutUserNestedInput
   managerRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutManagerNestedInput
   fuelLogs?: Prisma.FuelLogUncheckedUpdateManyWithoutUserNestedInput
+  drivers?: Prisma.UserUncheckedUpdateManyWithoutManagerNestedInput
 }
 
 export type UserUpsertWithoutManagerRequestsInput = {
@@ -781,9 +1073,57 @@ export type UserUpdateWithoutManagerRequestsInput = {
   units?: Prisma.UnitUpdateManyWithoutUserNestedInput
   driverRequests?: Prisma.FundRequestUpdateManyWithoutDriverNestedInput
   fuelLogs?: Prisma.FuelLogUpdateManyWithoutUserNestedInput
+  manager?: Prisma.UserUpdateOneWithoutDriversNestedInput
+  drivers?: Prisma.UserUpdateManyWithoutManagerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutManagerRequestsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  managerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  units?: Prisma.UnitUncheckedUpdateManyWithoutUserNestedInput
+  driverRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutDriverNestedInput
+  fuelLogs?: Prisma.FuelLogUncheckedUpdateManyWithoutUserNestedInput
+  drivers?: Prisma.UserUncheckedUpdateManyWithoutManagerNestedInput
+}
+
+export type UserCreateManyManagerInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  stellarPubKey?: string | null
+  role?: string
+  status?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type UserUpdateWithoutManagerInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  units?: Prisma.UnitUpdateManyWithoutUserNestedInput
+  driverRequests?: Prisma.FundRequestUpdateManyWithoutDriverNestedInput
+  managerRequests?: Prisma.FundRequestUpdateManyWithoutManagerNestedInput
+  fuelLogs?: Prisma.FuelLogUpdateManyWithoutUserNestedInput
+  drivers?: Prisma.UserUpdateManyWithoutManagerNestedInput
+}
+
+export type UserUncheckedUpdateWithoutManagerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
@@ -795,7 +1135,21 @@ export type UserUncheckedUpdateWithoutManagerRequestsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   units?: Prisma.UnitUncheckedUpdateManyWithoutUserNestedInput
   driverRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutDriverNestedInput
+  managerRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutManagerNestedInput
   fuelLogs?: Prisma.FuelLogUncheckedUpdateManyWithoutUserNestedInput
+  drivers?: Prisma.UserUncheckedUpdateManyWithoutManagerNestedInput
+}
+
+export type UserUncheckedUpdateManyWithoutManagerInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 
@@ -808,6 +1162,7 @@ export type UserCountOutputType = {
   driverRequests: number
   managerRequests: number
   fuelLogs: number
+  drivers: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -815,6 +1170,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   driverRequests?: boolean | UserCountOutputTypeCountDriverRequestsArgs
   managerRequests?: boolean | UserCountOutputTypeCountManagerRequestsArgs
   fuelLogs?: boolean | UserCountOutputTypeCountFuelLogsArgs
+  drivers?: boolean | UserCountOutputTypeCountDriversArgs
 }
 
 /**
@@ -855,6 +1211,13 @@ export type UserCountOutputTypeCountFuelLogsArgs<ExtArgs extends runtime.Types.E
   where?: Prisma.FuelLogWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountDriversArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.UserWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -864,12 +1227,15 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   stellarPubKey?: boolean
   role?: boolean
   status?: boolean
+  managerId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   units?: boolean | Prisma.User$unitsArgs<ExtArgs>
   driverRequests?: boolean | Prisma.User$driverRequestsArgs<ExtArgs>
   managerRequests?: boolean | Prisma.User$managerRequestsArgs<ExtArgs>
   fuelLogs?: boolean | Prisma.User$fuelLogsArgs<ExtArgs>
+  manager?: boolean | Prisma.User$managerArgs<ExtArgs>
+  drivers?: boolean | Prisma.User$driversArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -881,8 +1247,10 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   stellarPubKey?: boolean
   role?: boolean
   status?: boolean
+  managerId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  manager?: boolean | Prisma.User$managerArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -893,8 +1261,10 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   stellarPubKey?: boolean
   role?: boolean
   status?: boolean
+  managerId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  manager?: boolean | Prisma.User$managerArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectScalar = {
@@ -905,20 +1275,27 @@ export type UserSelectScalar = {
   stellarPubKey?: boolean
   role?: boolean
   status?: boolean
+  managerId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "phone" | "stellarPubKey" | "role" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "phone" | "stellarPubKey" | "role" | "status" | "managerId" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   units?: boolean | Prisma.User$unitsArgs<ExtArgs>
   driverRequests?: boolean | Prisma.User$driverRequestsArgs<ExtArgs>
   managerRequests?: boolean | Prisma.User$managerRequestsArgs<ExtArgs>
   fuelLogs?: boolean | Prisma.User$fuelLogsArgs<ExtArgs>
+  manager?: boolean | Prisma.User$managerArgs<ExtArgs>
+  drivers?: boolean | Prisma.User$driversArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
-export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
-export type UserIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
+export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  manager?: boolean | Prisma.User$managerArgs<ExtArgs>
+}
+export type UserIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  manager?: boolean | Prisma.User$managerArgs<ExtArgs>
+}
 
 export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "User"
@@ -927,6 +1304,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     driverRequests: Prisma.$FundRequestPayload<ExtArgs>[]
     managerRequests: Prisma.$FundRequestPayload<ExtArgs>[]
     fuelLogs: Prisma.$FuelLogPayload<ExtArgs>[]
+    manager: Prisma.$UserPayload<ExtArgs> | null
+    drivers: Prisma.$UserPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -936,6 +1315,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     stellarPubKey: string | null
     role: string
     status: string
+    managerId: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["user"]>
@@ -1336,6 +1716,8 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   driverRequests<T extends Prisma.User$driverRequestsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$driverRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FundRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   managerRequests<T extends Prisma.User$managerRequestsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$managerRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FundRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   fuelLogs<T extends Prisma.User$fuelLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$fuelLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FuelLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  manager<T extends Prisma.User$managerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$managerArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  drivers<T extends Prisma.User$driversArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$driversArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1372,6 +1754,7 @@ export interface UserFieldRefs {
   readonly stellarPubKey: Prisma.FieldRef<"User", 'String'>
   readonly role: Prisma.FieldRef<"User", 'String'>
   readonly status: Prisma.FieldRef<"User", 'String'>
+  readonly managerId: Prisma.FieldRef<"User", 'String'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
 }
@@ -1628,6 +2011,10 @@ export type UserCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensions
    */
   data: Prisma.UserCreateManyInput | Prisma.UserCreateManyInput[]
   skipDuplicates?: boolean
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserIncludeCreateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1698,6 +2085,10 @@ export type UserUpdateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensions
    * Limit how many Users to update.
    */
   limit?: number
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserIncludeUpdateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1860,6 +2251,49 @@ export type User$fuelLogsArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   take?: number
   skip?: number
   distinct?: Prisma.FuelLogScalarFieldEnum | Prisma.FuelLogScalarFieldEnum[]
+}
+
+/**
+ * User.manager
+ */
+export type User$managerArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
+}
+
+/**
+ * User.drivers
+ */
+export type User$driversArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
+  orderBy?: Prisma.UserOrderByWithRelationInput | Prisma.UserOrderByWithRelationInput[]
+  cursor?: Prisma.UserWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.UserScalarFieldEnum | Prisma.UserScalarFieldEnum[]
 }
 
 /**

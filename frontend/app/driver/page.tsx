@@ -90,7 +90,7 @@ export default function DriverPage() {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #0d1b2a 0%, #1b263b 100%)' }}>
         <div className="flex flex-col items-center gap-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" style={{ borderTopColor: '#F58220' }} />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" style={{ borderTopColor: '#22c55e' }} />
           <p className="text-sm text-white/50">Loading balance...</p>
         </div>
       </div>
@@ -217,7 +217,7 @@ export default function DriverPage() {
 
             <Button
               className="w-full py-6 text-lg font-semibold"
-              style={{ background: '#F58220' }}
+              style={{ background: '#22c55e' }}
               onClick={() => router.push('/connect')}
             >
               <Wallet className="mr-2 h-5 w-5" />

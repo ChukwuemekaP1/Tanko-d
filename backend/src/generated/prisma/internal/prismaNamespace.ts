@@ -388,6 +388,7 @@ export const ModelName = {
   Unit: 'Unit',
   FuelLog: 'FuelLog',
   FundRequest: 'FundRequest',
+  GasStation: 'GasStation',
   EscrowConfig: 'EscrowConfig',
   EscrowMilestone: 'EscrowMilestone'
 } as const
@@ -405,7 +406,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "unit" | "fuelLog" | "fundRequest" | "escrowConfig" | "escrowMilestone"
+    modelProps: "user" | "unit" | "fuelLog" | "fundRequest" | "gasStation" | "escrowConfig" | "escrowMilestone"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -705,6 +706,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    GasStation: {
+      payload: Prisma.$GasStationPayload<ExtArgs>
+      fields: Prisma.GasStationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.GasStationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GasStationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.GasStationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GasStationPayload>
+        }
+        findFirst: {
+          args: Prisma.GasStationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GasStationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.GasStationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GasStationPayload>
+        }
+        findMany: {
+          args: Prisma.GasStationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GasStationPayload>[]
+        }
+        create: {
+          args: Prisma.GasStationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GasStationPayload>
+        }
+        createMany: {
+          args: Prisma.GasStationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.GasStationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GasStationPayload>[]
+        }
+        delete: {
+          args: Prisma.GasStationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GasStationPayload>
+        }
+        update: {
+          args: Prisma.GasStationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GasStationPayload>
+        }
+        deleteMany: {
+          args: Prisma.GasStationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.GasStationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.GasStationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GasStationPayload>[]
+        }
+        upsert: {
+          args: Prisma.GasStationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GasStationPayload>
+        }
+        aggregate: {
+          args: Prisma.GasStationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateGasStation>
+        }
+        groupBy: {
+          args: Prisma.GasStationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GasStationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.GasStationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GasStationCountAggregateOutputType> | number
+        }
+      }
+    }
     EscrowConfig: {
       payload: Prisma.$EscrowConfigPayload<ExtArgs>
       fields: Prisma.EscrowConfigFieldRefs
@@ -900,6 +975,7 @@ export const UserScalarFieldEnum = {
   stellarPubKey: 'stellarPubKey',
   role: 'role',
   status: 'status',
+  managerId: 'managerId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -963,6 +1039,24 @@ export const FundRequestScalarFieldEnum = {
 } as const
 
 export type FundRequestScalarFieldEnum = (typeof FundRequestScalarFieldEnum)[keyof typeof FundRequestScalarFieldEnum]
+
+
+export const GasStationScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  address: 'address',
+  city: 'city',
+  state: 'state',
+  lat: 'lat',
+  lng: 'lng',
+  hours: 'hours',
+  services: 'services',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type GasStationScalarFieldEnum = (typeof GasStationScalarFieldEnum)[keyof typeof GasStationScalarFieldEnum]
 
 
 export const EscrowConfigScalarFieldEnum = {
@@ -1179,6 +1273,7 @@ export type GlobalOmitConfig = {
   unit?: Prisma.UnitOmit
   fuelLog?: Prisma.FuelLogOmit
   fundRequest?: Prisma.FundRequestOmit
+  gasStation?: Prisma.GasStationOmit
   escrowConfig?: Prisma.EscrowConfigOmit
   escrowMilestone?: Prisma.EscrowMilestoneOmit
 }

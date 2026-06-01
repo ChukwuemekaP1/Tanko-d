@@ -13,6 +13,10 @@ import unitRoutes from './routes/unit.routes.js';
 import fuelLogRoutes from './routes/fuelLog.routes.js';
 import configRoutes from './routes/config.routes.js';
 import stationRoutes from './routes/station.routes.js';
+import fs from "fs";
+import yaml from "js-yaml"
+import path from "path";
+import { ZodError } from 'zod';
 
 const app = express();
 
@@ -37,6 +41,13 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
+app.get("/api/v1/openapi.json", (req, res) => {
+  const filePath = path.join(process.cwd(), "docs/openapi.yaml");
+  const file = fs.readFileSync(filePath, "utf-8");
+  const json = yaml.load(file);
+  res.json(json);
+});
+
 app.use('/api/v1', escrowRoutes);
 app.use('/api/v1', walletRoutes);
 app.use('/api/v1', fundsRoutes);
@@ -55,8 +66,21 @@ app.use((req: Request, res: Response) => {
   });
 });
 
-app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
-  console.error('Unhandled error:', err);
+
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  if (err instanceof ZodError) {
+    return res.status(400).json({
+      success: false,
+      error: 'Validation failed',
+      details: err.errors.map((e) => ({
+        field: e.path.join('.'),
+        message: e.message,
+      })),
+    });
+  }
+
+  console.error(err);
+
   res.status(500).json({
     success: false,
     error: config.env === 'development' ? err.message : 'Internal server error',
