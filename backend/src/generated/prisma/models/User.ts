@@ -32,6 +32,7 @@ export type UserMinAggregateOutputType = {
   stellarPubKey: string | null
   role: string | null
   status: string | null
+  kycStatus: string | null
   managerId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -45,6 +46,7 @@ export type UserMaxAggregateOutputType = {
   stellarPubKey: string | null
   role: string | null
   status: string | null
+  kycStatus: string | null
   managerId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -58,6 +60,7 @@ export type UserCountAggregateOutputType = {
   stellarPubKey: number
   role: number
   status: number
+  kycStatus: number
   managerId: number
   createdAt: number
   updatedAt: number
@@ -73,6 +76,7 @@ export type UserMinAggregateInputType = {
   stellarPubKey?: true
   role?: true
   status?: true
+  kycStatus?: true
   managerId?: true
   createdAt?: true
   updatedAt?: true
@@ -86,6 +90,7 @@ export type UserMaxAggregateInputType = {
   stellarPubKey?: true
   role?: true
   status?: true
+  kycStatus?: true
   managerId?: true
   createdAt?: true
   updatedAt?: true
@@ -99,6 +104,7 @@ export type UserCountAggregateInputType = {
   stellarPubKey?: true
   role?: true
   status?: true
+  kycStatus?: true
   managerId?: true
   createdAt?: true
   updatedAt?: true
@@ -185,6 +191,7 @@ export type UserGroupByOutputType = {
   stellarPubKey: string | null
   role: string
   status: string
+  kycStatus: string
   managerId: string | null
   createdAt: Date
   updatedAt: Date
@@ -219,6 +226,7 @@ export type UserWhereInput = {
   stellarPubKey?: Prisma.StringNullableFilter<"User"> | string | null
   role?: Prisma.StringFilter<"User"> | string
   status?: Prisma.StringFilter<"User"> | string
+  kycStatus?: Prisma.StringFilter<"User"> | string
   managerId?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -226,6 +234,7 @@ export type UserWhereInput = {
   driverRequests?: Prisma.FundRequestListRelationFilter
   managerRequests?: Prisma.FundRequestListRelationFilter
   fuelLogs?: Prisma.FuelLogListRelationFilter
+  driverKyc?: Prisma.XOR<Prisma.DriverKycNullableScalarRelationFilter, Prisma.DriverKycWhereInput> | null
   manager?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   drivers?: Prisma.UserListRelationFilter
 }
@@ -238,6 +247,7 @@ export type UserOrderByWithRelationInput = {
   stellarPubKey?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  kycStatus?: Prisma.SortOrder
   managerId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -245,6 +255,7 @@ export type UserOrderByWithRelationInput = {
   driverRequests?: Prisma.FundRequestOrderByRelationAggregateInput
   managerRequests?: Prisma.FundRequestOrderByRelationAggregateInput
   fuelLogs?: Prisma.FuelLogOrderByRelationAggregateInput
+  driverKyc?: Prisma.DriverKycOrderByWithRelationInput
   manager?: Prisma.UserOrderByWithRelationInput
   drivers?: Prisma.UserOrderByRelationAggregateInput
 }
@@ -260,6 +271,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   phone?: Prisma.StringNullableFilter<"User"> | string | null
   role?: Prisma.StringFilter<"User"> | string
   status?: Prisma.StringFilter<"User"> | string
+  kycStatus?: Prisma.StringFilter<"User"> | string
   managerId?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -267,6 +279,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   driverRequests?: Prisma.FundRequestListRelationFilter
   managerRequests?: Prisma.FundRequestListRelationFilter
   fuelLogs?: Prisma.FuelLogListRelationFilter
+  driverKyc?: Prisma.XOR<Prisma.DriverKycNullableScalarRelationFilter, Prisma.DriverKycWhereInput> | null
   manager?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   drivers?: Prisma.UserListRelationFilter
 }, "id" | "email" | "stellarPubKey">
@@ -279,6 +292,7 @@ export type UserOrderByWithAggregationInput = {
   stellarPubKey?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  kycStatus?: Prisma.SortOrder
   managerId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -298,6 +312,7 @@ export type UserScalarWhereWithAggregatesInput = {
   stellarPubKey?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   role?: Prisma.StringWithAggregatesFilter<"User"> | string
   status?: Prisma.StringWithAggregatesFilter<"User"> | string
+  kycStatus?: Prisma.StringWithAggregatesFilter<"User"> | string
   managerId?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -311,12 +326,14 @@ export type UserCreateInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  kycStatus?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   units?: Prisma.UnitCreateNestedManyWithoutUserInput
   driverRequests?: Prisma.FundRequestCreateNestedManyWithoutDriverInput
   managerRequests?: Prisma.FundRequestCreateNestedManyWithoutManagerInput
   fuelLogs?: Prisma.FuelLogCreateNestedManyWithoutUserInput
+  driverKyc?: Prisma.DriverKycCreateNestedOneWithoutUserInput
   manager?: Prisma.UserCreateNestedOneWithoutDriversInput
   drivers?: Prisma.UserCreateNestedManyWithoutManagerInput
 }
@@ -329,6 +346,7 @@ export type UserUncheckedCreateInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  kycStatus?: string
   managerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -336,6 +354,7 @@ export type UserUncheckedCreateInput = {
   driverRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutDriverInput
   managerRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutManagerInput
   fuelLogs?: Prisma.FuelLogUncheckedCreateNestedManyWithoutUserInput
+  driverKyc?: Prisma.DriverKycUncheckedCreateNestedOneWithoutUserInput
   drivers?: Prisma.UserUncheckedCreateNestedManyWithoutManagerInput
 }
 
@@ -347,12 +366,14 @@ export type UserUpdateInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  kycStatus?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   units?: Prisma.UnitUpdateManyWithoutUserNestedInput
   driverRequests?: Prisma.FundRequestUpdateManyWithoutDriverNestedInput
   managerRequests?: Prisma.FundRequestUpdateManyWithoutManagerNestedInput
   fuelLogs?: Prisma.FuelLogUpdateManyWithoutUserNestedInput
+  driverKyc?: Prisma.DriverKycUpdateOneWithoutUserNestedInput
   manager?: Prisma.UserUpdateOneWithoutDriversNestedInput
   drivers?: Prisma.UserUpdateManyWithoutManagerNestedInput
 }
@@ -365,6 +386,7 @@ export type UserUncheckedUpdateInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  kycStatus?: Prisma.StringFieldUpdateOperationsInput | string
   managerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -372,6 +394,7 @@ export type UserUncheckedUpdateInput = {
   driverRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutDriverNestedInput
   managerRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutManagerNestedInput
   fuelLogs?: Prisma.FuelLogUncheckedUpdateManyWithoutUserNestedInput
+  driverKyc?: Prisma.DriverKycUncheckedUpdateOneWithoutUserNestedInput
   drivers?: Prisma.UserUncheckedUpdateManyWithoutManagerNestedInput
 }
 
@@ -383,6 +406,7 @@ export type UserCreateManyInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  kycStatus?: string
   managerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -396,6 +420,7 @@ export type UserUpdateManyMutationInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  kycStatus?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -408,6 +433,7 @@ export type UserUncheckedUpdateManyInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  kycStatus?: Prisma.StringFieldUpdateOperationsInput | string
   managerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -436,6 +462,7 @@ export type UserCountOrderByAggregateInput = {
   stellarPubKey?: Prisma.SortOrder
   role?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  kycStatus?: Prisma.SortOrder
   managerId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -449,6 +476,7 @@ export type UserMaxOrderByAggregateInput = {
   stellarPubKey?: Prisma.SortOrder
   role?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  kycStatus?: Prisma.SortOrder
   managerId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -462,6 +490,7 @@ export type UserMinOrderByAggregateInput = {
   stellarPubKey?: Prisma.SortOrder
   role?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  kycStatus?: Prisma.SortOrder
   managerId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -542,6 +571,20 @@ export type UserUncheckedUpdateManyWithoutManagerNestedInput = {
   deleteMany?: Prisma.UserScalarWhereInput | Prisma.UserScalarWhereInput[]
 }
 
+export type UserCreateNestedOneWithoutDriverKycInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDriverKycInput, Prisma.UserUncheckedCreateWithoutDriverKycInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDriverKycInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutDriverKycNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDriverKycInput, Prisma.UserUncheckedCreateWithoutDriverKycInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDriverKycInput
+  upsert?: Prisma.UserUpsertWithoutDriverKycInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDriverKycInput, Prisma.UserUpdateWithoutDriverKycInput>, Prisma.UserUncheckedUpdateWithoutDriverKycInput>
+}
+
 export type UserCreateNestedOneWithoutUnitsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutUnitsInput, Prisma.UserUncheckedCreateWithoutUnitsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutUnitsInput
@@ -606,12 +649,14 @@ export type UserCreateWithoutDriversInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  kycStatus?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   units?: Prisma.UnitCreateNestedManyWithoutUserInput
   driverRequests?: Prisma.FundRequestCreateNestedManyWithoutDriverInput
   managerRequests?: Prisma.FundRequestCreateNestedManyWithoutManagerInput
   fuelLogs?: Prisma.FuelLogCreateNestedManyWithoutUserInput
+  driverKyc?: Prisma.DriverKycCreateNestedOneWithoutUserInput
   manager?: Prisma.UserCreateNestedOneWithoutDriversInput
 }
 
@@ -623,6 +668,7 @@ export type UserUncheckedCreateWithoutDriversInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  kycStatus?: string
   managerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -630,6 +676,7 @@ export type UserUncheckedCreateWithoutDriversInput = {
   driverRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutDriverInput
   managerRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutManagerInput
   fuelLogs?: Prisma.FuelLogUncheckedCreateNestedManyWithoutUserInput
+  driverKyc?: Prisma.DriverKycUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutDriversInput = {
@@ -645,12 +692,14 @@ export type UserCreateWithoutManagerInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  kycStatus?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   units?: Prisma.UnitCreateNestedManyWithoutUserInput
   driverRequests?: Prisma.FundRequestCreateNestedManyWithoutDriverInput
   managerRequests?: Prisma.FundRequestCreateNestedManyWithoutManagerInput
   fuelLogs?: Prisma.FuelLogCreateNestedManyWithoutUserInput
+  driverKyc?: Prisma.DriverKycCreateNestedOneWithoutUserInput
   drivers?: Prisma.UserCreateNestedManyWithoutManagerInput
 }
 
@@ -662,12 +711,14 @@ export type UserUncheckedCreateWithoutManagerInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  kycStatus?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   units?: Prisma.UnitUncheckedCreateNestedManyWithoutUserInput
   driverRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutDriverInput
   managerRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutManagerInput
   fuelLogs?: Prisma.FuelLogUncheckedCreateNestedManyWithoutUserInput
+  driverKyc?: Prisma.DriverKycUncheckedCreateNestedOneWithoutUserInput
   drivers?: Prisma.UserUncheckedCreateNestedManyWithoutManagerInput
 }
 
@@ -700,12 +751,14 @@ export type UserUpdateWithoutDriversInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  kycStatus?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   units?: Prisma.UnitUpdateManyWithoutUserNestedInput
   driverRequests?: Prisma.FundRequestUpdateManyWithoutDriverNestedInput
   managerRequests?: Prisma.FundRequestUpdateManyWithoutManagerNestedInput
   fuelLogs?: Prisma.FuelLogUpdateManyWithoutUserNestedInput
+  driverKyc?: Prisma.DriverKycUpdateOneWithoutUserNestedInput
   manager?: Prisma.UserUpdateOneWithoutDriversNestedInput
 }
 
@@ -717,6 +770,7 @@ export type UserUncheckedUpdateWithoutDriversInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  kycStatus?: Prisma.StringFieldUpdateOperationsInput | string
   managerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -724,6 +778,7 @@ export type UserUncheckedUpdateWithoutDriversInput = {
   driverRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutDriverNestedInput
   managerRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutManagerNestedInput
   fuelLogs?: Prisma.FuelLogUncheckedUpdateManyWithoutUserNestedInput
+  driverKyc?: Prisma.DriverKycUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserUpsertWithWhereUniqueWithoutManagerInput = {
@@ -753,9 +808,102 @@ export type UserScalarWhereInput = {
   stellarPubKey?: Prisma.StringNullableFilter<"User"> | string | null
   role?: Prisma.StringFilter<"User"> | string
   status?: Prisma.StringFilter<"User"> | string
+  kycStatus?: Prisma.StringFilter<"User"> | string
   managerId?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
+}
+
+export type UserCreateWithoutDriverKycInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  stellarPubKey?: string | null
+  role?: string
+  status?: string
+  kycStatus?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  units?: Prisma.UnitCreateNestedManyWithoutUserInput
+  driverRequests?: Prisma.FundRequestCreateNestedManyWithoutDriverInput
+  managerRequests?: Prisma.FundRequestCreateNestedManyWithoutManagerInput
+  fuelLogs?: Prisma.FuelLogCreateNestedManyWithoutUserInput
+  manager?: Prisma.UserCreateNestedOneWithoutDriversInput
+  drivers?: Prisma.UserCreateNestedManyWithoutManagerInput
+}
+
+export type UserUncheckedCreateWithoutDriverKycInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  stellarPubKey?: string | null
+  role?: string
+  status?: string
+  kycStatus?: string
+  managerId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  units?: Prisma.UnitUncheckedCreateNestedManyWithoutUserInput
+  driverRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutDriverInput
+  managerRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutManagerInput
+  fuelLogs?: Prisma.FuelLogUncheckedCreateNestedManyWithoutUserInput
+  drivers?: Prisma.UserUncheckedCreateNestedManyWithoutManagerInput
+}
+
+export type UserCreateOrConnectWithoutDriverKycInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutDriverKycInput, Prisma.UserUncheckedCreateWithoutDriverKycInput>
+}
+
+export type UserUpsertWithoutDriverKycInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutDriverKycInput, Prisma.UserUncheckedUpdateWithoutDriverKycInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutDriverKycInput, Prisma.UserUncheckedCreateWithoutDriverKycInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutDriverKycInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutDriverKycInput, Prisma.UserUncheckedUpdateWithoutDriverKycInput>
+}
+
+export type UserUpdateWithoutDriverKycInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  kycStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  units?: Prisma.UnitUpdateManyWithoutUserNestedInput
+  driverRequests?: Prisma.FundRequestUpdateManyWithoutDriverNestedInput
+  managerRequests?: Prisma.FundRequestUpdateManyWithoutManagerNestedInput
+  fuelLogs?: Prisma.FuelLogUpdateManyWithoutUserNestedInput
+  manager?: Prisma.UserUpdateOneWithoutDriversNestedInput
+  drivers?: Prisma.UserUpdateManyWithoutManagerNestedInput
+}
+
+export type UserUncheckedUpdateWithoutDriverKycInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  kycStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  managerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  units?: Prisma.UnitUncheckedUpdateManyWithoutUserNestedInput
+  driverRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutDriverNestedInput
+  managerRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutManagerNestedInput
+  fuelLogs?: Prisma.FuelLogUncheckedUpdateManyWithoutUserNestedInput
+  drivers?: Prisma.UserUncheckedUpdateManyWithoutManagerNestedInput
 }
 
 export type UserCreateWithoutUnitsInput = {
@@ -766,11 +914,13 @@ export type UserCreateWithoutUnitsInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  kycStatus?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   driverRequests?: Prisma.FundRequestCreateNestedManyWithoutDriverInput
   managerRequests?: Prisma.FundRequestCreateNestedManyWithoutManagerInput
   fuelLogs?: Prisma.FuelLogCreateNestedManyWithoutUserInput
+  driverKyc?: Prisma.DriverKycCreateNestedOneWithoutUserInput
   manager?: Prisma.UserCreateNestedOneWithoutDriversInput
   drivers?: Prisma.UserCreateNestedManyWithoutManagerInput
 }
@@ -783,12 +933,14 @@ export type UserUncheckedCreateWithoutUnitsInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  kycStatus?: string
   managerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   driverRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutDriverInput
   managerRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutManagerInput
   fuelLogs?: Prisma.FuelLogUncheckedCreateNestedManyWithoutUserInput
+  driverKyc?: Prisma.DriverKycUncheckedCreateNestedOneWithoutUserInput
   drivers?: Prisma.UserUncheckedCreateNestedManyWithoutManagerInput
 }
 
@@ -816,11 +968,13 @@ export type UserUpdateWithoutUnitsInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  kycStatus?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   driverRequests?: Prisma.FundRequestUpdateManyWithoutDriverNestedInput
   managerRequests?: Prisma.FundRequestUpdateManyWithoutManagerNestedInput
   fuelLogs?: Prisma.FuelLogUpdateManyWithoutUserNestedInput
+  driverKyc?: Prisma.DriverKycUpdateOneWithoutUserNestedInput
   manager?: Prisma.UserUpdateOneWithoutDriversNestedInput
   drivers?: Prisma.UserUpdateManyWithoutManagerNestedInput
 }
@@ -833,12 +987,14 @@ export type UserUncheckedUpdateWithoutUnitsInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  kycStatus?: Prisma.StringFieldUpdateOperationsInput | string
   managerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   driverRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutDriverNestedInput
   managerRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutManagerNestedInput
   fuelLogs?: Prisma.FuelLogUncheckedUpdateManyWithoutUserNestedInput
+  driverKyc?: Prisma.DriverKycUncheckedUpdateOneWithoutUserNestedInput
   drivers?: Prisma.UserUncheckedUpdateManyWithoutManagerNestedInput
 }
 
@@ -850,11 +1006,13 @@ export type UserCreateWithoutFuelLogsInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  kycStatus?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   units?: Prisma.UnitCreateNestedManyWithoutUserInput
   driverRequests?: Prisma.FundRequestCreateNestedManyWithoutDriverInput
   managerRequests?: Prisma.FundRequestCreateNestedManyWithoutManagerInput
+  driverKyc?: Prisma.DriverKycCreateNestedOneWithoutUserInput
   manager?: Prisma.UserCreateNestedOneWithoutDriversInput
   drivers?: Prisma.UserCreateNestedManyWithoutManagerInput
 }
@@ -867,12 +1025,14 @@ export type UserUncheckedCreateWithoutFuelLogsInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  kycStatus?: string
   managerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   units?: Prisma.UnitUncheckedCreateNestedManyWithoutUserInput
   driverRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutDriverInput
   managerRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutManagerInput
+  driverKyc?: Prisma.DriverKycUncheckedCreateNestedOneWithoutUserInput
   drivers?: Prisma.UserUncheckedCreateNestedManyWithoutManagerInput
 }
 
@@ -900,11 +1060,13 @@ export type UserUpdateWithoutFuelLogsInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  kycStatus?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   units?: Prisma.UnitUpdateManyWithoutUserNestedInput
   driverRequests?: Prisma.FundRequestUpdateManyWithoutDriverNestedInput
   managerRequests?: Prisma.FundRequestUpdateManyWithoutManagerNestedInput
+  driverKyc?: Prisma.DriverKycUpdateOneWithoutUserNestedInput
   manager?: Prisma.UserUpdateOneWithoutDriversNestedInput
   drivers?: Prisma.UserUpdateManyWithoutManagerNestedInput
 }
@@ -917,12 +1079,14 @@ export type UserUncheckedUpdateWithoutFuelLogsInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  kycStatus?: Prisma.StringFieldUpdateOperationsInput | string
   managerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   units?: Prisma.UnitUncheckedUpdateManyWithoutUserNestedInput
   driverRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutDriverNestedInput
   managerRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutManagerNestedInput
+  driverKyc?: Prisma.DriverKycUncheckedUpdateOneWithoutUserNestedInput
   drivers?: Prisma.UserUncheckedUpdateManyWithoutManagerNestedInput
 }
 
@@ -934,11 +1098,13 @@ export type UserCreateWithoutDriverRequestsInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  kycStatus?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   units?: Prisma.UnitCreateNestedManyWithoutUserInput
   managerRequests?: Prisma.FundRequestCreateNestedManyWithoutManagerInput
   fuelLogs?: Prisma.FuelLogCreateNestedManyWithoutUserInput
+  driverKyc?: Prisma.DriverKycCreateNestedOneWithoutUserInput
   manager?: Prisma.UserCreateNestedOneWithoutDriversInput
   drivers?: Prisma.UserCreateNestedManyWithoutManagerInput
 }
@@ -951,12 +1117,14 @@ export type UserUncheckedCreateWithoutDriverRequestsInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  kycStatus?: string
   managerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   units?: Prisma.UnitUncheckedCreateNestedManyWithoutUserInput
   managerRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutManagerInput
   fuelLogs?: Prisma.FuelLogUncheckedCreateNestedManyWithoutUserInput
+  driverKyc?: Prisma.DriverKycUncheckedCreateNestedOneWithoutUserInput
   drivers?: Prisma.UserUncheckedCreateNestedManyWithoutManagerInput
 }
 
@@ -973,11 +1141,13 @@ export type UserCreateWithoutManagerRequestsInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  kycStatus?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   units?: Prisma.UnitCreateNestedManyWithoutUserInput
   driverRequests?: Prisma.FundRequestCreateNestedManyWithoutDriverInput
   fuelLogs?: Prisma.FuelLogCreateNestedManyWithoutUserInput
+  driverKyc?: Prisma.DriverKycCreateNestedOneWithoutUserInput
   manager?: Prisma.UserCreateNestedOneWithoutDriversInput
   drivers?: Prisma.UserCreateNestedManyWithoutManagerInput
 }
@@ -990,12 +1160,14 @@ export type UserUncheckedCreateWithoutManagerRequestsInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  kycStatus?: string
   managerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   units?: Prisma.UnitUncheckedCreateNestedManyWithoutUserInput
   driverRequests?: Prisma.FundRequestUncheckedCreateNestedManyWithoutDriverInput
   fuelLogs?: Prisma.FuelLogUncheckedCreateNestedManyWithoutUserInput
+  driverKyc?: Prisma.DriverKycUncheckedCreateNestedOneWithoutUserInput
   drivers?: Prisma.UserUncheckedCreateNestedManyWithoutManagerInput
 }
 
@@ -1023,11 +1195,13 @@ export type UserUpdateWithoutDriverRequestsInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  kycStatus?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   units?: Prisma.UnitUpdateManyWithoutUserNestedInput
   managerRequests?: Prisma.FundRequestUpdateManyWithoutManagerNestedInput
   fuelLogs?: Prisma.FuelLogUpdateManyWithoutUserNestedInput
+  driverKyc?: Prisma.DriverKycUpdateOneWithoutUserNestedInput
   manager?: Prisma.UserUpdateOneWithoutDriversNestedInput
   drivers?: Prisma.UserUpdateManyWithoutManagerNestedInput
 }
@@ -1040,12 +1214,14 @@ export type UserUncheckedUpdateWithoutDriverRequestsInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  kycStatus?: Prisma.StringFieldUpdateOperationsInput | string
   managerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   units?: Prisma.UnitUncheckedUpdateManyWithoutUserNestedInput
   managerRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutManagerNestedInput
   fuelLogs?: Prisma.FuelLogUncheckedUpdateManyWithoutUserNestedInput
+  driverKyc?: Prisma.DriverKycUncheckedUpdateOneWithoutUserNestedInput
   drivers?: Prisma.UserUncheckedUpdateManyWithoutManagerNestedInput
 }
 
@@ -1068,11 +1244,13 @@ export type UserUpdateWithoutManagerRequestsInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  kycStatus?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   units?: Prisma.UnitUpdateManyWithoutUserNestedInput
   driverRequests?: Prisma.FundRequestUpdateManyWithoutDriverNestedInput
   fuelLogs?: Prisma.FuelLogUpdateManyWithoutUserNestedInput
+  driverKyc?: Prisma.DriverKycUpdateOneWithoutUserNestedInput
   manager?: Prisma.UserUpdateOneWithoutDriversNestedInput
   drivers?: Prisma.UserUpdateManyWithoutManagerNestedInput
 }
@@ -1085,12 +1263,14 @@ export type UserUncheckedUpdateWithoutManagerRequestsInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  kycStatus?: Prisma.StringFieldUpdateOperationsInput | string
   managerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   units?: Prisma.UnitUncheckedUpdateManyWithoutUserNestedInput
   driverRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutDriverNestedInput
   fuelLogs?: Prisma.FuelLogUncheckedUpdateManyWithoutUserNestedInput
+  driverKyc?: Prisma.DriverKycUncheckedUpdateOneWithoutUserNestedInput
   drivers?: Prisma.UserUncheckedUpdateManyWithoutManagerNestedInput
 }
 
@@ -1102,6 +1282,7 @@ export type UserCreateManyManagerInput = {
   stellarPubKey?: string | null
   role?: string
   status?: string
+  kycStatus?: string
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1114,12 +1295,14 @@ export type UserUpdateWithoutManagerInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  kycStatus?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   units?: Prisma.UnitUpdateManyWithoutUserNestedInput
   driverRequests?: Prisma.FundRequestUpdateManyWithoutDriverNestedInput
   managerRequests?: Prisma.FundRequestUpdateManyWithoutManagerNestedInput
   fuelLogs?: Prisma.FuelLogUpdateManyWithoutUserNestedInput
+  driverKyc?: Prisma.DriverKycUpdateOneWithoutUserNestedInput
   drivers?: Prisma.UserUpdateManyWithoutManagerNestedInput
 }
 
@@ -1131,12 +1314,14 @@ export type UserUncheckedUpdateWithoutManagerInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  kycStatus?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   units?: Prisma.UnitUncheckedUpdateManyWithoutUserNestedInput
   driverRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutDriverNestedInput
   managerRequests?: Prisma.FundRequestUncheckedUpdateManyWithoutManagerNestedInput
   fuelLogs?: Prisma.FuelLogUncheckedUpdateManyWithoutUserNestedInput
+  driverKyc?: Prisma.DriverKycUncheckedUpdateOneWithoutUserNestedInput
   drivers?: Prisma.UserUncheckedUpdateManyWithoutManagerNestedInput
 }
 
@@ -1148,6 +1333,7 @@ export type UserUncheckedUpdateManyWithoutManagerInput = {
   stellarPubKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  kycStatus?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1227,6 +1413,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   stellarPubKey?: boolean
   role?: boolean
   status?: boolean
+  kycStatus?: boolean
   managerId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1234,6 +1421,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   driverRequests?: boolean | Prisma.User$driverRequestsArgs<ExtArgs>
   managerRequests?: boolean | Prisma.User$managerRequestsArgs<ExtArgs>
   fuelLogs?: boolean | Prisma.User$fuelLogsArgs<ExtArgs>
+  driverKyc?: boolean | Prisma.User$driverKycArgs<ExtArgs>
   manager?: boolean | Prisma.User$managerArgs<ExtArgs>
   drivers?: boolean | Prisma.User$driversArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -1247,6 +1435,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   stellarPubKey?: boolean
   role?: boolean
   status?: boolean
+  kycStatus?: boolean
   managerId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1261,6 +1450,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   stellarPubKey?: boolean
   role?: boolean
   status?: boolean
+  kycStatus?: boolean
   managerId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1275,17 +1465,19 @@ export type UserSelectScalar = {
   stellarPubKey?: boolean
   role?: boolean
   status?: boolean
+  kycStatus?: boolean
   managerId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "phone" | "stellarPubKey" | "role" | "status" | "managerId" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "phone" | "stellarPubKey" | "role" | "status" | "kycStatus" | "managerId" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   units?: boolean | Prisma.User$unitsArgs<ExtArgs>
   driverRequests?: boolean | Prisma.User$driverRequestsArgs<ExtArgs>
   managerRequests?: boolean | Prisma.User$managerRequestsArgs<ExtArgs>
   fuelLogs?: boolean | Prisma.User$fuelLogsArgs<ExtArgs>
+  driverKyc?: boolean | Prisma.User$driverKycArgs<ExtArgs>
   manager?: boolean | Prisma.User$managerArgs<ExtArgs>
   drivers?: boolean | Prisma.User$driversArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -1304,6 +1496,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     driverRequests: Prisma.$FundRequestPayload<ExtArgs>[]
     managerRequests: Prisma.$FundRequestPayload<ExtArgs>[]
     fuelLogs: Prisma.$FuelLogPayload<ExtArgs>[]
+    driverKyc: Prisma.$DriverKycPayload<ExtArgs> | null
     manager: Prisma.$UserPayload<ExtArgs> | null
     drivers: Prisma.$UserPayload<ExtArgs>[]
   }
@@ -1315,6 +1508,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     stellarPubKey: string | null
     role: string
     status: string
+    kycStatus: string
     managerId: string | null
     createdAt: Date
     updatedAt: Date
@@ -1716,6 +1910,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   driverRequests<T extends Prisma.User$driverRequestsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$driverRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FundRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   managerRequests<T extends Prisma.User$managerRequestsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$managerRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FundRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   fuelLogs<T extends Prisma.User$fuelLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$fuelLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FuelLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  driverKyc<T extends Prisma.User$driverKycArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$driverKycArgs<ExtArgs>>): Prisma.Prisma__DriverKycClient<runtime.Types.Result.GetResult<Prisma.$DriverKycPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   manager<T extends Prisma.User$managerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$managerArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   drivers<T extends Prisma.User$driversArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$driversArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
@@ -1754,6 +1949,7 @@ export interface UserFieldRefs {
   readonly stellarPubKey: Prisma.FieldRef<"User", 'String'>
   readonly role: Prisma.FieldRef<"User", 'String'>
   readonly status: Prisma.FieldRef<"User", 'String'>
+  readonly kycStatus: Prisma.FieldRef<"User", 'String'>
   readonly managerId: Prisma.FieldRef<"User", 'String'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
@@ -2251,6 +2447,25 @@ export type User$fuelLogsArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   take?: number
   skip?: number
   distinct?: Prisma.FuelLogScalarFieldEnum | Prisma.FuelLogScalarFieldEnum[]
+}
+
+/**
+ * User.driverKyc
+ */
+export type User$driverKycArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the DriverKyc
+   */
+  select?: Prisma.DriverKycSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the DriverKyc
+   */
+  omit?: Prisma.DriverKycOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DriverKycInclude<ExtArgs> | null
+  where?: Prisma.DriverKycWhereInput
 }
 
 /**
