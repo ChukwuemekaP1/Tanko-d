@@ -104,6 +104,26 @@ app.listen(config.port, "0.0.0.0", () => {
 ║  API URL:    ${config.trustlessWork.apiUrl.substring(0, 48).padEnd(48)}║
 ╚══════════════════════════════════════════════════════════════╝
   `);
+
+  // Initialize Oracle service
+  try {
+    oracleCronService.start();
+  } catch (error) {
+    logger.error('Failed to start Oracle service', error);
+  }
+});
+
+// Handle graceful shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down gracefully');
+  oracleCronService.stop();
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT received, shutting down gracefully');
+  oracleCronService.stop();
+  process.exit(0);
 });
 
 export default app;
