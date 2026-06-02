@@ -14,6 +14,19 @@ import { toast } from "sonner"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001"
 
+// Dynamically import the map component with no SSR to avoid 'window is not defined' errors from Leaflet
+const StationsMap = dynamic(
+  () => import("@/components/maps/StationsMap"),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full items-center justify-center bg-muted/20">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+)
+
 interface GasStation {
   id: string
   name: string
@@ -114,6 +127,17 @@ export default function LocationsPage() {
   const mapStations = useMemo(
     () => filtered.map(toMapLocation).filter((station): station is StationMapLocation => Boolean(station)),
     [filtered]
+  )
+  const validStations = useMemo(() => getMappableStations(filtered), [filtered])
+  const coordinatesById = useMemo(
+    () =>
+      new Map(
+        getMappableStations(stations).map((station) => [
+          station.id,
+          { lat: station.lat, lng: station.lng },
+        ]),
+      ),
+    [stations],
   )
 
   useEffect(() => {
