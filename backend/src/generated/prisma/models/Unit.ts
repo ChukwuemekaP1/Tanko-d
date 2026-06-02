@@ -605,10 +605,6 @@ export type IntFieldUpdateOperationsInput = {
   divide?: number
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type FloatFieldUpdateOperationsInput = {
   set?: number
   increment?: number

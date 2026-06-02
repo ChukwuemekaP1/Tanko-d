@@ -7,12 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Loader2, Wallet, User, Users } from 'lucide-react'
 import { useAuth, UserRole } from '@/providers/auth-provider'
 import { TankoLogoMinimal } from '@/components/logo'
+import { WalletConnectModal } from '@/components/wallet/wallet-connect-modal'
 
 export default function LoginPage() {
   const router = useRouter()
-  const { address, isConnected, isConnecting, connect, disconnect, setRole, role } = useAuth()
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
+  const { address, isConnected, isConnecting, disconnect, setRole, role } = useAuth()
+  const [modalOpen, setModalOpen] = useState(false)
 
   useEffect(() => {
     if (isConnected && address && role) {
@@ -23,19 +23,6 @@ export default function LoginPage() {
       }
     }
   }, [isConnected, address, role, router])
-
-  const handleWalletConnect = async () => {
-    setIsLoading(true)
-    setError('')
-
-    try {
-      await connect()
-    } catch (err) {
-      setError('Error al conectar wallet. Asegúrate de tener Freighter instalado.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleRoleSelect = (selectedRole: UserRole) => {
     setRole(selectedRole)
@@ -53,7 +40,7 @@ export default function LoginPage() {
         <Card className="w-full max-w-md">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-            <p className="text-muted-foreground">Conectando con Freighter...</p>
+            <p className="text-muted-foreground">Conectando wallet...</p>
           </CardContent>
         </Card>
       </div>
@@ -142,24 +129,18 @@ export default function LoginPage() {
         </CardHeader>
         
         <CardContent className="space-y-4">
-          {error && (
-            <div className="mb-4 p-3 text-sm text-destructive bg-destructive/10 rounded-lg">
-              {error}
-            </div>
-          )}
-
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground text-center">
-              Conecta tu wallet Freighter para comenzar
+              Freighter, Albedo o WalletConnect en Stellar Testnet
             </p>
-            
+
             <Button
-              onClick={handleWalletConnect}
+              onClick={() => setModalOpen(true)}
               className="w-full"
-              disabled={isLoading}
+              disabled={isConnecting}
               size="lg"
             >
-              {isLoading ? (
+              {isConnecting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Conectando...
@@ -167,20 +148,13 @@ export default function LoginPage() {
               ) : (
                 <>
                   <Wallet className="mr-2 h-4 w-4" />
-                  Conectar con Freighter
+                  Conectar wallet
                 </>
               )}
             </Button>
           </div>
 
-          <div className="mt-6 p-4 rounded-lg bg-muted/50">
-            <h4 className="text-sm font-medium mb-2">Acerca de Freighter</h4>
-            <p className="text-xs text-muted-foreground">
-              Freighter es una wallet de Stellar que te permite interactuar con 
-              aplicaciones descentralizadas. Necesitarás crear una cuenta en 
-              Stellar Testnet para usar esta aplicación.
-            </p>
-          </div>
+          <WalletConnectModal open={modalOpen} onOpenChange={setModalOpen} />
         </CardContent>
       </Card>
     </div>

@@ -9,6 +9,7 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/User.js'
+export type * from './models/DriverKyc.js'
 export type * from './models/Unit.js'
 export type * from './models/FuelLog.js'
 export type * from './models/FundRequest.js'
