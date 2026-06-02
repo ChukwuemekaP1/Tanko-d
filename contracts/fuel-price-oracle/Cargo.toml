@@ -1,0 +1,20 @@
+[package]
+name = "fuel-price-oracle"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = "23.5.2"
+
+[dev-dependencies]
+soroban-sdk = { version = "23.5.2", features = ["testutils"] }
+ed25519-dalek = { version = "2", features = ["rand_core"] }
+sha2 = "0.10"
+
+[profile.release]
+opt-level = 3
+lto = true
+overflow-checks = true
