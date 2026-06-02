@@ -4,3 +4,4 @@ export { fuelLogRepository } from './fuelLog.repository.js';
 export { fundRequestRepository, type FundStatus } from './fundRequest.repository.js';
 export { escrowConfigRepository } from './escrowConfig.repository.js';
 export { escrowMilestoneRepository } from './escrowMilestone.repository.js';
+export { kycRepository } from './kyc.repository.js';

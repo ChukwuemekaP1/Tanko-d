@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/providers/auth-provider'
+import { WalletConnectModal } from '@/components/wallet/wallet-connect-modal'
 import { Wallet, ChevronDown, LogOut, Copy, CheckCheck, Loader2, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -11,8 +12,9 @@ interface WalletButtonProps {
 }
 
 export function WalletButton({ className }: WalletButtonProps) {
-  const { isConnected, isConnecting, address, connect, disconnect, error } = useAuth()
+  const { isConnected, isConnecting, address, walletLabel, disconnect } = useAuth()
   const [open, setOpen] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -60,7 +62,7 @@ export function WalletButton({ className }: WalletButtonProps) {
           <div className="absolute right-0 top-full mt-2 w-72 rounded-xl border border-border bg-card p-3 shadow-xl z-50">
             {/* Full address */}
             <div className="mb-3 rounded-lg bg-muted/50 p-3">
-              <p className="text-xs font-medium text-muted-foreground mb-1">Connected wallet (Freighter)</p>
+              <p className="text-xs font-medium text-muted-foreground mb-1">Connected wallet ({walletLabel})</p>
               <p className="font-mono text-xs text-foreground break-all leading-relaxed">{address}</p>
             </div>
 
@@ -82,7 +84,7 @@ export function WalletButton({ className }: WalletButtonProps) {
                 View on Stellar Explorer
               </a>
               <button
-                onClick={() => { disconnect(); setOpen(false) }}
+                onClick={() => { void disconnect(); setOpen(false) }}
                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
               >
                 <LogOut className="h-4 w-4" />
@@ -95,21 +97,23 @@ export function WalletButton({ className }: WalletButtonProps) {
     )
   }
 
-  // ── Disconnected button ───────────────────────────────────────────────────
   return (
-    <Button
-      onClick={connect}
-      disabled={isConnecting}
-      size="sm"
-      className={`font-semibold text-white ${className}`}
-      style={{ background: '#F58220' }}
-    >
-      {isConnecting ? (
-        <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Connecting…</>
-      ) : (
-        <><Wallet className="mr-2 h-4 w-4" />Connect Wallet</>
-      )}
-    </Button>
+    <>
+      <Button
+        onClick={() => setModalOpen(true)}
+        disabled={isConnecting}
+        size="sm"
+        className={`font-semibold text-white ${className}`}
+        style={{ background: '#F58220' }}
+      >
+        {isConnecting ? (
+          <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Connecting…</>
+        ) : (
+          <><Wallet className="mr-2 h-4 w-4" />Connect Wallet</>
+        )}
+      </Button>
+      <WalletConnectModal open={modalOpen} onOpenChange={setModalOpen} />
+    </>
   )
 }
 

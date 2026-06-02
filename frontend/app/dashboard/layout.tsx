@@ -62,6 +62,12 @@ const NAV_ITEMS: NavItem[] = [
     roles: ["JEFE"],
   },
   {
+    name: "Request Fuel",
+    href: "/dashboard/conductor",
+    icon: Fuel,
+    roles: ["CONDUCTOR"],
+  },
+  {
     name: "My Requests",
     href: "/dashboard/solicitudes",
     icon: Fuel,
@@ -77,7 +83,7 @@ const NAV_ITEMS: NavItem[] = [
 
 // ── Role-based redirect map ──────────────────────────────────────────────────
 // When a CONDUCTOR lands on a JEFE-only route, redirect them to their home.
-const CONDUCTOR_HOME = "/dashboard/solicitudes";
+const CONDUCTOR_HOME = "/dashboard/conductor";
 const JEFE_ONLY_PREFIXES = [
   "/dashboard/usuarios",
   "/dashboard/unidades",

@@ -47,6 +47,11 @@ export { Prisma }
  */
 export type User = Prisma.UserModel
 /**
+ * Model DriverKyc
+ * 
+ */
+export type DriverKyc = Prisma.DriverKycModel
+/**
  * Model Unit
  * 
  */
@@ -76,3 +81,8 @@ export type EscrowConfig = Prisma.EscrowConfigModel
  * 
  */
 export type EscrowMilestone = Prisma.EscrowMilestoneModel
+/**
+ * Model ProcessedEvent
+ * 
+ */
+export type ProcessedEvent = Prisma.ProcessedEventModel

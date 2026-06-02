@@ -52,12 +52,14 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   User: 'User',
+  DriverKyc: 'DriverKyc',
   Unit: 'Unit',
   FuelLog: 'FuelLog',
   FundRequest: 'FundRequest',
   GasStation: 'GasStation',
   EscrowConfig: 'EscrowConfig',
-  EscrowMilestone: 'EscrowMilestone'
+  EscrowMilestone: 'EscrowMilestone',
+  ProcessedEvent: 'ProcessedEvent'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -84,12 +86,31 @@ export const UserScalarFieldEnum = {
   stellarPubKey: 'stellarPubKey',
   role: 'role',
   status: 'status',
+  kycStatus: 'kycStatus',
   managerId: 'managerId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const DriverKycScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  licenseNumber: 'licenseNumber',
+  licenseExpiry: 'licenseExpiry',
+  idCardFrontUrl: 'idCardFrontUrl',
+  idCardBackUrl: 'idCardBackUrl',
+  selfieUrl: 'selfieUrl',
+  status: 'status',
+  verifiedAt: 'verifiedAt',
+  rejectionReason: 'rejectionReason',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DriverKycScalarFieldEnum = (typeof DriverKycScalarFieldEnum)[keyof typeof DriverKycScalarFieldEnum]
 
 
 export const UnitScalarFieldEnum = {
@@ -196,6 +217,17 @@ export const EscrowMilestoneScalarFieldEnum = {
 } as const
 
 export type EscrowMilestoneScalarFieldEnum = (typeof EscrowMilestoneScalarFieldEnum)[keyof typeof EscrowMilestoneScalarFieldEnum]
+
+
+export const ProcessedEventScalarFieldEnum = {
+  id: 'id',
+  eventId: 'eventId',
+  ledgerSequence: 'ledgerSequence',
+  contractId: 'contractId',
+  processedAt: 'processedAt'
+} as const
+
+export type ProcessedEventScalarFieldEnum = (typeof ProcessedEventScalarFieldEnum)[keyof typeof ProcessedEventScalarFieldEnum]
 
 
 export const SortOrder = {
