@@ -267,6 +267,16 @@ export interface PrismaClient<
     * ```
     */
   get escrowMilestone(): Prisma.EscrowMilestoneDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.processedEvent`: Exposes CRUD operations for the **ProcessedEvent** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ProcessedEvents
+    * const processedEvents = await prisma.processedEvent.findMany()
+    * ```
+    */
+  get processedEvent(): Prisma.ProcessedEventDelegate<ExtArgs, { omit: OmitOpts }>;
 }
 
 export function getPrismaClientClass(): PrismaClientConstructor {

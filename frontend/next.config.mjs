@@ -11,6 +11,7 @@ try {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: process.env.CAPACITOR_BUILD === 'true' ? 'export' : undefined,
   typescript: {
     ignoreBuildErrors: true,
   },
