@@ -1,245 +1,243 @@
-import { Keypair, StrKey } from 'stellar-sdk';
-import axios from 'axios';
+import crypto from 'crypto';
+import { Keypair } from 'stellar-sdk';
 import { config } from '../config/index.js';
+import { fxService, MXN_SCALE, USDC_SCALE } from './fx.service.js';
+import { sorobanOracleService } from './sorobanOracle.service.js';
 
-/**
- * Price data structure that will be signed
- */
-export interface PricePayload {
-  fuelType: string; // e.g., "Diesel", "Premium", "Magna"
-  pricePerLiter: number; // Price in USD per liter
-  stationId?: string; // Optional: specific gas station
-  timestamp: number; // Unix timestamp in milliseconds
-}
+export type FuelType = 'MAGNA' | 'PREMIUM' | 'DIESEL';
 
-/**
- * Signed price data returned to contracts
- */
-export interface SignedPrice {
-  payload: PricePayload;
-  signature: string; // Ed25519 signature (hex-encoded)
-  oraclePublicKey: string; // Signer's public key
-}
-
-/**
- * Price feed data structure stored in database
- */
-export interface FuelPriceFeed {
-  fuelType: string;
-  pricePerLiter: number;
-  stationId?: string;
+export interface CertifiedPricePayload {
+  fuel_type: FuelType;
+  price_mxn: number;
+  price_usdc: number;
   timestamp: number;
-  signature: string;
-  oraclePublicKey: string;
+  station_id: string;
 }
 
-/**
- * OracleService - Manages fuel price data signing and distribution
- *
- * Responsibilities:
- * - Sign price payloads with Oracle's Ed25519 private key
- * - Fetch real-time fuel prices from trusted APIs
- * - Maintain Oracle keypair
- * - Prepare price data for consumption by Soroban contracts
- */
+export interface OraclePriceRecord extends CertifiedPricePayload {
+  price_mxn_scaled: number;
+  price_usdc_scaled: number;
+  signature: string;
+}
+
+const FUEL_TYPE_CODE: Record<FuelType, number> = {
+  MAGNA: 0,
+  PREMIUM: 1,
+  DIESEL: 2,
+};
+
 export class OracleService {
-  private keypair: Keypair | null = null;
-  private publicKey: string;
-  private secretKey: string;
+  private prices: Map<FuelType, OraclePriceRecord> = new Map();
+  private oracleKeypair: Keypair | null = null;
 
   constructor() {
-    this.publicKey = config.oracle.publicKey;
-    this.secretKey = config.oracle.secretKey;
-
-    // Initialize keypair if both keys are configured
-    if (this.publicKey && this.secretKey) {
-      try {
-        this.keypair = Keypair.fromSecret(this.secretKey);
-        this.validateKeypair();
-      } catch (error) {
-        console.error('Failed to initialize Oracle keypair:', error);
-        throw new Error('Invalid Oracle keypair configuration');
-      }
-    }
+    this.loadOracleKeypair();
+    this.initializeSeedPrices();
   }
 
-  /**
-   * Validates that the keypair is correctly initialized
-   */
-  private validateKeypair(): void {
-    if (!this.keypair) {
-      throw new Error('Oracle keypair not initialized');
+  private loadOracleKeypair(): void {
+    const secret = config.oracle.privateKey;
+    if (!secret) {
+      console.warn('[OracleService] ORACLE_PRIVATE_KEY not set — signing disabled');
+      return;
     }
-
-    // Verify public key matches
-    const derivedPublicKey = this.keypair.publicKey();
-    if (derivedPublicKey !== this.publicKey) {
-      throw new Error('Oracle public key does not match the derived key from secret');
-    }
-
-    // Verify it's a valid Ed25519 key
-    if (!StrKey.isValidEd25519PublicKey(derivedPublicKey)) {
-      throw new Error('Oracle public key is not a valid Ed25519 key');
-    }
-  }
-
-  /**
-   * Gets the Oracle's public key
-   */
-  getPublicKey(): string {
-    return this.publicKey;
-  }
-
-  /**
-   * Signs a price payload with the Oracle's private key
-   *
-   * @param payload - The price data to sign
-   * @returns Signed price data including signature
-   * @throws Error if keypair not initialized or signing fails
-   */
-  signPrice(payload: PricePayload): SignedPrice {
-    if (!this.keypair) {
-      throw new Error('Oracle keypair not initialized. Configure ORACLE_SECRET_KEY and ORACLE_PUBLIC_KEY');
-    }
-
     try {
-      // Convert payload to Buffer for signing
-      const payloadString = JSON.stringify(payload);
-      const payloadBuffer = Buffer.from(payloadString, 'utf-8');
-
-      // Sign using Ed25519
-      const signature = this.keypair.sign(payloadBuffer);
-      const signatureHex = signature.toString('hex');
-
-      return {
-        payload,
-        signature: signatureHex,
-        oraclePublicKey: this.publicKey,
-      };
+      this.oracleKeypair = Keypair.fromSecret(secret);
     } catch (error) {
-      throw new Error(`Failed to sign price payload: ${error}`);
+      console.error('[OracleService] Invalid ORACLE_PRIVATE_KEY', error);
     }
   }
 
-  /**
-   * Fetches fuel prices from external API
-   *
-   * For v1, this is a mock implementation. In production, integrate with:
-   * - PETROIntelligence API
-   * - CRE open data
-   * - Partner gas station APIs
-   * - Real-time market data providers
-   *
-   * @returns Array of fuel price payloads
-   */
-  async fetchFuelPrices(): Promise<PricePayload[]> {
-    try {
-      // Mock implementation - returns default prices
-      // TODO: Replace with real API integration
-      const mockPrices: PricePayload[] = [
-        {
-          fuelType: 'Diesel',
-          pricePerLiter: 25.0,
-          timestamp: Date.now(),
-        },
-        {
-          fuelType: 'Premium',
-          pricePerLiter: 26.5,
-          timestamp: Date.now(),
-        },
-        {
-          fuelType: 'Magna',
-          pricePerLiter: 24.5,
-          timestamp: Date.now(),
-        },
-      ];
+  private initializeSeedPrices(): void {
+    const now = Math.floor(Date.now() / 1000);
+    const seeds: Array<{ fuel: FuelType; mxn: number }> = [
+      { fuel: 'MAGNA', mxn: config.oracle.seedPrices.magna },
+      { fuel: 'PREMIUM', mxn: config.oracle.seedPrices.premium },
+      { fuel: 'DIESEL', mxn: config.oracle.seedPrices.diesel },
+    ];
 
-      return mockPrices;
-
-      // Real implementation would look like:
-      /*
-      const response = await axios.get(config.oracle.priceApi.baseUrl, {
-        headers: {
-          'Authorization': `Bearer ${config.oracle.priceApi.apiKey}`,
-        },
+    for (const { fuel, mxn } of seeds) {
+      const usdc = mxn / config.fx.mxnPerUsd;
+      const record = this.buildRecord({
+        fuel_type: fuel,
+        price_mxn: mxn,
+        price_usdc: usdc,
+        timestamp: now,
+        station_id: config.oracle.defaultStationId,
       });
-
-      return response.data.prices.map((price: any) => ({
-        fuelType: price.type,
-        pricePerLiter: price.pricePerLiter,
-        stationId: price.stationId,
-        timestamp: Date.now(),
-      }));
-      */
-    } catch (error) {
-      console.error('Failed to fetch fuel prices:', error);
-      throw new Error(`Failed to fetch fuel prices: ${error}`);
+      this.prices.set(fuel, record);
     }
   }
 
-  /**
-   * Fetches and signs current fuel prices
-   *
-   * @returns Array of signed price data ready for smart contract consumption
-   */
-  async getSignedPrices(): Promise<SignedPrice[]> {
-    const prices = await this.fetchFuelPrices();
-    return prices.map((price) => this.signPrice(price));
+  getOraclePublicKey(): string | null {
+    if (config.oracle.publicKey) return config.oracle.publicKey;
+    return this.oracleKeypair?.publicKey() ?? null;
   }
 
-  /**
-   * Verifies a signed price payload (for testing/validation)
-   *
-   * Note: The actual verification happens in the Soroban contract
-   *
-   * @param signedPrice - The signed price to verify
-   * @returns true if signature is valid, false otherwise
-   */
-  verifySignedPrice(signedPrice: SignedPrice): boolean {
+  getPrices(): OraclePriceRecord[] {
+    return Array.from(this.prices.values());
+  }
+
+  getPrice(fuelType: FuelType): OraclePriceRecord | undefined {
+    return this.prices.get(fuelType);
+  }
+
+  calculateEscrowReserve(liters: number, fuelType: FuelType): {
+    liters: number;
+    fuel_type: FuelType;
+    price_per_liter_mxn: number;
+    price_per_liter_usdc: number;
+    total_mxn: number;
+    total_usdc: number;
+    total_usdc_stroops: number;
+  } | null {
+    const price = this.prices.get(fuelType);
+    if (!price) return null;
+
+    const totalMxn = liters * price.price_mxn;
+    const totalUsdc = liters * price.price_usdc;
+
+    return {
+      liters,
+      fuel_type: fuelType,
+      price_per_liter_mxn: price.price_mxn,
+      price_per_liter_usdc: price.price_usdc,
+      total_mxn: totalMxn,
+      total_usdc: totalUsdc,
+      total_usdc_stroops: Math.floor(totalUsdc * USDC_SCALE),
+    };
+  }
+
+  buildCertificationMessage(payload: CertifiedPricePayload): Buffer {
+    const fuelCode = FUEL_TYPE_CODE[payload.fuel_type];
+    const priceMxnScaled = fxService.scaleMxn(payload.price_mxn);
+    const priceUsdcScaled = fxService.scaleUsdc(payload.price_usdc);
+    const stationHash = crypto
+      .createHash('sha256')
+      .update(payload.station_id, 'utf8')
+      .digest();
+
+    const buf = Buffer.alloc(60);
+    let offset = 0;
+    buf.writeUInt32BE(fuelCode, offset);
+    offset += 4;
+    buf.writeBigUInt64BE(BigInt(priceMxnScaled), offset);
+    offset += 8;
+    buf.writeBigUInt64BE(BigInt(priceUsdcScaled), offset);
+    offset += 8;
+    buf.writeBigUInt64BE(BigInt(payload.timestamp), offset);
+    offset += 8;
+    stationHash.copy(buf, offset);
+    return buf;
+  }
+
+  signPayload(payload: CertifiedPricePayload): string {
+    if (!this.oracleKeypair) {
+      throw new Error('Oracle private key not configured');
+    }
+    const message = this.buildCertificationMessage(payload);
+    const signature = this.oracleKeypair.sign(message);
+    return signature.toString('base64');
+  }
+
+  buildRecord(payload: CertifiedPricePayload): OraclePriceRecord {
+    const price_mxn_scaled = fxService.scaleMxn(payload.price_mxn);
+    const price_usdc_scaled = fxService.scaleUsdc(payload.price_usdc);
+    let signature = '';
     try {
-      if (!this.keypair) {
-        throw new Error('Oracle keypair not initialized');
-      }
-
-      // Verify the public key matches
-      if (signedPrice.oraclePublicKey !== this.publicKey) {
-        return false;
-      }
-
-      // Reconstruct the signed message
-      const payloadString = JSON.stringify(signedPrice.payload);
-      const payloadBuffer = Buffer.from(payloadString, 'utf-8');
-      const signatureBuffer = Buffer.from(signedPrice.signature, 'hex');
-
-      // Verify the signature
-      const isValid = this.keypair.verify(payloadBuffer, signatureBuffer);
-      return isValid;
-    } catch (error) {
-      console.error('Failed to verify signature:', error);
-      return false;
+      signature = this.signPayload(payload);
+    } catch {
+      signature = '';
     }
+    return {
+      ...payload,
+      price_mxn_scaled,
+      price_usdc_scaled,
+      signature,
+    };
   }
 
-  /**
-   * Gets the maximum age for price data (in milliseconds)
-   * Used by contracts to reject stale prices
-   */
-  getMaxPriceAge(): number {
-    return config.oracle.maxPriceAge;
+  async fetchRegulatoryPrices(): Promise<CertifiedPricePayload[]> {
+    if (config.oracle.priceSourceUrl) {
+      try {
+        const axios = (await import('axios')).default;
+        const response = await axios.get(config.oracle.priceSourceUrl, {
+          timeout: 8000,
+        });
+        const parsed = this.parseRegulatoryResponse(response.data);
+        if (parsed.length > 0) return parsed;
+      } catch (error) {
+        console.warn('[OracleService] Regulatory API fetch failed', error);
+      }
+    }
+
+    return this.getSimulatedRegulatoryPrices();
   }
 
-  /**
-   * Checks if a price payload is within acceptable age
-   *
-   * @param payload - The price payload to check
-   * @returns true if price is fresh, false if expired
-   */
-  isPricefresh(payload: PricePayload): boolean {
-    const now = Date.now();
-    const age = now - payload.timestamp;
-    return age <= this.getMaxPriceAge();
+  private getSimulatedRegulatoryPrices(): CertifiedPricePayload[] {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const station_id = config.oracle.defaultStationId;
+    const fuels: FuelType[] = ['MAGNA', 'PREMIUM', 'DIESEL'];
+
+    return fuels.map((fuel) => {
+      const current = this.prices.get(fuel);
+      const baseMxn = current?.price_mxn ?? config.oracle.seedPrices.magna;
+      return {
+        fuel_type: fuel,
+        price_mxn: Number(baseMxn.toFixed(2)),
+        price_usdc: 0,
+        timestamp,
+        station_id,
+      };
+    });
+  }
+
+  private parseRegulatoryResponse(data: unknown): CertifiedPricePayload[] {
+    if (!Array.isArray(data)) return [];
+    const timestamp = Math.floor(Date.now() / 1000);
+
+    return data
+      .map((item) => {
+        if (!item || typeof item !== 'object') return null;
+        const row = item as Record<string, unknown>;
+        const fuel = row.fuel_type as FuelType;
+        const priceMxn = Number(row.price_mxn);
+        if (!['MAGNA', 'PREMIUM', 'DIESEL'].includes(fuel) || !Number.isFinite(priceMxn)) {
+          return null;
+        }
+        return {
+          fuel_type: fuel,
+          price_mxn: priceMxn,
+          price_usdc: 0,
+          timestamp,
+          station_id: String(row.station_id ?? config.oracle.defaultStationId),
+        } satisfies CertifiedPricePayload;
+      })
+      .filter((p): p is CertifiedPricePayload => p !== null);
+  }
+
+  async refreshPrices(): Promise<OraclePriceRecord[]> {
+    await fxService.refreshRate();
+    const fetched = await this.fetchRegulatoryPrices();
+    const updated: OraclePriceRecord[] = [];
+
+    for (const raw of fetched) {
+      const price_usdc = await fxService.convertMxnToUsdc(raw.price_mxn);
+      const payload: CertifiedPricePayload = {
+        ...raw,
+        price_usdc: Number(price_usdc.toFixed(7)),
+      };
+      const record = this.buildRecord(payload);
+      this.prices.set(payload.fuel_type, record);
+      updated.push(record);
+
+      if (sorobanOracleService.isConfigured()) {
+        await sorobanOracleService.submitPriceUpdate(record);
+      }
+    }
+
+    return updated;
   }
 }
 
-// Singleton instance
 export const oracleService = new OracleService();

@@ -1,5 +1,6 @@
 import { userRepository } from '../repositories/user.repository.js';
 import { registerDriverSchema } from '../utils/validators.js';
+import { sendEmail } from './mail.service.js';
 
 export class UserService {
   /**
@@ -57,6 +58,19 @@ export class UserService {
       role: 'CONDUCTOR',
       managerId: manager.id,
     });
+
+    // 5. Send welcome email to the manager (driver emails are auto-generated placeholders)
+    if (manager.email) {
+      sendEmail({
+        to: manager.email,
+        subject: `New driver registered: ${driver.name}`,
+        template: 'welcome',
+        context: {
+          driverName: driver.name,
+          managerName: manager.name,
+        },
+      });
+    }
 
     return driver;
   }

@@ -1,47 +1,21 @@
-/**
- * Simple logger utility for the application
- * Provides console-based logging with levels and timestamps
- */
+import winston from 'winston';
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+const isDev = process.env.NODE_ENV !== 'production';
 
-interface LogContext {
-  [key: string]: any;
-}
-
-class Logger {
-  private isDevelopment = process.env.NODE_ENV !== 'production';
-
-  /**
-   * Formats a log message with timestamp
-   */
-  private formatMessage(level: LogLevel, message: string, context?: LogContext): string {
-    const timestamp = new Date().toISOString();
-    const contextStr = context ? ` ${JSON.stringify(context)}` : '';
-    return `[${timestamp}] [${level.toUpperCase()}] ${message}${contextStr}`;
-  }
-
-  debug(message: string, context?: LogContext): void {
-    if (this.isDevelopment) {
-      console.debug(this.formatMessage('debug', message, context));
-    }
-  }
-
-  info(message: string, context?: LogContext): void {
-    console.log(this.formatMessage('info', message, context));
-  }
-
-  warn(message: string, context?: LogContext): void {
-    console.warn(this.formatMessage('warn', message, context));
-  }
-
-  error(message: string, error?: Error | LogContext): void {
-    if (error instanceof Error) {
-      console.error(this.formatMessage('error', message, { error: error.message, stack: error.stack }));
-    } else {
-      console.error(this.formatMessage('error', message, error));
-    }
-  }
-}
-
-export const logger = new Logger();
+export const logger = winston.createLogger({
+  level: isDev ? 'debug' : 'info',
+  format: isDev
+    ? winston.format.combine(
+        winston.format.colorize(),
+        winston.format.timestamp({ format: 'HH:mm:ss' }),
+        winston.format.printf(({ timestamp, level, message, ...meta }) => {
+          const extras = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
+          return `[${timestamp}] ${level}: ${message}${extras}`;
+        })
+      )
+    : winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
+      ),
+  transports: [new winston.transports.Console()],
+});

@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import 'leaflet/dist/leaflet.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -119,11 +120,110 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Capacitor Scanner Overlay */
+body.scanner-active {
+  --background: transparent !important;
+  background-color: transparent !important;
+}
+
+body.scanner-active * {
+  visibility: hidden;
+}
+
+body.scanner-active .scanner-ui {
+  visibility: visible;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    /* Safe area handling for mobile */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
   }
+}
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  background: hsl(210 20% 92%);
+  font: inherit;
+}
+
+.leaflet-control-attribution {
+  font-size: 10px;
+}
+
+.station-marker-icon {
+  background: transparent;
+  border: 0;
+}
+
+.station-pin {
+  position: relative;
+  display: block;
+  width: 34px;
+  height: 34px;
+  transform: rotate(45deg);
+  border: 3px solid white;
+  border-radius: 50% 50% 50% 8px;
+  background: #16a34a;
+  box-shadow: 0 12px 24px rgb(15 23 42 / 0.28);
+}
+
+.station-pin-dot {
+  position: absolute;
+  inset: 9px;
+  display: block;
+  transform: rotate(-45deg);
+  border-radius: 999px;
+  background: #facc15;
+  box-shadow: inset 0 0 0 3px rgb(255 255 255 / 0.72);
+}
+
+.station-map-popup .leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 16px 40px rgb(15 23 42 / 0.22);
+}
+
+.station-map-popup .leaflet-popup-content {
+  margin: 0;
+}
+
+.station-popup {
+  min-width: 210px;
+  padding: 12px;
+}
+
+.station-popup-title {
+  margin: 0;
+  color: hsl(222 47% 11%);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.station-popup-address,
+.station-popup-meta,
+.station-popup-hours {
+  margin: 6px 0 0;
+  color: hsl(215 16% 47%);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.station-popup-hours {
+  display: inline-flex;
+  border-radius: 999px;
+  background: hsl(142 71% 45% / 0.12);
+  color: hsl(142 76% 28%);
+  padding: 4px 8px;
+  font-weight: 600;
 }

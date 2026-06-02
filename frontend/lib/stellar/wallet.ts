@@ -92,6 +92,11 @@ export async function getBalance(publicKey: string, assetCode: string = 'XLM'): 
  * Verifica si una cuenta existe en la red
  */
 export async function accountExists(publicKey: string): Promise<boolean> {
+  // If we're in a test environment, don't try to call Horizon
+  if (process.env.NODE_ENV === 'test') {
+    return false;
+  }
+  
   try {
     const server = new StellarSdk.Horizon.Server('https://horizon-testnet.stellar.org')
     await server.loadAccount(publicKey)

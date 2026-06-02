@@ -24,26 +24,37 @@ export const config = {
       process.env.STELLAR_NETWORK_PASSPHRASE || 'Test SDF Network ; September 2015',
   },
 
-  oracle: {
-    // Oracle keypair for signing price payloads
-    // NOTE: In production, store in secure key management system (e.g., AWS Secrets Manager, HashiCorp Vault)
-    publicKey: process.env.ORACLE_PUBLIC_KEY || '',
-    secretKey: process.env.ORACLE_SECRET_KEY || '',
-    // Price fetch configuration
-    enabled: process.env.ORACLE_ENABLED === 'true' || false,
-    // Cron expression for price updates (default: every hour)
-    cronExpression: process.env.ORACLE_CRON || '0 * * * *',
-    // Max age of price data in milliseconds (default: 1 hour)
-    maxPriceAge: parseInt(process.env.ORACLE_MAX_PRICE_AGE || '3600000', 10),
-    // Price API configuration
-    priceApi: {
-      // Using a mock API for v1; replace with real API (PETROIntelligence, CRE, etc.)
-      baseUrl: process.env.PRICE_API_URL || 'https://api.example.com/prices',
-      apiKey: process.env.PRICE_API_KEY || '',
-    },
+  soroban: {
+    rpcUrl: process.env.SOROBAN_RPC_URL || 'https://soroban-testnet.stellar.org:443',
+    networkPassphrase: process.env.SOROBAN_NETWORK_PASSPHRASE || 'Test SDF Network ; September 2015',
+    contractId: process.env.SOROBAN_CONTRACT_ID || '',
   },
 
   cors: {
     origin: process.env.CORS_ORIGIN || '*',
+  },
+
+  get fx() {
+    return {
+      mxnPerUsd: parseFloat(process.env.FX_MXN_PER_USD || '17.24'),
+      apiUrl: process.env.FX_RATE_API_URL || '',
+    };
+  },
+
+  get oracle() {
+    return {
+      seedPrices: {
+        magna: parseFloat(process.env.ORACLE_SEED_PRICE_MAGNA || '24.00'),
+        premium: parseFloat(process.env.ORACLE_SEED_PRICE_PREMIUM || '28.66'),
+        diesel: parseFloat(process.env.ORACLE_SEED_PRICE_DIESEL || '27.44'),
+      },
+      privateKey: process.env.ORACLE_PRIVATE_KEY || '',
+      publicKey: process.env.ORACLE_PUBLIC_KEY || '',
+      defaultStationId: process.env.ORACLE_DEFAULT_STATION_ID || 'CRE-MX-001',
+      priceSourceUrl: process.env.ORACLE_PRICE_SOURCE_URL || '',
+      workerEnabled: process.env.ORACLE_WORKER_ENABLED !== 'false',
+      workerIntervalMs: parseInt(process.env.ORACLE_WORKER_INTERVAL_MS || '3600000', 10),
+      contractId: process.env.ORACLE_CONTRACT_ID || '',
+    };
   },
 };
