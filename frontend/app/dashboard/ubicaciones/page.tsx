@@ -5,6 +5,12 @@ import { AlertCircle, Clock, Fuel, Loader2, MapPin, Search } from "lucide-react"
 import { StationMap, type StationMapLocation } from "@/components/station-map"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { useAuth } from "@/providers/auth-provider"
+import { toast } from "sonner"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001"
 
@@ -55,10 +61,12 @@ function toMapLocation(station: GasStation): StationMapLocation | null {
 }
 
 export default function LocationsPage() {
+  const { role } = useAuth()
   const [stations, setStations] = useState<GasStation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
+  const isJefe = role === "JEFE"
   const [selectedStationId, setSelectedStationId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -121,20 +129,66 @@ export default function LocationsPage() {
           <p className="text-sm text-muted-foreground">Cargando ubicaciones...</p>
         </div>
       </div>
-    )
-  }
+      <h3 className="text-xl font-semibold text-foreground">No stations found</h3>
+      <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+        {searchQuery 
+          ? "We couldn't find any gas stations matching your search criteria. Try a different term."
+          : isJefe 
+            ? "Your fleet doesn't have any authorized gas stations yet. Start by adding your first one."
+            : "There are currently no authorized gas stations available for your route."}
+      </p>
+      {isJefe && !searchQuery && (
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button className="mt-6 gap-2" size="lg">
+              <Plus className="h-4 w-4" />
+              Register First Gas Station
+            </Button>
+          </SheetTrigger>
+          <StationForm />
+        </Sheet>
+      )}
+    </div>
+  )
 
-  if (error) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <AlertCircle className="h-8 w-8 text-destructive" />
-          <p className="text-destructive">Error al cargar ubicaciones</p>
-          <p className="text-sm text-muted-foreground">{error}</p>
+  const StationForm = () => (
+    <SheetContent className="sm:max-w-[500px]">
+      <SheetHeader className="pb-6">
+        <SheetTitle className="text-2xl font-bold">Add New Gas Station</SheetTitle>
+        <SheetDescription>
+          Register a new authorized fueling location for your fleet.
+        </SheetDescription>
+      </SheetHeader>
+      <div className="space-y-6 py-4">
+        {/* Mock form fields for now */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Station Name</label>
+          <Input placeholder="e.g. Pemex Santa Fe" />
         </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Full Address</label>
+          <Input placeholder="Avenida Siempre Viva 123..." />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">City</label>
+            <Input placeholder="CDMX" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">State</label>
+            <Input placeholder="Mexico" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Operating Hours</label>
+          <Input placeholder="e.g. 24/7 or 06:00 - 22:00" />
+        </div>
+        <Button className="w-full mt-4" onClick={() => toast.success("Feature coming soon!")}>
+          Register Station
+        </Button>
       </div>
-    )
-  }
+    </SheetContent>
+  )
 
   return (
     <div className="space-y-6">
