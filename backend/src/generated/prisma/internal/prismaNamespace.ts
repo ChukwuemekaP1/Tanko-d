@@ -385,6 +385,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   User: 'User',
+  DriverKyc: 'DriverKyc',
   Unit: 'Unit',
   FuelLog: 'FuelLog',
   FundRequest: 'FundRequest',
@@ -407,7 +408,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "unit" | "fuelLog" | "fundRequest" | "gasStation" | "escrowConfig" | "escrowMilestone" | "processedEvent"
+    modelProps: "user" | "driverKyc" | "unit" | "fuelLog" | "fundRequest" | "gasStation" | "escrowConfig" | "escrowMilestone"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -482,6 +483,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.UserCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.UserCountAggregateOutputType> | number
+        }
+      }
+    }
+    DriverKyc: {
+      payload: Prisma.$DriverKycPayload<ExtArgs>
+      fields: Prisma.DriverKycFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DriverKycFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriverKycPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DriverKycFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriverKycPayload>
+        }
+        findFirst: {
+          args: Prisma.DriverKycFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriverKycPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DriverKycFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriverKycPayload>
+        }
+        findMany: {
+          args: Prisma.DriverKycFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriverKycPayload>[]
+        }
+        create: {
+          args: Prisma.DriverKycCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriverKycPayload>
+        }
+        createMany: {
+          args: Prisma.DriverKycCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DriverKycCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriverKycPayload>[]
+        }
+        delete: {
+          args: Prisma.DriverKycDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriverKycPayload>
+        }
+        update: {
+          args: Prisma.DriverKycUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriverKycPayload>
+        }
+        deleteMany: {
+          args: Prisma.DriverKycDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DriverKycUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DriverKycUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriverKycPayload>[]
+        }
+        upsert: {
+          args: Prisma.DriverKycUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriverKycPayload>
+        }
+        aggregate: {
+          args: Prisma.DriverKycAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDriverKyc>
+        }
+        groupBy: {
+          args: Prisma.DriverKycGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DriverKycGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DriverKycCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DriverKycCountAggregateOutputType> | number
         }
       }
     }
@@ -1050,12 +1125,31 @@ export const UserScalarFieldEnum = {
   stellarPubKey: 'stellarPubKey',
   role: 'role',
   status: 'status',
+  kycStatus: 'kycStatus',
   managerId: 'managerId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const DriverKycScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  licenseNumber: 'licenseNumber',
+  licenseExpiry: 'licenseExpiry',
+  idCardFrontUrl: 'idCardFrontUrl',
+  idCardBackUrl: 'idCardBackUrl',
+  selfieUrl: 'selfieUrl',
+  status: 'status',
+  verifiedAt: 'verifiedAt',
+  rejectionReason: 'rejectionReason',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DriverKycScalarFieldEnum = (typeof DriverKycScalarFieldEnum)[keyof typeof DriverKycScalarFieldEnum]
 
 
 export const UnitScalarFieldEnum = {
@@ -1356,6 +1450,7 @@ export type PrismaClientOptions = ({
 }
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
+  driverKyc?: Prisma.DriverKycOmit
   unit?: Prisma.UnitOmit
   fuelLog?: Prisma.FuelLogOmit
   fundRequest?: Prisma.FundRequestOmit

@@ -52,6 +52,7 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   User: 'User',
+  DriverKyc: 'DriverKyc',
   Unit: 'Unit',
   FuelLog: 'FuelLog',
   FundRequest: 'FundRequest',
@@ -85,12 +86,31 @@ export const UserScalarFieldEnum = {
   stellarPubKey: 'stellarPubKey',
   role: 'role',
   status: 'status',
+  kycStatus: 'kycStatus',
   managerId: 'managerId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const DriverKycScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  licenseNumber: 'licenseNumber',
+  licenseExpiry: 'licenseExpiry',
+  idCardFrontUrl: 'idCardFrontUrl',
+  idCardBackUrl: 'idCardBackUrl',
+  selfieUrl: 'selfieUrl',
+  status: 'status',
+  verifiedAt: 'verifiedAt',
+  rejectionReason: 'rejectionReason',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DriverKycScalarFieldEnum = (typeof DriverKycScalarFieldEnum)[keyof typeof DriverKycScalarFieldEnum]
 
 
 export const UnitScalarFieldEnum = {
