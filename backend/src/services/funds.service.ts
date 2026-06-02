@@ -8,6 +8,8 @@ import { stellarService } from './stellar.service.js';
 import { fundRequestRepository } from '../repositories/fundRequest.repository.js';
 import { escrowConfigRepository } from '../repositories/escrowConfig.repository.js';
 import { escrowMilestoneRepository } from '../repositories/escrowMilestone.repository.js';
+import { userRepository } from '../repositories/user.repository.js';
+import { sendEmail } from './mail.service.js';
 import axios from 'axios';
 import prisma from '../db/prisma.js';
 
@@ -55,6 +57,26 @@ export class FundsService {
       amount: input.amount,
       description: input.description,
     });
+
+    // Notify the manager about the new fuel request
+    const [manager, driver] = await Promise.all([
+      userRepository.findByStellarPubKey(input.managerPubKey),
+      userRepository.findByStellarPubKey(input.driverPubKey),
+    ]);
+    if (manager?.email) {
+      sendEmail({
+        to: manager.email,
+        subject: `Fuel request: ${input.liters}L from ${driver?.name ?? 'Driver'}`,
+        template: 'fuelRequestCreated',
+        context: {
+          driverName: driver?.name ?? 'Driver',
+          managerName: manager.name,
+          liters: input.liters,
+          amount: input.amount,
+          description: input.description,
+        },
+      });
+    }
 
     return { success: true, data: request };
   }
@@ -197,6 +219,22 @@ export class FundsService {
           });
         }
       });
+
+      // Notify the driver that escrow is locked and they can fuel up
+      const driverUser = await userRepository.findByStellarPubKey(request.driverPubKey);
+      if (driverUser?.email) {
+        sendEmail({
+          to: driverUser.email,
+          subject: 'Escrow locked — you are authorized to fuel',
+          template: 'escrowLocked',
+          context: {
+            driverName: driverUser.name,
+            liters: request.liters,
+            amount: request.amount,
+            contractId,
+          },
+        });
+      }
 
       return {
         success: true,
