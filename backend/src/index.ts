@@ -85,7 +85,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     });
   }
 
-  console.error(err);
+  logger.error(err?.message ?? String(err), { stack: err?.stack });
 
   res.status(500).json({
     success: false,
