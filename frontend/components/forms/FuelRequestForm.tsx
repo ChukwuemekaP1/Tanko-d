@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { useOraclePrice } from '@/hooks/useOraclePrice'
+import { useNetwork } from '@/hooks/useNetwork'
 
 interface FuelRequestFormProps {
   driverPubKey: string
@@ -44,6 +45,7 @@ export default function FuelRequestForm({
   onCancel,
 }: FuelRequestFormProps) {
   const { prices, loading: pricesLoading, error: pricesError, getPricePerLiter } = useOraclePrice()
+  const { isOnline } = useNetwork()
 
   // Form state
   const [liters, setLiters] = useState('')
@@ -122,6 +124,11 @@ export default function FuelRequestForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!isOnline) {
+      toast.error('Sin conexión a internet. No se puede enviar la solicitud.')
+      return
+    }
 
     // Force touch for validation display
     setTouched({ liters: true, manager: true })

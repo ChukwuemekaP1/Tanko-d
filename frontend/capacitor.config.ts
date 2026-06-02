@@ -5,12 +5,16 @@ const config: CapacitorConfig = {
   appName: 'Tanko-d',
   webDir: 'out',
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
+    cleartext: true
   },
   plugins: {
     DeepLinks: {
       schemes: ['tanko']
     }
+  },
+  ios: {
+    contentInset: 'always'
   }
 };
 

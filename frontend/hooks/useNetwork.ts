@@ -3,9 +3,10 @@ import { Network, ConnectionStatus } from '@capacitor/network';
 import { Capacitor } from '@capacitor/core';
 
 export function useNetwork() {
-  const [status, setStatus] = useState<ConnectionStatus | { connected: boolean; connectionType: string }>({
+  const [status, setStatus] = useState<ConnectionStatus & { isOnline: boolean }>({
     connected: true,
-    connectionType: 'wifi'
+    connectionType: 'wifi',
+    isOnline: true
   });
 
   useEffect(() => {
@@ -14,27 +15,35 @@ export function useNetwork() {
     const checkStatus = async () => {
       if (Capacitor.isNativePlatform()) {
         const currentStatus = await Network.getStatus();
-        setStatus(currentStatus);
+        setStatus({
+          ...currentStatus,
+          isOnline: currentStatus.connected
+        });
         
         handler = await Network.addListener('networkStatusChange', (newStatus) => {
-          setStatus(newStatus);
+          setStatus({
+            ...newStatus,
+            isOnline: newStatus.connected
+          });
         });
       } else {
         // Browser fallback
-        setStatus({
-          connected: navigator.onLine,
-          connectionType: 'unknown'
-        });
+        const updateBrowserStatus = () => {
+          setStatus({
+            connected: navigator.onLine,
+            connectionType: (navigator as any).connection?.type || 'unknown',
+            isOnline: navigator.onLine
+          });
+        };
 
-        const onOnline = () => setStatus({ connected: true, connectionType: 'unknown' });
-        const onOffline = () => setStatus({ connected: false, connectionType: 'unknown' });
+        updateBrowserStatus();
 
-        window.addEventListener('online', onOnline);
-        window.addEventListener('offline', onOffline);
+        window.addEventListener('online', updateBrowserStatus);
+        window.addEventListener('offline', updateBrowserStatus);
 
         return () => {
-          window.removeEventListener('online', onOnline);
-          window.removeEventListener('offline', onOffline);
+          window.removeEventListener('online', updateBrowserStatus);
+          window.removeEventListener('offline', updateBrowserStatus);
         };
       }
     };
