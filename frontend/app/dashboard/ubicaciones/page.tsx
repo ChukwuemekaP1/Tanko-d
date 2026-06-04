@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { AlertCircle, Clock, Fuel, Loader2, MapPin, Search } from "lucide-react"
+import dynamic from "next/dynamic"
+import { AlertCircle, Clock, Fuel, Loader2, MapPin, Search, Plus } from "lucide-react"
 import { StationMap, type StationMapLocation } from "@/components/station-map"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { useAuth } from "@/providers/auth-provider"
 import { toast } from "sonner"
+import { getMappableStations } from "@/lib/maps/stations"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001"
 
@@ -145,36 +147,6 @@ export default function LocationsPage() {
     setSelectedStationId(mapStations[0]?.id ?? filtered[0]?.id ?? null)
   }, [filtered, mapStations, selectedStationId])
 
-  if (loading) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Cargando ubicaciones...</p>
-        </div>
-      </div>
-      <h3 className="text-xl font-semibold text-foreground">No stations found</h3>
-      <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-        {searchQuery 
-          ? "We couldn't find any gas stations matching your search criteria. Try a different term."
-          : isJefe 
-            ? "Your fleet doesn't have any authorized gas stations yet. Start by adding your first one."
-            : "There are currently no authorized gas stations available for your route."}
-      </p>
-      {isJefe && !searchQuery && (
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button className="mt-6 gap-2" size="lg">
-              <Plus className="h-4 w-4" />
-              Register First Gas Station
-            </Button>
-          </SheetTrigger>
-          <StationForm />
-        </Sheet>
-      )}
-    </div>
-  )
-
   const StationForm = () => (
     <SheetContent className="sm:max-w-[500px]">
       <SheetHeader className="pb-6">
@@ -213,6 +185,46 @@ export default function LocationsPage() {
       </div>
     </SheetContent>
   )
+
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Cargando ubicaciones...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (filtered.length === 0) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card p-12 text-center">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 mb-6">
+          <MapPin className="h-10 w-10 text-primary" />
+        </div>
+        <h3 className="text-xl font-semibold text-foreground">No stations found</h3>
+        <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+          {searchQuery 
+            ? "We couldn't find any gas stations matching your search criteria. Try a different term."
+            : isJefe 
+              ? "Your fleet doesn't have any authorized gas stations yet. Start by adding your first one."
+              : "There are currently no authorized gas stations available for your route."}
+        </p>
+        {isJefe && !searchQuery && (
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button className="mt-6 gap-2" size="lg">
+                <Plus className="h-4 w-4" />
+                Register First Gas Station
+              </Button>
+            </SheetTrigger>
+            <StationForm />
+          </Sheet>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
