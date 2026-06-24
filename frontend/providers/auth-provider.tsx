@@ -1,196 +1,259 @@
-'use client'
+"use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from "react";
+import {
+  connectWallet,
+  disconnectWallet,
+  restoreWalletSession,
+  signWalletTransaction,
+} from "@/lib/wallet/stellar-wallet-service";
+import {
+  STORAGE_KEYS,
+  FREIGHTER_WALLET,
+  type WalletType,
+} from "@/lib/wallet/types";
 
-export type UserRole = 'CONDUCTOR' | 'JEFE' | null
+export type UserRole = "CONDUCTOR" | "JEFE" | null;
+
+function parseStoredWalletType(raw: string | null): WalletType | null {
+  if (
+    raw === "freighter" ||
+    raw === "albedo" ||
+    raw === "wallet_connect"
+  ) {
+    return raw;
+  }
+  return null;
+}
+
+function walletLabel(walletType: WalletType | null): string {
+  switch (walletType) {
+    case "freighter":
+      return "Freighter";
+    case "albedo":
+      return "Albedo";
+    case "wallet_connect":
+      return "WalletConnect";
+    default:
+      return "Stellar";
+  }
+}
 
 interface AuthState {
-  address: string | null
-  isConnected: boolean
-  isConnecting: boolean
-  error: string | null
-  freighterInstalled: boolean
-  role: UserRole
-  setRole: (role: UserRole) => void
-  userId: string | null
-  setUserId: (id: string | null) => void
+  address: string | null;
+  walletType: WalletType | null;
+  isConnected: boolean;
+  isConnecting: boolean;
+  error: string | null;
+  role: UserRole;
+  userId: string | null;
 }
 
 interface AuthContextType extends AuthState {
-  connect: () => Promise<void>
-  disconnect: () => void
+  /** Unified alias for `address` (issue #31) */
+  walletAddress: string | null;
+  setRole: (role: UserRole) => void;
+  setUserId: (id: string | null) => void;
+  connectWithWallet: (walletType: WalletType) => Promise<void>;
+  /** @deprecated Prefer connectWithWallet; defaults to Freighter */
+  connect: () => Promise<void>;
+  signTransaction: (xdr: string) => Promise<string>;
+  disconnect: () => Promise<void>;
+  walletLabel: string;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-const STORAGE_KEYS = {
-  ADDRESS: 'tanko_stellar_address',
-  ROLE: 'tanko_user_role',
-  USER_ID: 'tanko_user_id',
-}
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     address: null,
+    walletType: null,
     isConnected: false,
     isConnecting: false,
     error: null,
-    freighterInstalled: false,
     role: null,
     userId: null,
-  })
+  });
+
+  const persistSession = useCallback(
+    (address: string, walletType: WalletType) => {
+      localStorage.setItem(STORAGE_KEYS.ADDRESS, address);
+      localStorage.setItem(STORAGE_KEYS.WALLET_TYPE, walletType);
+    },
+    [],
+  );
+
+  const clearWalletSession = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEYS.ADDRESS);
+    localStorage.removeItem(STORAGE_KEYS.WALLET_TYPE);
+    localStorage.removeItem(STORAGE_KEYS.ROLE);
+    localStorage.removeItem(STORAGE_KEYS.USER_ID);
+  }, []);
 
   useEffect(() => {
     async function restore() {
-      try {
-        const freighter = await import('@stellar/freighter-api')
+      const storedAddress = localStorage.getItem(STORAGE_KEYS.ADDRESS);
+      const storedWalletType = parseStoredWalletType(
+        localStorage.getItem(STORAGE_KEYS.WALLET_TYPE),
+      );
+      const storedRole = localStorage.getItem(STORAGE_KEYS.ROLE) as UserRole;
+      const storedUserId = localStorage.getItem(STORAGE_KEYS.USER_ID);
 
-        const { isConnected } = await freighter.isConnected()
-        const storedAddress = localStorage.getItem(STORAGE_KEYS.ADDRESS)
-        const storedRole = localStorage.getItem(STORAGE_KEYS.ROLE) as UserRole
-        const storedUserId = localStorage.getItem(STORAGE_KEYS.USER_ID)
+      if (!storedAddress) {
+        return;
+      }
 
-        if (!isConnected) {
-          if (storedAddress) {
-            setState(prev => ({ 
-              ...prev, 
-              address: storedAddress, 
-              isConnected: true, 
-              freighterInstalled: false,
-              role: storedRole,
-              userId: storedUserId,
-            }))
-          }
-          return
-        }
-
-        setState(prev => ({ ...prev, freighterInstalled: true }))
-
-        const { isAllowed } = await freighter.isAllowed()
-        if (isAllowed) {
-          const { address, error } = await freighter.getAddress()
-          if (!error && address) {
-            localStorage.setItem(STORAGE_KEYS.ADDRESS, address)
-            setState({ 
-              address, 
-              isConnected: true, 
-              isConnecting: false, 
-              error: null, 
-              freighterInstalled: true,
-              role: storedRole,
-              userId: storedUserId,
-            })
-          }
-        } else if (storedAddress) {
-          setState(prev => ({ 
-            ...prev, 
-            address: storedAddress, 
-            isConnected: true, 
-            freighterInstalled: true,
+      if (storedWalletType) {
+        const liveAddress = await restoreWalletSession(storedWalletType);
+        if (liveAddress) {
+          persistSession(liveAddress, storedWalletType);
+          setState({
+            address: liveAddress,
+            walletType: storedWalletType,
+            isConnected: true,
+            isConnecting: false,
+            error: null,
             role: storedRole,
             userId: storedUserId,
-          }))
+          });
+          return;
         }
-      } catch (err) {
-        console.error('[Tanko] Freighter init error:', err)
       }
+
+      // Fallback: show last known address until user reconnects or disconnects
+      setState({
+        address: storedAddress,
+        walletType: storedWalletType,
+        isConnected: true,
+        isConnecting: false,
+        error: null,
+        role: storedRole,
+        userId: storedUserId,
+      });
     }
 
-    restore()
-  }, [])
+    restore().catch((err) => {
+      console.error("[Tanko] Wallet restore error:", err);
+    });
+  }, [persistSession]);
 
-  const connect = async () => {
-    setState(prev => ({ ...prev, isConnecting: true, error: null }))
-    try {
-      const freighter = await import('@stellar/freighter-api')
-
-      const { isConnected } = await freighter.isConnected()
-      if (!isConnected) {
-        setState(prev => ({
+  const connectWithWallet = useCallback(
+    async (walletType: WalletType) => {
+      setState((prev) => ({ ...prev, isConnecting: true, error: null }));
+      try {
+        const address = await connectWallet(walletType);
+        persistSession(address, walletType);
+        setState((prev) => ({
           ...prev,
-          isConnecting: false,
-          freighterInstalled: false,
-          error: 'Freighter is not installed. Install it at freighter.app and reload the page.',
-        }))
-        return
-      }
-
-      const { address, error } = await freighter.requestAccess()
-
-      if (error) {
-        setState(prev => ({
-          ...prev,
-          isConnecting: false,
-          error: `Freighter denied access: ${error}`,
-        }))
-        return
-      }
-
-      if (address) {
-        localStorage.setItem(STORAGE_KEYS.ADDRESS, address)
-        setState(prev => ({
           address,
+          walletType,
           isConnected: true,
           isConnecting: false,
           error: null,
-          freighterInstalled: true,
-          role: prev.role,
-          userId: prev.userId,
-        }))
-        console.log(`[Tanko] ✅ Freighter connected: ${address}`)
+        }));
+        console.log(
+          `[Tanko] ✅ ${walletLabel(walletType)} connected: ${address}`,
+        );
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : "Could not connect. Unlock your wallet and try again.";
+        setState((prev) => ({
+          ...prev,
+          isConnecting: false,
+          error: message,
+        }));
       }
-    } catch (err: any) {
-      setState(prev => ({
-        ...prev,
-        isConnecting: false,
-        error: err?.message || 'Connection error. Make sure Freighter is unlocked.',
-      }))
-    }
-  }
+    },
+    [persistSession],
+  );
 
-  const disconnect = () => {
-    localStorage.removeItem(STORAGE_KEYS.ADDRESS)
-    localStorage.removeItem(STORAGE_KEYS.ROLE)
-    localStorage.removeItem(STORAGE_KEYS.USER_ID)
-    setState(prev => ({
-      ...prev,
+  const connect = useCallback(async () => {
+    await connectWithWallet(FREIGHTER_WALLET);
+  }, [connectWithWallet]);
+
+  const signTransaction = useCallback(
+    async (xdr: string): Promise<string> => {
+      if (!state.address) {
+        throw new Error("No wallet connected.");
+      }
+      try {
+        return await signWalletTransaction(xdr, state.address);
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : "Transaction signing failed.";
+        setState((prev) => ({ ...prev, error: message }));
+        throw err;
+      }
+    },
+    [state.address],
+  );
+
+  const disconnect = useCallback(async () => {
+    await disconnectWallet();
+    clearWalletSession();
+    setState({
       address: null,
+      walletType: null,
       isConnected: false,
       isConnecting: false,
       error: null,
       role: null,
       userId: null,
-    }))
-    console.log('[Tanko] Wallet disconnected')
-  }
+    });
+    console.log("[Tanko] Wallet disconnected");
+    if (typeof window !== "undefined") {
+      window.location.href = "/connect";
+    }
+  }, [clearWalletSession]);
 
-  const setRole = (role: UserRole) => {
+  const setRole = useCallback((role: UserRole) => {
     if (role) {
-      localStorage.setItem(STORAGE_KEYS.ROLE, role)
+      localStorage.setItem(STORAGE_KEYS.ROLE, role);
     } else {
-      localStorage.removeItem(STORAGE_KEYS.ROLE)
+      localStorage.removeItem(STORAGE_KEYS.ROLE);
     }
-    setState(prev => ({ ...prev, role }))
-  }
+    setState((prev) => ({ ...prev, role }));
+  }, []);
 
-  const setUserId = (userId: string | null) => {
+  const setUserId = useCallback((userId: string | null) => {
     if (userId) {
-      localStorage.setItem(STORAGE_KEYS.USER_ID, userId)
+      localStorage.setItem(STORAGE_KEYS.USER_ID, userId);
     } else {
-      localStorage.removeItem(STORAGE_KEYS.USER_ID)
+      localStorage.removeItem(STORAGE_KEYS.USER_ID);
     }
-    setState(prev => ({ ...prev, userId }))
-  }
+    setState((prev) => ({ ...prev, userId }));
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ ...state, connect, disconnect, setRole, setUserId }}>
+    <AuthContext.Provider
+      value={{
+        ...state,
+        walletAddress: state.address,
+        connectWithWallet,
+        connect,
+        signTransaction,
+        disconnect,
+        setRole,
+        setUserId,
+        walletLabel: walletLabel(state.walletType),
+      }}
+    >
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) throw new Error('useAuth must be used within an AuthProvider')
-  return context
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+  return context;
 }

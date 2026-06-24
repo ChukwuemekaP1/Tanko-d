@@ -1,100 +1,165 @@
-import { Request, Response } from 'express';
-import { statsService } from '../services/stats.service.js';
+import { Request, Response } from "express";
+import { statsService } from "../services/stats.service.js";
 
-export class StatsController {
-  async getDashboardStats(req: Request, res: Response): Promise<void> {
-    try {
-      const stats = await statsService.getDashboardStats();
-      res.status(200).json({ success: true, data: stats });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch stats',
-      });
-    }
+type QueryValue = string | string[] | undefined;
+
+function isDateOnly(value: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function parseDateValue(value: QueryValue, boundary: "start" | "end"): Date | undefined {
+  if (value === undefined) {
+    return undefined;
   }
 
-  async getMonthlyStats(req: Request, res: Response): Promise<void> {
-    try {
-      const year = req.query.year ? parseInt(req.query.year as string) : undefined;
-      const stats = await statsService.getMonthlyStats(year);
-      res.status(200).json({ success: true, data: stats });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch monthly stats',
-      });
-    }
+  if (Array.isArray(value) || typeof value !== "string") {
+    throw new Error("Invalid date format");
   }
 
-  async getConsumptionByDriver(req: Request, res: Response): Promise<void> {
-    try {
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-      const stats = await statsService.getConsumptionByDriver(limit);
-      res.status(200).json({ success: true, data: stats });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch consumption stats',
-      });
-    }
+  const trimmed = value.trim();
+  if (trimmed === "") {
+    return undefined;
   }
 
-  async getTopUnits(req: Request, res: Response): Promise<void> {
-    try {
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      const units = await statsService.getTopUnits(limit);
-      res.status(200).json({ success: true, data: units });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch top units',
-      });
+  if (isDateOnly(trimmed)) {
+    const [year, month, day] = trimmed.split("-").map(Number);
+
+    if ([year, month, day].some((part) => Number.isNaN(part))) {
+      throw new Error("Invalid date format");
     }
+
+    const parsed =
+      boundary === "start"
+        ? new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0))
+        : new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+
+    if (parsed.getUTCFullYear() !== year || parsed.getUTCMonth() !== month - 1 || parsed.getUTCDate() !== day) {
+      throw new Error("Invalid date format");
+    }
+
+    return parsed;
   }
 
-  async getRecentTransactions(req: Request, res: Response): Promise<void> {
-    try {
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-      const transactions = await statsService.getRecentTransactions(limit);
-      res.status(200).json({ success: true, data: transactions });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch recent transactions',
-      });
-    }
+  const parsed = new Date(trimmed);
+
+  if (Number.isNaN(parsed.getTime())) {
+    throw new Error("Invalid date format");
   }
 
-  async getReportStats(req: Request, res: Response): Promise<void> {
-    try {
-      const managerPubKey = req.query.managerPubKey as string | undefined;
-      const stats = await statsService.getReportStats(managerPubKey);
-      res.status(200).json({ success: true, data: stats });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch report stats',
-      });
-    }
+  return parsed;
+}
+
+function parseDateRange(query: Record<string, unknown>) {
+  const startDate = parseDateValue(query.startDate as QueryValue, "start");
+  const endDate = parseDateValue(query.endDate as QueryValue, "end");
+
+  if (startDate && endDate && startDate.getTime() > endDate.getTime()) {
+    throw new Error("Invalid date format");
   }
 
-  async getDriverStats(req: Request, res: Response): Promise<void> {
+  return { startDate, endDate };
+}
+
+function parseLimit(queryLimit: QueryValue, fallback = 50) {
+  if (queryLimit === undefined) {
+    return fallback;
+  }
+
+  if (Array.isArray(queryLimit)) {
+    throw new Error("Invalid limit");
+  }
+
+  const parsed = Number.parseInt(queryLimit, 10);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new Error("Invalid limit");
+  }
+
+  return parsed;
+}
+
+class StatsController {
+  async getDashboardStats(req: Request, res: Response) {
     try {
-      const { address } = req.params;
-      if (!address) {
-        res.status(400).json({ success: false, error: 'Driver address is required' });
-        return;
+      const { startDate, endDate } = parseDateRange(req.query as Record<string, unknown>);
+      const stats = await statsService.getDashboardStats(startDate, endDate);
+
+      return res.json(stats);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to load dashboard stats";
+
+      if (message === "Invalid date format") {
+        return res.status(400).json({ message });
       }
-      const stats = await statsService.getDriverStats(address);
+
+      return res.status(500).json({ message });
+    }
+  }
+
+  async getConsumptionByDriver(req: Request, res: Response) {
+    try {
+      const { startDate, endDate } = parseDateRange(req.query as Record<string, unknown>);
+      const stats = await statsService.getConsumptionByDriver(startDate, endDate);
+
+      return res.json(stats);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to load consumption stats";
+
+      if (message === "Invalid date format") {
+        return res.status(400).json({ message });
+      }
+
+      return res.status(500).json({ message });
+    }
+  }
+
+  async getRecentTransactions(req: Request, res: Response) {
+    try {
+      const { startDate, endDate } = parseDateRange(req.query as Record<string, unknown>);
+      const limit = parseLimit(req.query.limit as QueryValue, 50);
+      const transactions = await statsService.getRecentTransactions(startDate, endDate, limit);
+
+      return res.json(transactions);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to load recent transactions";
+
+      if (message === "Invalid date format" || message === "Invalid limit") {
+        return res.status(400).json({ message });
+      }
+
+      return res.status(500).json({ message });
+    }
+  }
+
+  async getReportStats(req: Request, res: Response) {
+    try {
+      const { startDate, endDate } = parseDateRange(req.query as Record<string, unknown>);
+      const report = await statsService.getReportStats(startDate, endDate);
+
+      return res.json(report);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to load report stats";
+
+      if (message === "Invalid date format") {
+        return res.status(400).json({ message });
+      }
+
+      return res.status(500).json({ message });
+    }
+  }
+
+  async getStatsSummary(req: Request, res: Response): Promise<void> {
+    try {
+      const stats = await statsService.getStatsSummary();
       res.status(200).json({ success: true, data: stats });
     } catch (error) {
       res.status(500).json({
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch driver stats',
+        error: error instanceof Error ? error.message : 'Failed to fetch stats summary',
       });
     }
   }
 }
 
 export const statsController = new StatsController();
+export default StatsController;

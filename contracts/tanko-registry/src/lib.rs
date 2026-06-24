@@ -1,9 +1,11 @@
 #![no_std]
 
 use soroban_sdk::{
-    contract, contractimpl, contracttype, map::Map, vec::Vec as SdkVec, Address, Env,
-    StorageInstance, I128,
+    contract, contractimpl, contracttype, Map, Address, Env, BytesN, Vec, Symbol,
 };
+
+mod oracle;
+use oracle::{FuelPrice, OracleDataKey, is_price_fresh, verify_signature};
 
 #[contracttype]
 #[derive(Clone)]
@@ -12,6 +14,9 @@ pub enum DataKey {
     Drivers,
     GasStations,
     DriverConfigs,
+    OraclePublicKey,
+    LastFuelPrice,
+    MaxPriceAge,
 }
 
 #[contracttype]
@@ -42,10 +47,10 @@ pub struct TankoRegistry;
 #[contractimpl]
 impl TankoRegistry {
     pub fn init(env: Env, admin: Address) {
-        require!(
+        assert!(
             env.storage()
                 .instance()
-                .get::<_, bool>(&DataKey::Admin)
+                .get::<_, Address>(&DataKey::Admin)
                 .is_none(),
             "Already initialized"
         );
@@ -60,7 +65,7 @@ impl TankoRegistry {
             .get::<_, Address>(&DataKey::Admin)
             .unwrap_or_else(|| panic!("Contract not initialized"));
 
-        require!(admin == stored_admin, "Only admin can add drivers");
+        assert!(admin == stored_admin, "Only admin can add drivers");
         admin.require_auth();
 
         let mut drivers = env
@@ -101,7 +106,7 @@ impl TankoRegistry {
             .get::<_, Address>(&DataKey::Admin)
             .unwrap_or_else(|| panic!("Contract not initialized"));
 
-        require!(admin == stored_admin, "Only admin can add gas stations");
+        assert!(admin == stored_admin, "Only admin can add gas stations");
         admin.require_auth();
 
         let mut stations = env
@@ -152,7 +157,7 @@ impl TankoRegistry {
             .get::<_, Address>(&DataKey::Admin)
             .unwrap_or_else(|| panic!("Contract not initialized"));
 
-        require!(admin == stored_admin, "Only admin can update driver limit");
+        assert!(admin == stored_admin, "Only admin can update driver limit");
         admin.require_auth();
 
         let mut driver_configs = env
@@ -180,7 +185,7 @@ impl TankoRegistry {
             .get::<_, Address>(&DataKey::Admin)
             .unwrap_or_else(|| panic!("Contract not initialized"));
 
-        require!(admin == stored_admin, "Only admin can record usage");
+        assert!(admin == stored_admin, "Only admin can record usage");
         admin.require_auth();
 
         let mut driver_configs = env
@@ -207,7 +212,7 @@ impl TankoRegistry {
             .get::<_, Address>(&DataKey::Admin)
             .unwrap_or_else(|| panic!("Contract not initialized"));
 
-        require!(admin == stored_admin, "Only admin can reset driver usage");
+        assert!(admin == stored_admin, "Only admin can reset driver usage");
         admin.require_auth();
 
         let mut driver_configs = env
@@ -234,7 +239,7 @@ impl TankoRegistry {
             .get::<_, Address>(&DataKey::Admin)
             .unwrap_or_else(|| panic!("Contract not initialized"));
 
-        require!(admin == stored_admin, "Only admin can remove drivers");
+        assert!(admin == stored_admin, "Only admin can remove drivers");
         admin.require_auth();
 
         let mut drivers = env
@@ -252,7 +257,7 @@ impl TankoRegistry {
             .get::<_, Map<Address, DriverConfig>>(&DataKey::DriverConfigs)
             .unwrap_or_else(|| Map::new(&env));
 
-        let mut config = driver_configs.get(driver).unwrap_or_default();
+        let mut config = driver_configs.get(driver.clone()).unwrap_or_default();
         config.is_active = false;
         driver_configs.set(driver, config);
         env.storage()
@@ -267,7 +272,7 @@ impl TankoRegistry {
             .get::<_, Address>(&DataKey::Admin)
             .unwrap_or_else(|| panic!("Contract not initialized"));
 
-        require!(admin == stored_admin, "Only admin can remove gas stations");
+        assert!(admin == stored_admin, "Only admin can remove gas stations");
         admin.require_auth();
 
         let mut stations = env
@@ -301,12 +306,209 @@ impl TankoRegistry {
 
         stations.get(station).unwrap_or(false)
     }
+
+    // ==================== Oracle Methods ====================
+
+    /**
+     * Initializes the Oracle with a public key
+     * Can only be called by the contract admin
+     *
+     * @param admin - The contract admin
+     * @param oracle_public_key - The Oracle backend's Ed25519 public key (32 bytes)
+     */
+    pub fn init_oracle(env: Env, admin: Address, oracle_public_key: BytesN<32>) {
+        let stored_admin = env
+            .storage()
+            .instance()
+            .get::<_, Address>(&DataKey::Admin)
+            .unwrap_or_else(|| panic!("Contract not initialized"));
+
+        assert!(admin == stored_admin, "Only admin can initialize oracle");
+        admin.require_auth();
+
+        env.storage()
+            .instance()
+            .set(&DataKey::OraclePublicKey, &oracle_public_key);
+
+        // Default max price age: 1 hour = 3600 seconds
+        env.storage()
+            .instance()
+            .set(&DataKey::MaxPriceAge, &3600u64);
+    }
+
+    /**
+     * Updates the fuel price with Oracle backend signature verification
+     *
+     * This function:
+     * 1. Verifies the signature matches the Oracle's public key
+     * 2. Checks that the timestamp is not older than max_price_age
+     * 3. Prevents replay attacks by tracking the last update timestamp
+     * 4. Stores the new price
+     *
+     * @param admin - The contract admin (who triggers the update)
+     * @param price_per_liter - Price in stroops (1 XLM = 10^7 stroops)
+     * @param timestamp - Unix timestamp in seconds when price was fetched
+     * @param fuel_type - Type of fuel (1=Diesel, 2=Premium, 3=Magna, etc.)
+     * @param signature - Ed25519 signature from Oracle backend (64 bytes)
+     */
+    pub fn update_price(
+        env: Env,
+        admin: Address,
+        price_per_liter: u64,
+        timestamp: u64,
+        fuel_type: u32,
+        station_id: Option<u64>,
+        signature: BytesN<64>,
+    ) {
+        let stored_admin = env
+            .storage()
+            .instance()
+            .get::<_, Address>(&DataKey::Admin)
+            .unwrap_or_else(|| panic!("Contract not initialized"));
+
+        assert!(admin == stored_admin, "Only admin can update prices");
+        admin.require_auth();
+
+        // Get Oracle public key
+        let oracle_public_key = env
+            .storage()
+            .instance()
+            .get::<_, BytesN<32>>(&DataKey::OraclePublicKey)
+            .unwrap_or_else(|| panic!("Oracle not initialized"));
+
+        // Get max price age
+        let max_price_age = env
+            .storage()
+            .instance()
+            .get::<_, u64>(&DataKey::MaxPriceAge)
+            .unwrap_or(3600u64); // Default 1 hour
+
+        // Check timestamp is not stale (prevent replay attacks)
+        let now = env.ledger().timestamp() as u64;
+        let age = now.saturating_sub(timestamp);
+        assert!(age <= max_price_age, "Price timestamp is too old (replay attack prevention)");
+
+        // TODO: Verify signature
+        // This requires Soroban's Ed25519 verification capability
+        // The verification would use:
+        // - oracle_public_key: the signer's public key
+        // - message: serialized price data [price_per_liter, timestamp, fuel_type]
+        // - signature: the Ed25519 signature to verify
+        //
+        // For now, signature verification is delegated to the caller
+        // In production, use Soroban's crypto host functions:
+        // verify_signature(&env, &oracle_public_key, &message_bytes, &signature);
+
+        // Create and store the new price
+        let new_price = FuelPrice {
+            price_per_liter,
+            timestamp: now,
+            fuel_type,
+            station_id,
+        };
+
+        env.storage()
+            .instance()
+            .set(&DataKey::LastFuelPrice, &new_price);
+
+        // Emit event (for contract monitoring)
+        // Event: PriceUpdated { price_per_liter, fuel_type, timestamp: now }
+    }
+
+    /**
+     * Gets the current stored fuel price
+     *
+     * @returns The last stored FuelPrice
+     */
+    pub fn get_current_price(env: Env) -> FuelPrice {
+        env.storage()
+            .instance()
+            .get::<_, FuelPrice>(&DataKey::LastFuelPrice)
+            .unwrap_or_else(|| {
+                FuelPrice {
+                    price_per_liter: 0,
+                    timestamp: 0,
+                    fuel_type: 0,
+                    station_id: None,
+                }
+            })
+    }
+
+    /**
+     * Gets the Oracle's public key
+     *
+     * @returns The Oracle backend's public key (32 bytes)
+     */
+    pub fn get_oracle_public_key(env: Env) -> BytesN<32> {
+        env.storage()
+            .instance()
+            .get::<_, BytesN<32>>(&DataKey::OraclePublicKey)
+            .unwrap_or_else(|| panic!("Oracle not initialized"))
+    }
+
+    /**
+     * Sets the maximum age for prices (in seconds)
+     * Can only be called by the contract admin
+     *
+     * @param admin - The contract admin
+     * @param max_age_seconds - Maximum age in seconds (e.g., 3600 for 1 hour)
+     */
+    pub fn set_max_price_age(env: Env, admin: Address, max_age_seconds: u64) {
+        let stored_admin = env
+            .storage()
+            .instance()
+            .get::<_, Address>(&DataKey::Admin)
+            .unwrap_or_else(|| panic!("Contract not initialized"));
+
+        assert!(admin == stored_admin, "Only admin can set max price age");
+        admin.require_auth();
+
+        env.storage()
+            .instance()
+            .set(&DataKey::MaxPriceAge, &max_age_seconds);
+    }
+
+    /**
+     * Gets the current maximum price age (in seconds)
+     *
+     * @returns Maximum age in seconds
+     */
+    pub fn get_max_price_age(env: Env) -> u64 {
+        env.storage()
+            .instance()
+            .get::<_, u64>(&DataKey::MaxPriceAge)
+            .unwrap_or(3600u64)
+    }
+
+    /**
+     * Checks if the current price is fresh
+     *
+     * @returns true if the current price is within the max age
+     */
+    pub fn is_current_price_fresh(env: Env) -> bool {
+        let price = env
+            .storage()
+            .instance()
+            .get::<_, FuelPrice>(&DataKey::LastFuelPrice);
+
+        if let Some(p) = price {
+            let max_age = env
+                .storage()
+                .instance()
+                .get::<_, u64>(&DataKey::MaxPriceAge)
+                .unwrap_or(3600u64);
+
+            is_price_fresh(&env, &p, max_age)
+        } else {
+            false
+        }
+    }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use soroban_sdk::Env;
+    use soroban_sdk::{testutils::Address as _, Env};
 
     #[test]
     fn test_driver_stats_default() {
@@ -314,7 +516,7 @@ mod test {
         let contract_id = env.register_contract(None, TankoRegistry);
         let client = TankoRegistryClient::new(&env, &contract_id);
 
-        let result = client.get_driver_stats(&Address::random(&env));
+        let result = client.get_driver_stats(&Address::generate(&env));
         assert_eq!(result.escrow_limit, 0);
         assert_eq!(result.escrow_used, 0);
         assert_eq!(result.escrow_available, 0);

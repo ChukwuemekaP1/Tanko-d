@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useEffect, useState } from "react"
 import type { ReactNode } from "react"
@@ -23,70 +23,56 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/providers/auth-provider"
 import { cn } from "@/lib/utils"
 
-const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001"
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001";
 
 interface User {
-  id: string
-  name: string
-  email: string
-  phone?: string
-  stellarPubKey: string
-  role: string
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  stellarPubKey: string;
+  role: string;
   units?: Array<{
-    id: string
-    plates: string
-    make: string
-    model: string
-  }>
-  createdAt: string
+    id: string;
+    plates: string;
+    make: string;
+    model: string;
+  }>;
+  createdAt: string;
 }
 
 export default function UsersPage() {
-  const { address: walletAddress } = useAuth()
-  const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState("")
+  const { address: walletAddress } = useAuth();
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     async function fetchUsers() {
-      console.log(`[Users] Fetching from ${BACKEND}/api/v1/users`)
-      setLoading(true)
-      setError(null)
-
+      setLoading(true);
+      setError(null);
       try {
-        const res = await fetch(`${BACKEND}/api/v1/users`)
-        console.log(`[Users] Response status: ${res.status}`)
-
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`)
-        }
-
-        const data = await res.json()
-        console.log(`[Users] Response:`, data)
-
-        if (data.success && data.data) {
-          setUsers(data.data)
-        } else {
-          setUsers([])
-        }
+        const res = await fetch(`${BACKEND}/api/v1/users`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setUsers(data.success && data.data ? data.data : []);
       } catch (err) {
-        console.error("[Users] Error fetching data:", err)
-        setError(err instanceof Error ? err.message : "Error de conexión")
-        setUsers([])
+        setError(err instanceof Error ? err.message : "Error de conexión");
+        setUsers([]);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
+    fetchUsers();
+  }, [walletAddress]);
 
-    fetchUsers()
-  }, [walletAddress])
-
-  const filteredUsers = users.filter(user =>
-    user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.stellarPubKey?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.stellarPubKey?.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   const managerCount = users.filter(user => user.role === "JEFE").length
   const driverCount = users.filter(user => user.role !== "JEFE").length
@@ -201,7 +187,7 @@ export default function UsersPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
 function PageHero({ eyebrow, title, description, icon: Icon }: { eyebrow: string; title: string; description: string; icon: LucideIcon }) {

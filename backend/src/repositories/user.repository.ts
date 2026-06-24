@@ -10,6 +10,7 @@ export interface CreateUserDTO {
   stellarPubKey?: string;
   role?: UserRole;
   status?: Status;
+  managerId?: string;
 }
 
 export interface UpdateUserDTO {
@@ -19,6 +20,7 @@ export interface UpdateUserDTO {
   stellarPubKey?: string;
   role?: UserRole;
   status?: Status;
+  managerId?: string;
 }
 
 export class UserRepository {
@@ -67,6 +69,14 @@ export class UserRepository {
     return prisma.user.count({ where: { role } });
   }
 
+  async findDriversByManagerId(managerId: string) {
+    return prisma.user.findMany({
+      where: { managerId, role: 'CONDUCTOR' },
+      include: { units: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async getDriversWithStats(managerPubKey: string) {
     return prisma.user.findMany({
       where: { role: 'CONDUCTOR' },
@@ -82,3 +92,4 @@ export class UserRepository {
 }
 
 export const userRepository = new UserRepository();
+

@@ -17,6 +17,7 @@ async function main() {
   await prisma.unit.deleteMany();
   await prisma.user.deleteMany();
   await prisma.escrowConfig.deleteMany();
+  await prisma.gasStation.deleteMany();
 
   console.log('Cleared existing data');
 
@@ -301,6 +302,88 @@ async function main() {
     }),
   ]);
   console.log('Created', fundRequests.length, 'fund requests');
+
+  const stations = await Promise.all([
+    prisma.gasStation.create({
+      data: {
+        name: 'Central CDMX Station',
+        address: 'Av. Insurgentes Sur 1234, Del Valle',
+        city: 'Ciudad de México',
+        state: 'CDMX',
+        lat: 19.3910,
+        lng: -99.1787,
+        hours: '24 horas',
+        services: ['Diesel', 'Magna', 'Premium', 'Aire'],
+        status: 'ACTIVE',
+      },
+    }),
+    prisma.gasStation.create({
+      data: {
+        name: 'Reforma Station',
+        address: 'Paseo de la Reforma 567, Juárez',
+        city: 'Ciudad de México',
+        state: 'CDMX',
+        lat: 19.4284,
+        lng: -99.1558,
+        hours: '06:00 - 22:00',
+        services: ['Diesel', 'Magna', 'Premium'],
+        status: 'ACTIVE',
+      },
+    }),
+    prisma.gasStation.create({
+      data: {
+        name: 'North Station',
+        address: 'Blvd. Manuel Ávila Camacho 890',
+        city: 'Ciudad de México',
+        state: 'CDMX',
+        lat: 19.4876,
+        lng: -99.2234,
+        hours: '24 horas',
+        services: ['Diesel', 'Magna', 'Lavado'],
+        status: 'ACTIVE',
+      },
+    }),
+    prisma.gasStation.create({
+      data: {
+        name: 'South Express Station',
+        address: 'Calzada de Tlalpan 2345',
+        city: 'Ciudad de México',
+        state: 'CDMX',
+        lat: 19.3012,
+        lng: -99.1456,
+        hours: '05:00 - 23:00',
+        services: ['Diesel', 'Magna'],
+        status: 'ACTIVE',
+      },
+    }),
+    prisma.gasStation.create({
+      data: {
+        name: 'East Station',
+        address: 'Av. Zaragoza 678, Balbuena',
+        city: 'Ciudad de México',
+        state: 'CDMX',
+        lat: 19.4123,
+        lng: -99.0987,
+        hours: '24 horas',
+        services: ['Diesel', 'Magna', 'Premium', 'Aire', 'Agua'],
+        status: 'ACTIVE',
+      },
+    }),
+    prisma.gasStation.create({
+      data: {
+        name: 'Querétaro Central',
+        address: 'Av. Constituyentes 456, Centro',
+        city: 'Querétaro',
+        state: 'Querétaro',
+        lat: 20.5881,
+        lng: -100.3899,
+        hours: '24 horas',
+        services: ['Diesel', 'Magna', 'Premium'],
+        status: 'ACTIVE',
+      },
+    }),
+  ]);
+  console.log('Created', stations.length, 'gas stations');
 
   console.log('Seed completed successfully!');
 }

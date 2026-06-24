@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: DATABASE_URL=postgresql://localhost/tanko_dev npx prisma generate --schema=./backend/prisma/schema.prisma
+
+      - name: Lint — frontend
+        run: cd frontend && npm run lint
+
+      - name: Typecheck — backend
+        run: npm run typecheck --workspace=backend
+
+      - name: Build — frontend
+        run: npm run build --workspace=frontend
+        env:
+          NEXT_PUBLIC_BACKEND_URL: https://api.tanko-d.test
+
+      - name: Build — backend
+        run: npm run build --workspace=backend
+
+      - name: Test — frontend
+        run: npm run test:run --workspace=frontend
+
+      - name: Test — backend
+        run: npm run test --workspace=backend

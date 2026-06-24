@@ -19,6 +19,7 @@ export interface TrustlessWorkResponse<T> {
   success: boolean;
   data?: T;
   error?: string;
+  statusCode?: number;
 }
 
 export class TrustlessWorkService {
@@ -270,11 +271,13 @@ export class TrustlessWorkService {
       return {
         success: false,
         error: message,
+        statusCode: error.response?.status,
       };
     }
     return {
       success: false,
       error: 'An unexpected error occurred',
+      statusCode: 500,
     };
   }
 }

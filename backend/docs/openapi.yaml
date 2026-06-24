@@ -1,0 +1,328 @@
+openapi: 3.0.3
+info:
+  title: Tanko API
+  version: 1.0.0
+  description: REST API for Tanko backend (Stellar escrow + fuel management)
+
+servers:
+  - url: /api/v1
+
+tags:
+  - name: Funds
+  - name: Stats
+  - name: Accounts
+  - name: Escrow
+
+paths:
+  # ================= FUNDS =================
+
+  /funds/request:
+    post:
+      tags: [Funds]
+      summary: Create fund request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFundRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /funds/approve:
+    post:
+      tags: [Funds]
+      summary: Approve fund request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApproveFundRequest"
+      responses:
+        "200":
+          description: Approved
+        "400":
+          description: Error
+
+  /funds/release:
+    post:
+      tags: [Funds]
+      summary: Release funds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReleaseFunds"
+      responses:
+        "200":
+          description: Released
+
+  /funds/reject:
+    post:
+      tags: [Funds]
+      summary: Reject fund request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectFundRequest"
+      responses:
+        "200":
+          description: Rejected
+
+  /funds/request/{id}:
+    get:
+      tags: [Funds]
+      summary: Get fund request by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Found
+        "404":
+          description: Not found
+
+  /funds/pending:
+    get:
+      tags: [Funds]
+      summary: Get pending fund requests
+      parameters:
+        - in: query
+          name: managerPubKey
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of pending requests
+
+  /funds/driver/{publicKey}:
+    get:
+      tags: [Funds]
+      summary: Get driver requests
+      parameters:
+        - in: path
+          name: publicKey
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Driver requests
+
+  # ================= STATS =================
+
+  /stats/dashboard:
+    get:
+      tags: [Stats]
+      summary: Dashboard statistics
+      parameters:
+        - $ref: "#/components/parameters/startDate"
+        - $ref: "#/components/parameters/endDate"
+      responses:
+        "200":
+          description: Dashboard stats
+
+  /stats/consumption-by-driver:
+    get:
+      tags: [Stats]
+      summary: Fuel consumption grouped by driver
+      parameters:
+        - $ref: "#/components/parameters/startDate"
+        - $ref: "#/components/parameters/endDate"
+      responses:
+        "200":
+          description: Consumption stats
+
+  /stats/recent-transactions:
+    get:
+      tags: [Stats]
+      summary: Recent transactions
+      parameters:
+        - $ref: "#/components/parameters/startDate"
+        - $ref: "#/components/parameters/endDate"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        "200":
+          description: Recent transactions list
+
+  /stats/reports:
+    get:
+      tags: [Stats]
+      summary: Report statistics
+      parameters:
+        - $ref: "#/components/parameters/startDate"
+        - $ref: "#/components/parameters/endDate"
+      responses:
+        "200":
+          description: Report data
+
+  /stats/summary:
+    get:
+      tags: [Stats]
+      summary: Overall stats summary
+      responses:
+        "200":
+          description: Summary stats
+
+  # ================= ACCOUNTS =================
+
+  /accounts/create:
+    post:
+      tags: [Accounts]
+      summary: Create testnet account
+      responses:
+        "201":
+          description: Account created
+
+  /accounts/fund:
+    post:
+      tags: [Accounts]
+      summary: Fund testnet account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [publicKey]
+              properties:
+                publicKey:
+                  type: string
+      responses:
+        "200":
+          description: Funded
+
+  # ================= ESCROW =================
+
+  /escrow/{contractId}/status:
+    get:
+      tags: [Escrow]
+      summary: Get escrow status
+      parameters:
+        - in: path
+          name: contractId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Escrow status
+        "404":
+          description: Not found
+
+components:
+  parameters:
+    startDate:
+      in: query
+      name: startDate
+      schema:
+        type: string
+        format: date
+      required: false
+
+    endDate:
+      in: query
+      name: endDate
+      schema:
+        type: string
+        format: date
+      required: false
+
+    limit:
+      in: query
+      name: limit
+      schema:
+        type: integer
+        minimum: 1
+      required: false
+
+  schemas:
+    CreateFundRequest:
+      type: object
+      required: [driverPubKey, managerPubKey, liters, amount]
+      properties:
+        driverPubKey:
+          type: string
+        managerPubKey:
+          type: string
+        liters:
+          type: number
+          minimum: 0
+        amount:
+          type: number
+          minimum: 0
+        description:
+          type: string
+
+    ApproveFundRequest:
+      type: object
+      required: [requestId, managerPubKey]
+      properties:
+        requestId:
+          type: string
+        managerSecret:
+          type: string
+        managerPubKey:
+          type: string
+
+    ReleaseFunds:
+      type: object
+      required: [requestId, managerSecret, managerPubKey]
+      properties:
+        requestId:
+          type: string
+        managerSecret:
+          type: string
+        managerPubKey:
+          type: string
+
+    RejectFundRequest:
+      type: object
+      required: [requestId, managerPubKey]
+      properties:
+        requestId:
+          type: string
+        managerPubKey:
+          type: string
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        error:
+          type: string
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string

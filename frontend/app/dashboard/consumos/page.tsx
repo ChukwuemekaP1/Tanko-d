@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useEffect, useState } from "react"
 import type { ReactNode } from "react"
@@ -31,74 +31,111 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/providers/auth-provider"
 
-const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001"
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001";
 
 interface FuelLog {
-  id: string
-  date: string
-  liters: number
-  amount: number
-  fuelType: string
-  station: string
-  stationAddress?: string
+  id: string;
+  date: string;
+  liters: number;
+  amount: number;
+  fuelType: string;
+  station: string;
+  stationAddress?: string;
   unit?: {
-    plates: string
-    make: string
-    model: string
-  }
+    plates: string;
+    make: string;
+    model: string;
+  };
   user?: {
-    name: string
-  }
+    name: string;
+  };
+}
+
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  helper,
+}: {
+  label: string;
+  value: string;
+  icon: React.ComponentType<{ className?: string }>;
+  helper?: string;
+}) {
+  return (
+    <div className="rounded-xl border bg-background p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm text-muted-foreground">{label}</p>
+          <p className="mt-1 text-2xl font-semibold tracking-tight">{value}</p>
+        </div>
+        <div className="rounded-full bg-muted p-2 text-muted-foreground">
+          <Icon className="h-4 w-4" />
+        </div>
+      </div>
+      {helper ? (
+        <p className="mt-3 text-xs text-muted-foreground">{helper}</p>
+      ) : null}
+    </div>
+  );
 }
 
 export default function FuelLogsPage() {
-  const { address: walletAddress } = useAuth()
-  const [fuelLogs, setFuelLogs] = useState<FuelLog[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [filterPeriod, setFilterPeriod] = useState("all")
+  const { address: walletAddress } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const searchParamsString = searchParams.toString();
+
+  const [fuelLogs, setFuelLogs] = useState<FuelLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const selectedRange = useMemo(() => {
+    const start = searchParams.get("startDate");
+    const end = searchParams.get("endDate");
+    return {
+      from: start ? parseISO(start) : undefined,
+      to: end ? parseISO(end) : undefined,
+    } as DateRangeValue;
+  }, [searchParamsString]);
 
   useEffect(() => {
     async function fetchFuelLogs() {
-      console.log(`[FuelLogs] Fetching from ${BACKEND}/api/v1/stats/recent-transactions?limit=50`)
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       try {
-        const res = await fetch(`${BACKEND}/api/v1/stats/recent-transactions?limit=50`)
-        console.log(`[FuelLogs] Response status: ${res.status}`)
+        const params = new URLSearchParams();
+        params.set("limit", "50");
+        if (selectedRange?.from) params.set("startDate", format(selectedRange.from, "yyyy-MM-dd"));
+        if (selectedRange?.to) params.set("endDate", format(selectedRange.to, "yyyy-MM-dd"));
 
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`)
-        }
-
-        const data = await res.json()
-        console.log(`[FuelLogs] Response:`, data)
-
-        if (data.success && data.data) {
-          setFuelLogs(data.data)
-        } else {
-          setFuelLogs([])
-        }
+        const res = await fetch(`${BACKEND}/api/v1/stats/recent-transactions?${params.toString()}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setFuelLogs(data.success && data.data ? data.data : []);
       } catch (err) {
-        console.error("[FuelLogs] Error fetching data:", err)
-        setError(err instanceof Error ? err.message : "Error de conexión")
-        setFuelLogs([])
+        setError(err instanceof Error ? err.message : "Connection Error");
+        setFuelLogs([]);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
+    fetchFuelLogs();
+  }, [walletAddress, selectedRange?.from, selectedRange?.to]);
 
-    fetchFuelLogs()
-  }, [walletAddress])
+  const filtered = fuelLogs.filter(
+    (c) =>
+      c.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.unit?.make?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.unit?.plates?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.station?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const filtered = fuelLogs.filter(c =>
-    c.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.unit?.make?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.unit?.plates?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.station?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const totalAmount = filtered.reduce((acc, c) => acc + c.amount, 0);
+  const totalLiters = filtered.reduce((acc, c) => acc + c.liters, 0);
 
   const totalAmount = filtered.reduce((acc, c) => acc + c.amount, 0)
   const totalLiters = filtered.reduce((acc, c) => acc + c.liters, 0)
@@ -219,6 +256,10 @@ export default function FuelLogsPage() {
                         {new Date(log.date).toLocaleString("es-MX", { dateStyle: "medium", timeStyle: "short" })}
                       </div>
                     </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium uppercase tracking-tight">
+                      <Calendar className="h-3.5 w-3.5" />
+                      {new Date(log.date).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -229,7 +270,7 @@ export default function FuelLogsPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
 function PageHero({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) {

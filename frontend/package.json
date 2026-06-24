@@ -1,5 +1,4 @@
 {
-
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,10 +6,23 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "build:mobile": "node build-mobile.js && npx cap sync",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@capacitor-community/barcode-scanner": "^4.0.1",
+    "@capacitor/android": "^8.3.4",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/cli": "^8.3.4",
+    "@capacitor/core": "^8.3.4",
+    "@capacitor/geolocation": "^8.2.0",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.3.4",
+    "@capacitor/keyboard": "^8.0.3",
+    "@capacitor/network": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2",
     "@creit.tech/stellar-wallets-kit": "^2.0.1",
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "1.2.12",
@@ -50,7 +62,9 @@
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.6.0",
     "framer-motion": "^12.41.0",
+    "html5-qrcode": "^2.3.8",
     "input-otp": "1.4.2",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.564.0",
     "next": "^16.2.0",
     "next-auth": "^4.24.13",
@@ -59,6 +73,7 @@
     "react-day-picker": "9.13.2",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.54.1",
+    "react-leaflet": "^5.0.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.0",
     "sonner": "^1.7.1",
@@ -69,8 +84,10 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "@tailwindcss/postcss": "^4.2.0",
     "@testing-library/react": "^16.3.2",
+    "@types/leaflet": "^1.9.21",
     "@types/node": "^22",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",

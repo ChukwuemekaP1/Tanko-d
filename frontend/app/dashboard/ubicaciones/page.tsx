@@ -24,71 +24,174 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001"
 
-interface Location {
+// Dynamically import the map component with no SSR to avoid 'window is not defined' errors from Leaflet
+const StationsMap = dynamic(
+  () => import("@/components/maps/StationsMap"),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full items-center justify-center bg-muted/20">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+)
+
+interface GasStation {
   id: string
   name: string
   address: string
-  city?: string
-  coordinates?: string
-  hours?: string
+  city?: string | null
+  state?: string | null
+  lat?: number | string | null
+  lng?: number | string | null
+  hours?: string | null
   services?: string[]
+  status: string
+}
+
+function normalizeStation(station: GasStation): GasStation {
+  return {
+    ...station,
+    services: Array.isArray(station.services) ? station.services : [],
+  }
+}
+
+function toCoordinate(value: GasStation["lat"]) {
+  if (value === null || value === undefined || value === "") return null
+
+  const coordinate = typeof value === "number" ? value : Number(value)
+  return Number.isFinite(coordinate) ? coordinate : null
+}
+
+function toMapLocation(station: GasStation): StationMapLocation | null {
+  const lat = toCoordinate(station.lat)
+  const lng = toCoordinate(station.lng)
+
+  if (lat === null || lng === null) return null
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null
+
+  return {
+    id: station.id,
+    name: station.name,
+    address: station.address,
+    city: station.city ?? undefined,
+    state: station.state ?? undefined,
+    lat,
+    lng,
+    hours: station.hours ?? undefined,
+  }
 }
 
 export default function LocationsPage() {
-  const [locations, setLocations] = useState<Location[]>([])
+  const { role } = useAuth()
+  const [stations, setStations] = useState<GasStation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
+  const isJefe = role === "JEFE"
+  const [selectedStationId, setSelectedStationId] = useState<string | null>(null)
 
   useEffect(() => {
-    async function fetchLocations() {
-      console.log(`[Locations] Fetching from ${BACKEND}/api/v1/stats/recent-transactions`)
+    async function fetchStations() {
       setLoading(true)
       setError(null)
-
       try {
-        const res = await fetch(`${BACKEND}/api/v1/stats/recent-transactions?limit=100`)
-        console.log(`[Locations] Response status: ${res.status}`)
-
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`)
-        }
-
+        const res = await fetch(`${BACKEND}/api/v1/stations?active=true`)
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const data = await res.json()
-        console.log(`[Locations] Response:`, data)
+        const nextStations: GasStation[] = Array.isArray(data.data)
+          ? data.data.map((station: GasStation) => normalizeStation(station))
+          : []
+        const firstMappableStation = nextStations
+          .map(toMapLocation)
+          .find((station): station is StationMapLocation => Boolean(station))
 
-        if (data.success && data.data) {
-          const uniqueStations = new Map<string, Location>()
-          data.data.forEach((tx: any) => {
-            if (tx.station && !uniqueStations.has(tx.station)) {
-              uniqueStations.set(tx.station, {
-                id: tx.id,
-                name: tx.station,
-                address: tx.station,
-                city: "México",
-              })
-            }
-          })
-          setLocations(Array.from(uniqueStations.values()))
-        } else {
-          setLocations([])
-        }
+        setStations(nextStations)
+        setSelectedStationId(firstMappableStation?.id ?? nextStations[0]?.id ?? null)
       } catch (err) {
-        console.error("[Locations] Error fetching data:", err)
-        setError(err instanceof Error ? err.message : "Error de conexión")
-        setLocations([])
+        setError(err instanceof Error ? err.message : "Error de conexion")
+        setStations([])
+        setSelectedStationId(null)
       } finally {
         setLoading(false)
       }
     }
-
-    fetchLocations()
+    fetchStations()
   }, [])
 
-  const filteredLocations = locations.filter(loc =>
-    loc.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    loc.address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    loc.city?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filtered = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase()
+    if (!query) return stations
+
+    return stations.filter((station) =>
+      [
+        station.name,
+        station.address,
+        station.city ?? "",
+        station.state ?? "",
+      ].some((value) => value.toLowerCase().includes(query))
+    )
+  }, [searchQuery, stations])
+
+  const mapStations = useMemo(
+    () => filtered.map(toMapLocation).filter((station): station is StationMapLocation => Boolean(station)),
+    [filtered]
+  )
+  const validStations = useMemo(() => getMappableStations(filtered), [filtered])
+  const coordinatesById = useMemo(
+    () =>
+      new Map(
+        getMappableStations(stations).map((station) => [
+          station.id,
+          { lat: station.lat, lng: station.lng },
+        ]),
+      ),
+    [stations],
+  )
+
+  useEffect(() => {
+    if (!selectedStationId || filtered.some((station) => station.id === selectedStationId)) return
+    setSelectedStationId(mapStations[0]?.id ?? filtered[0]?.id ?? null)
+  }, [filtered, mapStations, selectedStationId])
+
+  const StationForm = () => (
+    <SheetContent className="sm:max-w-[500px]">
+      <SheetHeader className="pb-6">
+        <SheetTitle className="text-2xl font-bold">Add New Gas Station</SheetTitle>
+        <SheetDescription>
+          Register a new authorized fueling location for your fleet.
+        </SheetDescription>
+      </SheetHeader>
+      <div className="space-y-6 py-4">
+        {/* Mock form fields for now */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Station Name</label>
+          <Input placeholder="e.g. Pemex Santa Fe" />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Full Address</label>
+          <Input placeholder="Avenida Siempre Viva 123..." />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">City</label>
+            <Input placeholder="CDMX" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">State</label>
+            <Input placeholder="Mexico" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Operating Hours</label>
+          <Input placeholder="e.g. 24/7 or 06:00 - 22:00" />
+        </div>
+        <Button className="w-full mt-4" onClick={() => toast.success("Feature coming soon!")}>
+          Register Station
+        </Button>
+      </div>
+    </SheetContent>
   )
 
   if (error) {

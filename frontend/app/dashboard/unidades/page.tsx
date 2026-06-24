@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useEffect, useState } from "react"
 import type { ReactNode } from "react"
@@ -32,70 +32,56 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/providers/auth-provider"
 import { cn } from "@/lib/utils"
 
-const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001"
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001";
 
 interface Unit {
-  id: string
-  make: string
-  model: string
-  year?: number
-  plates: string
-  isActive: boolean
-  specs?: string
-  permitNumber?: string
-  permitExpiry?: string
+  id: string;
+  make: string;
+  model: string;
+  year?: number;
+  plates: string;
+  isActive: boolean;
+  specs?: string;
+  permitNumber?: string;
+  permitExpiry?: string;
   user?: {
-    name: string
-  }
+    name: string;
+  };
 }
 
 export default function UnidadesPage() {
-  const { address: walletAddress } = useAuth()
-  const [units, setUnits] = useState<Unit[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState("")
+  const { address: walletAddress } = useAuth();
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     async function fetchUnits() {
-      console.log(`[Units] Fetching from ${BACKEND}/api/v1/units`)
-      setLoading(true)
-      setError(null)
-
+      setLoading(true);
+      setError(null);
       try {
-        const res = await fetch(`${BACKEND}/api/v1/units`)
-        console.log(`[Units] Response status: ${res.status}`)
-
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`)
-        }
-
-        const data = await res.json()
-        console.log(`[Units] Response:`, data)
-
-        if (data.success && data.data) {
-          setUnits(data.data)
-        } else {
-          setUnits([])
-        }
+        const res = await fetch(`${BACKEND}/api/v1/units`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setUnits(data.success && data.data ? data.data : []);
       } catch (err) {
-        console.error("[Units] Error fetching data:", err)
-        setError(err instanceof Error ? err.message : "Error de conexión")
-        setUnits([])
+        setError(err instanceof Error ? err.message : "Error de conexión");
+        setUnits([]);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
+    fetchUnits();
+  }, [walletAddress]);
 
-    fetchUnits()
-  }, [walletAddress])
-
-  const filteredUnits = units.filter(unit =>
-    unit.make?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    unit.model?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    unit.plates?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    unit.user?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredUnits = units.filter(
+    (unit) =>
+      unit.make?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      unit.model?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      unit.plates?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      unit.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   const activeUnits = units.filter(unit => unit.isActive).length
   const assignedUnits = units.filter(unit => unit.user?.name).length

@@ -11,7 +11,7 @@ if (rootEnv.error) {
 export const config = {
   port: parseInt(process.env.PORT || '3000', 10),
   env: process.env.NODE_ENV || 'development',
-  
+
   trustlessWork: {
     apiUrl: process.env.TRUSTLESS_WORK_API_URL || 'https://dev.api.trustlesswork.com',
     apiKey: process.env.TRUSTLESS_WORK_API_KEY || '',
@@ -20,9 +20,41 @@ export const config = {
   stellar: {
     network: process.env.STELLAR_NETWORK || 'testnet',
     horizonUrl: process.env.STELLAR_HORIZON_URL || 'https://horizon-testnet.stellar.org',
+    networkPassphrase:
+      process.env.STELLAR_NETWORK_PASSPHRASE || 'Test SDF Network ; September 2015',
+  },
+
+  soroban: {
+    rpcUrl: process.env.SOROBAN_RPC_URL || 'https://soroban-testnet.stellar.org:443',
+    networkPassphrase: process.env.SOROBAN_NETWORK_PASSPHRASE || 'Test SDF Network ; September 2015',
+    contractId: process.env.SOROBAN_CONTRACT_ID || '',
   },
 
   cors: {
     origin: process.env.CORS_ORIGIN || '*',
+  },
+
+  get fx() {
+    return {
+      mxnPerUsd: parseFloat(process.env.FX_MXN_PER_USD || '17.24'),
+      apiUrl: process.env.FX_RATE_API_URL || '',
+    };
+  },
+
+  get oracle() {
+    return {
+      seedPrices: {
+        magna: parseFloat(process.env.ORACLE_SEED_PRICE_MAGNA || '24.00'),
+        premium: parseFloat(process.env.ORACLE_SEED_PRICE_PREMIUM || '28.66'),
+        diesel: parseFloat(process.env.ORACLE_SEED_PRICE_DIESEL || '27.44'),
+      },
+      privateKey: process.env.ORACLE_PRIVATE_KEY || '',
+      publicKey: process.env.ORACLE_PUBLIC_KEY || '',
+      defaultStationId: process.env.ORACLE_DEFAULT_STATION_ID || 'CRE-MX-001',
+      priceSourceUrl: process.env.ORACLE_PRICE_SOURCE_URL || '',
+      workerEnabled: process.env.ORACLE_WORKER_ENABLED !== 'false',
+      workerIntervalMs: parseInt(process.env.ORACLE_WORKER_INTERVAL_MS || '3600000', 10),
+      contractId: process.env.ORACLE_CONTRACT_ID || '',
+    };
   },
 };

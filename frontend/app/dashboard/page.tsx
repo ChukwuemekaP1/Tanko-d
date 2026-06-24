@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useEffect, useState } from "react"
 import type { ReactNode } from "react"
@@ -42,166 +42,189 @@ import {
 import { useAuth } from "@/providers/auth-provider"
 import { cn } from "@/lib/utils"
 
-const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001"
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001";
 
 interface DashboardStats {
-  totalSpent: number
-  totalLiters: number
-  transactionCount: number
-  activeUsers: number
-  registeredUnits: number
-  activeUnits: number
-  escrowBalance: number
-  totalReleased: number
-  pendingRequests: number
+  totalSpent: number;
+  totalLiters: number;
+  transactionCount: number;
+  activeUsers: number;
+  registeredUnits: number;
+  activeUnits: number;
+  escrowBalance: number;
+  totalReleased: number;
+  pendingRequests: number;
 }
 
 interface MonthlyStats {
-  month: string
-  spend: number
-  liters: number
-  transactionCount: number
+  month: string;
+  spend: number;
+  liters: number;
+  transactionCount: number;
 }
 
 interface PendingRequest {
-  id: string
-  liters: number
-  amount: number
-  description: string
-  status: string
-  createdAt: string
+  id: string;
+  liters: number;
+  amount: number;
+  description: string;
+  status: string;
+  createdAt: string;
   driver: {
-    name: string
-    stellarPubKey: string
-  }
+    name: string;
+    stellarPubKey: string;
+  };
 }
 
 interface RecentTransaction {
-  id: string
-  date: string
-  driver: string
-  unit: string
-  plates: string
-  station: string
-  amount: number
-  liters: number
+  id: string;
+  date: string;
+  driver: string;
+  unit: string;
+  plates: string;
+  station: string;
+  amount: number;
+  liters: number;
 }
 
 interface TopUnit {
-  id: string
-  make: string
-  model: string
-  plates: string
-  monthlySpend: number
-  totalLiters: number
-  driverName: string
+  id: string;
+  make: string;
+  model: string;
+  plates: string;
+  monthlySpend: number;
+  totalLiters: number;
+  driverName: string;
 }
 
 export default function DashboardPage() {
-  const { address: walletAddress } = useAuth()
-  const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [monthlyStats, setMonthlyStats] = useState<MonthlyStats[]>([])
-  const [recentTransactions, setRecentTransactions] = useState<RecentTransaction[]>([])
-  const [topUnits, setTopUnits] = useState<TopUnit[]>([])
-  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([])
-  const [loading, setLoading] = useState(true)
-  const [processingId, setProcessingId] = useState<string | null>(null)
+  const { address: walletAddress, role, userId } = useAuth();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [monthlyStats, setMonthlyStats] = useState<MonthlyStats[]>([]);
+  const [recentTransactions, setRecentTransactions] = useState<
+    RecentTransaction[]
+  >([]);
+  const [topUnits, setTopUnits] = useState<TopUnit[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+
+  const [kycData, setKycData] = useState<any>(null);
+  const [showKYCForm, setShowKYCForm] = useState(false);
+
+  const fetchKYC = async () => {
+    if (!userId) return;
+    try {
+      const res = await fetch(`${BACKEND}/api/v1/kyc/${userId}`);
+      const data = await res.json();
+      if (data.success) {
+        setKycData(data.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch KYC", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchKYC();
+  }, [userId]);
 
   useEffect(() => {
     async function fetchData() {
       if (!walletAddress) {
-        setLoading(false)
-        return
+        setLoading(false);
+        return;
       }
 
       try {
-        const [statsRes, monthlyRes, transactionsRes, topUnitsRes, pendingRes] = await Promise.all([
-          fetch(`${BACKEND}/api/v1/stats/dashboard`),
-          fetch(`${BACKEND}/api/v1/stats/monthly`),
-          fetch(`${BACKEND}/api/v1/stats/recent-transactions?limit=5`),
-          fetch(`${BACKEND}/api/v1/stats/top-units?limit=5`),
-          fetch(`${BACKEND}/api/v1/funds/manager/${walletAddress}/pending`),
-        ])
+        const [statsRes, monthlyRes, transactionsRes, topUnitsRes, pendingRes] =
+          await Promise.all([
+            fetch(`${BACKEND}/api/v1/stats/dashboard`),
+            fetch(`${BACKEND}/api/v1/stats/monthly`),
+            fetch(`${BACKEND}/api/v1/stats/recent-transactions?limit=5`),
+            fetch(`${BACKEND}/api/v1/stats/top-units?limit=5`),
+            fetch(`${BACKEND}/api/v1/funds/manager/${walletAddress}/pending`),
+          ]);
 
         if (statsRes.ok) {
-          const statsData = await statsRes.json()
-          setStats(statsData.data)
+          const statsData = await statsRes.json();
+          setStats(statsData.data);
         }
 
         if (monthlyRes.ok) {
-          const monthlyData = await monthlyRes.json()
-          setMonthlyStats(monthlyData.data)
+          const monthlyData = await monthlyRes.json();
+          setMonthlyStats(monthlyData.data);
         }
 
         if (transactionsRes.ok) {
-          const transactionsData = await transactionsRes.json()
-          setRecentTransactions(transactionsData.data)
+          const transactionsData = await transactionsRes.json();
+          setRecentTransactions(transactionsData.data);
         }
 
         if (topUnitsRes.ok) {
-          const unitsData = await topUnitsRes.json()
-          setTopUnits(unitsData.data)
+          const unitsData = await topUnitsRes.json();
+          setTopUnits(unitsData.data);
         }
 
         if (pendingRes.ok) {
-          const pendingData = await pendingRes.json()
-          setPendingRequests(pendingData.data || [])
+          const pendingData = await pendingRes.json();
+          setPendingRequests(pendingData.data || []);
         }
       } catch (error) {
-        console.error("Error fetching dashboard data:", error)
+        console.error("Error fetching dashboard data:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    fetchData()
-  }, [walletAddress])
+    fetchData();
+  }, [walletAddress]);
 
   const handleApprove = async (requestId: string) => {
-    setProcessingId(requestId)
+    setProcessingId(requestId);
     try {
       const res = await fetch(`${BACKEND}/api/v1/trustless/solicitud/approve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ requestId }),
-      })
-      const data = await res.json()
+      });
+      const data = await res.json();
 
       if (res.ok && data.success) {
-        toast.success("Solicitud aprobada")
-        setPendingRequests(prev => prev.filter(r => r.id !== requestId))
+        toast.success("Solicitud aprobada");
+        setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
       } else {
-        toast.error("Error al aprobar", { description: data.error })
+        toast.error("Error al aprobar", { description: data.error });
       }
     } catch (err) {
-      toast.error("Error de conexión")
+      toast.error("Error de conexión");
     } finally {
-      setProcessingId(null)
+      setProcessingId(null);
     }
-  }
+  };
 
   const handleReject = async (requestId: string) => {
-    setProcessingId(requestId)
+    setProcessingId(requestId);
     try {
       const res = await fetch(`${BACKEND}/api/v1/trustless/solicitud/reject`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ requestId }),
-      })
-      const data = await res.json()
+      });
+      const data = await res.json();
 
       if (res.ok && data.success) {
-        toast.success("Solicitud rechazada")
-        setPendingRequests(prev => prev.filter(r => r.id !== requestId))
+        toast.success("Solicitud rechazada");
+        setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
       } else {
-        toast.error("Error al rechazar", { description: data.error })
+        toast.error("Error al rechazar", { description: data.error });
       }
     } catch (err) {
-      toast.error("Error de conexión")
+      toast.error("Error de conexión");
     } finally {
-      setProcessingId(null)
+      setProcessingId(null);
     }
-  }
+  };
 
   const defaultStats: DashboardStats = {
     totalSpent: 0,
@@ -213,9 +236,9 @@ export default function DashboardPage() {
     escrowBalance: 0,
     totalReleased: 0,
     pendingRequests: 0,
-  }
+  };
 
-  const displayStats = stats || defaultStats
+  const displayStats = stats || defaultStats;
 
   const statsCards = [
     {
@@ -246,7 +269,7 @@ export default function DashboardPage() {
       icon: Droplets,
       tone: "success" as const,
     },
-  ]
+  ];
 
   if (loading) {
     return (
@@ -256,7 +279,7 @@ export default function DashboardPage() {
           <p className="text-body-sm text-muted-foreground">Cargando dashboard...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -281,6 +304,43 @@ export default function DashboardPage() {
           </div>
         </div>
       </section>
+
+      {role === "CONDUCTOR" && kycData?.status !== "VERIFIED" && (
+        <Card className="border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-900/10">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-amber-600" />
+              <CardTitle className="text-amber-800 dark:text-amber-400">
+                KYC Verification Required
+              </CardTitle>
+            </div>
+            <CardDescription className="text-amber-700 dark:text-amber-500">
+              {kycData?.status === "PENDING"
+                ? "Your KYC is currently under review. Please wait for an administrator to verify it."
+                : "You need to verify your driver's license before you can operate fleet units."}
+            </CardDescription>
+          </CardHeader>
+          {kycData?.status !== "PENDING" && (
+            <CardContent>
+              {!showKYCForm ? (
+                <Button onClick={() => setShowKYCForm(true)}>
+                  Start Verification
+                </Button>
+              ) : (
+                <div className="max-w-md bg-background p-6 rounded-xl border shadow-sm">
+                  <DriverKYCForm
+                    userId={userId!}
+                    onSuccess={() => {
+                      setShowKYCForm(false);
+                      fetchKYC();
+                    }}
+                  />
+                </div>
+              )}
+            </CardContent>
+          )}
+        </Card>
+      )}
 
       {pendingRequests.length > 0 && (
         <Card className="tanko-glass rounded-lg border-warning/25 py-0">
@@ -594,7 +654,7 @@ function ListRow({
         <p className="text-caption text-muted-foreground">{meta}</p>
       </div>
     </div>
-  )
+  );
 }
 
 function EmptyState({ children }: { children: ReactNode }) {

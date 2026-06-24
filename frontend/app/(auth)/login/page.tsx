@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { useAuth, UserRole } from '@/providers/auth-provider'
 import { TankoLogoMinimal } from '@/components/logo'
+import { WalletConnectModal } from '@/components/wallet/wallet-connect-modal'
 
 const TRUST_POINTS = [
   'Stellar Testnet wallet access',
@@ -25,9 +26,8 @@ const TRUST_POINTS = [
 
 export default function LoginPage() {
   const router = useRouter()
-  const { address, isConnected, isConnecting, connect, disconnect, setRole, role } = useAuth()
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
+  const { address, isConnected, isConnecting, disconnect, setRole, role } = useAuth()
+  const [modalOpen, setModalOpen] = useState(false)
 
   useEffect(() => {
     if (isConnected && address && role) {
@@ -38,19 +38,6 @@ export default function LoginPage() {
       }
     }
   }, [isConnected, address, role, router])
-
-  const handleWalletConnect = async () => {
-    setIsLoading(true)
-    setError('')
-
-    try {
-      await connect()
-    } catch (err) {
-      setError('Error al conectar wallet. Asegúrate de tener Freighter instalado.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleRoleSelect = (selectedRole: UserRole) => {
     setRole(selectedRole)
@@ -145,7 +132,7 @@ export default function LoginPage() {
               disabled={isLoading}
               size="lg"
             >
-              {isLoading ? (
+              {isConnecting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Conectando...

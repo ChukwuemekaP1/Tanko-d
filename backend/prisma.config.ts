@@ -1,18 +1,13 @@
-import 'dotenv/config';
-import { defineConfig } from 'prisma/config';
-import path from 'path';
+import "dotenv/config";
+import { defineConfig, env } from "prisma/config";
 
 export default defineConfig({
-  earlyAccess: true,
-  schema: path.join(__dirname, 'prisma', 'schema.prisma'),
-  migrate: {
-    adapter: async () => {
-      const { PrismaPostgres } = await import('@prisma/adapter-pg');
-      const { Pool } = await import('pg');
-      const pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
-      });
-      return new PrismaPostgres(pool);
-    },
+  schema: "./prisma/schema.prisma",
+  migrations: {
+    path: "./prisma/migrations",
+    seed: "tsx prisma/seed.ts",
+  },
+  datasource: {
+    url: env("DATABASE_URL") || "postgresql://postgres:postgres@localhost:5432/tanko_dev?schema=public",
   },
 });

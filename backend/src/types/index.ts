@@ -91,7 +91,13 @@ export interface FundRequest {
   managerPublicKey: string;
   amount: string;
   description: string;
-  status: 'pending' | 'approved' | 'rejected' | 'released';
+  status:
+    | 'pending'
+    | 'escrow_initialized'
+    | 'approved'
+    | 'rejected'
+    | 'released'
+    | 'failed_blockchain';
   contractId?: string;
   escrowXdr?: string;
   createdAt: string;
