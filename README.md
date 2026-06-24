@@ -14,10 +14,11 @@
 5. [Installation](#installation)
 6. [Environment Variables](#environment-variables)
 7. [Running the App](#running-the-app)
-8. [Usage Guide](#usage-guide)
-9. [Backend API Endpoints](#backend-api-endpoints)
-10. [Smart Contract](#smart-contract)
-11. [Current Status](#current-status)
+8. [Design System](#design-system)
+9. [Usage Guide](#usage-guide)
+10. [Backend API Endpoints](#backend-api-endpoints)
+11. [Smart Contract](#smart-contract)
+12. [Current Status](#current-status)
 
 ---
 
@@ -211,11 +212,45 @@ Tanko/
 
 ---
 
+## Design System
+
+Tanko uses a dark operational control-plane design system defined in `frontend/app/globals.css`.
+
+### Foundations
+
+| Token group | Usage |
+|-------------|-------|
+| `--background`, `--foreground`, `--card` | Dark app shell, readable foreground text, dashboard surfaces |
+| `--primary` | Tanko cyan for primary actions, active states, data highlights |
+| `--accent` | Secondary purple accent for role/status differentiation |
+| `--success`, `--warning`, `--destructive` | Operational status states for approvals, pending work, and errors |
+| `--glass`, `--glass-strong`, `--glass-border` | Translucent dashboard panels and elevated content containers |
+| `--shadow-glass`, `--shadow-glow-blue`, `--shadow-glow-purple` | Depth and focus treatments for key shell elements |
+
+### Utilities
+
+| Utility | Purpose |
+|---------|---------|
+| `.tanko-glass` | Primary elevated glass panel with blur, border, and shadow |
+| `.tanko-glass-subtle` | Lighter glass panel for repeated cards and lists |
+| `.tanko-surface-grid` | Background grid texture used behind app shells |
+| `.tanko-text-gradient` | Cyan-to-purple text treatment for high-emphasis labels |
+| `.tanko-focus` | Consistent keyboard focus ring |
+
+### Page Patterns
+
+- Dashboard pages use a compact hero band with an icon, uppercase eyebrow, page title, and short context line.
+- Async content uses skeleton loaders inside the target section instead of replacing the full page with a spinner.
+- Manager operational pages keep their existing API contracts and business logic while presenting dense glass tables, cards, and searchable lists.
+- Driver pages emphasize wallet state, balances, request creation, and request status using the same token system.
+
+---
+
 ## Installation
 
 ### Prerequisites
 
-- Node.js ≥ 18
+- Node.js ≥ 20.9
 - npm ≥ 9
 - PostgreSQL (local or managed)
 - [Freighter wallet extension](https://freighter.app) installed and set to **Testnet**

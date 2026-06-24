@@ -1,17 +1,26 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { 
-  MapPin, 
-  Search,
-  Fuel,
-  Loader2,
+import { useEffect, useState } from "react"
+import type { ReactNode } from "react"
+import {
   AlertCircle,
-  Star,
   Clock,
+  Fuel,
+  type LucideIcon,
+  MapPin,
+  Navigation,
+  Search,
+  Star,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001"
 
@@ -82,101 +91,180 @@ export default function LocationsPage() {
     loc.city?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  if (loading) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Cargando ubicaciones...</p>
-        </div>
-      </div>
-    )
-  }
-
   if (error) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <AlertCircle className="h-8 w-8 text-destructive" />
-          <p className="text-destructive">Error al cargar ubicaciones</p>
-          <p className="text-sm text-muted-foreground">{error}</p>
-        </div>
-      </div>
-    )
+    return <ErrorState title="Error al cargar ubicaciones" message={error} />
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Ubicaciones</h1>
-        <p className="text-muted-foreground">Gasolineras donde la flota ha cargado combustible</p>
+      <PageHero
+        eyebrow="Station network"
+        title="Ubicaciones"
+        description="Gasolineras donde la flota ha cargado combustible y puntos de operación recientes."
+      />
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <MetricCard label="Estaciones" value={locations.length.toString()} detail="Puntos únicos" loading={loading} />
+        <MetricCard label="Ciudad" value="México" detail="Cobertura detectada" loading={loading} />
+        <MetricCard label="Servicios" value="Fuel" detail="Red de carga" loading={loading} />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Gasolineras</CardTitle>
-          <CardDescription>Estaciones donde se han registrado cargas de combustible</CardDescription>
-          <div className="relative mt-3">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Buscar estación..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+      <Card className="tanko-glass-subtle rounded-lg py-0">
+        <CardHeader className="p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle className="text-title text-white">Gasolineras</CardTitle>
+              <CardDescription>Estaciones donde se han registrado cargas de combustible</CardDescription>
+            </div>
+            <div className="relative w-full sm:w-80">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Buscar estación..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-glass pl-10"
+              />
+            </div>
           </div>
         </CardHeader>
-        <CardContent>
-          {filteredLocations.length > 0 ? (
-            <div className="space-y-4">
+        <CardContent className="p-5 pt-0">
+          {loading ? (
+            <LocationSkeleton />
+          ) : filteredLocations.length > 0 ? (
+            <div className="grid gap-4 lg:grid-cols-2">
               {filteredLocations.map((location) => (
                 <div
                   key={location.id}
-                  className="flex items-start gap-4 rounded-xl border border-border p-4 transition-all hover:border-primary/30"
+                  className="rounded-lg border border-glass-border bg-glass p-5 transition-all hover:border-primary/30 hover:bg-glass-strong"
                 >
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <Fuel className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-foreground">{location.name}</h4>
-                    <p className="text-sm text-muted-foreground">{location.address}</p>
-                    {location.city && (
-                      <p className="text-xs text-muted-foreground">{location.city}</p>
-                    )}
-                    {location.coordinates && (
-                      <p className="text-xs text-muted-foreground font-mono mt-1">
-                        {location.coordinates}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    {location.hours && (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        {location.hours}
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                      <Fuel className="h-6 w-6" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="font-semibold text-white">{location.name}</h4>
+                        <span className="inline-flex items-center gap-1 rounded-md border border-success/20 bg-success/10 px-2 py-0.5 text-caption font-semibold text-success">
+                          <Star className="h-3 w-3" />
+                          Activa
+                        </span>
                       </div>
-                    )}
-                    {location.services && location.services.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {location.services.map((service, idx) => (
-                          <span
-                            key={idx}
-                            className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary"
-                          >
-                            {service}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                      <InfoLine icon={MapPin}>{location.address}</InfoLine>
+                      {location.city && (
+                        <InfoLine icon={Navigation}>{location.city}</InfoLine>
+                      )}
+                      {location.coordinates && (
+                        <p className="mt-2 font-mono text-caption text-muted-foreground">
+                          {location.coordinates}
+                        </p>
+                      )}
+                    </div>
+                    <div className="hidden shrink-0 flex-col items-end gap-2 sm:flex">
+                      {location.hours && (
+                        <div className="flex items-center gap-1.5 text-caption text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {location.hours}
+                        </div>
+                      )}
+                      {location.services && location.services.length > 0 && (
+                        <div className="flex flex-wrap justify-end gap-1">
+                          {location.services.map((service, idx) => (
+                            <span
+                              key={idx}
+                              className="rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 text-caption text-primary"
+                            >
+                              {service}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-center py-8 text-muted-foreground">No hay ubicaciones registradas</p>
+            <EmptyState>No hay ubicaciones registradas</EmptyState>
           )}
         </CardContent>
       </Card>
+    </div>
+  )
+}
+
+function PageHero({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) {
+  return (
+    <section className="tanko-glass rounded-lg p-5 lg:p-6">
+      <div className="flex items-start gap-4">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+          <MapPin className="h-5 w-5" />
+        </div>
+        <div>
+          <p className="text-micro font-semibold uppercase tracking-[0.28em] text-primary">{eyebrow}</p>
+          <h1 className="mt-2 text-heading font-black text-white">{title}</h1>
+          <p className="mt-2 max-w-2xl text-body-sm text-muted-foreground">{description}</p>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function MetricCard({ label, value, detail, loading }: { label: string; value: string; detail: string; loading: boolean }) {
+  return (
+    <Card className="tanko-glass-subtle rounded-lg py-0">
+      <CardContent className="p-5">
+        <p className="text-body-sm text-muted-foreground">{label}</p>
+        {loading ? <Skeleton className="mt-3 h-8 w-24 bg-white/10" /> : <p className="mt-3 text-3xl font-black text-white">{value}</p>}
+        <p className="mt-2 text-caption text-muted-foreground">{detail}</p>
+      </CardContent>
+    </Card>
+  )
+}
+
+function InfoLine({ icon: Icon, children }: { icon: LucideIcon; children: ReactNode }) {
+  return (
+    <p className="mt-2 flex items-center gap-2 text-body-sm text-muted-foreground">
+      <Icon className="h-4 w-4 text-primary" />
+      {children}
+    </p>
+  )
+}
+
+function LocationSkeleton() {
+  return (
+    <div className="grid gap-4 lg:grid-cols-2">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div key={index} className="rounded-lg border border-glass-border bg-glass p-5">
+          <div className="flex gap-4">
+            <Skeleton className="h-12 w-12 bg-white/10" />
+            <div className="flex-1 space-y-3">
+              <Skeleton className="h-5 w-2/3 bg-white/10" />
+              <Skeleton className="h-4 w-full bg-white/10" />
+              <Skeleton className="h-4 w-32 bg-white/10" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ErrorState({ title, message }: { title: string; message: string }) {
+  return (
+    <div className="flex h-[60vh] items-center justify-center">
+      <div className="tanko-glass flex max-w-md flex-col items-center gap-4 rounded-lg px-8 py-7 text-center">
+        <AlertCircle className="h-8 w-8 text-destructive" />
+        <p className="font-semibold text-destructive">{title}</p>
+        <p className="text-body-sm text-muted-foreground">{message}</p>
+      </div>
+    </div>
+  )
+}
+
+function EmptyState({ children }: { children: ReactNode }) {
+  return (
+    <div className="rounded-lg border border-dashed border-glass-border bg-glass p-8 text-center text-body-sm text-muted-foreground">
+      {children}
     </div>
   )
 }

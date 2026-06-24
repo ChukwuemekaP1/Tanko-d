@@ -1,18 +1,26 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { 
-  Search, 
-  MoreHorizontal, 
-  Car,
-  User,
-  Loader2,
+import { useEffect, useState } from "react"
+import type { ReactNode } from "react"
+import {
   AlertCircle,
   Calendar,
+  Car,
+  Eye,
   Fuel,
+  type LucideIcon,
+  MoreHorizontal,
+  Search,
+  User,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +28,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/providers/auth-provider"
+import { cn } from "@/lib/utils"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001"
 
@@ -87,81 +97,73 @@ export default function UnidadesPage() {
     unit.user?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  if (loading) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Cargando unidades...</p>
-        </div>
-      </div>
-    )
-  }
+  const activeUnits = units.filter(unit => unit.isActive).length
+  const assignedUnits = units.filter(unit => unit.user?.name).length
 
   if (error) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <AlertCircle className="h-8 w-8 text-destructive" />
-          <p className="text-destructive">Error al cargar unidades</p>
-          <p className="text-sm text-muted-foreground">{error}</p>
-        </div>
-      </div>
-    )
+    return <ErrorState title="Error al cargar unidades" message={error} />
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Flota</h1>
-          <p className="text-muted-foreground">Gestionar vehículos registrados en el sistema</p>
-        </div>
+      <PageHero
+        eyebrow="Fleet registry"
+        title="Flota"
+        description="Gestionar vehículos registrados, permisos y asignación de conductores."
+        icon={Car}
+      />
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <MetricCard label="Vehículos" value={units.length.toString()} detail="Registrados" loading={loading} />
+        <MetricCard label="Activos" value={activeUnits.toString()} detail="Listos para operar" loading={loading} />
+        <MetricCard label="Asignados" value={assignedUnits.toString()} detail="Con conductor" loading={loading} />
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="tanko-glass-subtle rounded-lg py-0">
+        <CardHeader className="p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle>Lista de Vehículos</CardTitle>
+              <CardTitle className="text-title text-white">Lista de vehículos</CardTitle>
               <CardDescription>Total: {units.length} vehículos registrados</CardDescription>
             </div>
-            <div className="relative w-full sm:w-72">
+            <div className="relative w-full sm:w-80">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Buscar vehículo..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="bg-glass pl-10"
               />
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          {filteredUnits.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <CardContent className="p-5 pt-0">
+          {loading ? (
+            <CardGridSkeleton />
+          ) : filteredUnits.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {filteredUnits.map((unit) => (
-                <div 
+                <div
                   key={unit.id}
-                  className="rounded-xl border border-border bg-background p-5 transition-all hover:border-primary/30 hover:shadow-md"
+                  className="rounded-lg border border-glass-border bg-glass p-5 transition-all hover:border-primary/30 hover:bg-glass-strong"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                        <Car className="h-6 w-6 text-primary" />
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                        <Car className="h-6 w-6" />
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground">
+                      <div className="min-w-0">
+                        <h3 className="truncate font-semibold text-white">
                           {unit.make} {unit.model}
                         </h3>
                         {unit.year && (
-                          <p className="text-sm text-muted-foreground">{unit.year}</p>
+                          <p className="text-body-sm text-muted-foreground">{unit.year}</p>
                         )}
                       </div>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="icon-sm" aria-label="Abrir acciones">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -174,41 +176,35 @@ export default function UnidadesPage() {
                     </DropdownMenu>
                   </div>
 
-                  <div className="mt-4 space-y-3">
-                    <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
-                      <span className="text-sm text-muted-foreground">Placas</span>
-                      <span className="text-sm font-semibold text-foreground">{unit.plates}</span>
+                  <div className="mt-5 space-y-3">
+                    <div className="flex items-center justify-between rounded-md border border-glass-border bg-background/35 px-3 py-2">
+                      <span className="text-body-sm text-muted-foreground">Placas</span>
+                      <span className="font-mono text-body-sm font-semibold text-white">{unit.plates}</span>
                     </div>
 
                     {unit.user && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">{unit.user.name}</span>
-                      </div>
+                      <InfoLine icon={User}>{unit.user.name}</InfoLine>
                     )}
 
                     {unit.permitNumber && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">Permiso: {unit.permitNumber}</span>
-                      </div>
+                      <InfoLine icon={Fuel}>Permiso: {unit.permitNumber}</InfoLine>
                     )}
 
                     {unit.permitExpiry && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">
-                          Vence: {new Date(unit.permitExpiry).toLocaleDateString("es-MX")}
-                        </span>
-                      </div>
+                      <InfoLine icon={Calendar}>
+                        Vence: {new Date(unit.permitExpiry).toLocaleDateString("es-MX")}
+                      </InfoLine>
                     )}
 
-                    <div className="flex items-center justify-end pt-3">
-                      <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        unit.isActive 
-                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" 
-                          : "bg-muted text-muted-foreground"
-                      }`}>
+                    <div className="flex items-center justify-end pt-2">
+                      <span
+                        className={cn(
+                          "inline-flex rounded-md border px-2.5 py-1 text-caption font-semibold",
+                          unit.isActive
+                            ? "border-success/20 bg-success/10 text-success"
+                            : "border-glass-border bg-glass text-muted-foreground",
+                        )}
+                      >
                         {unit.isActive ? "Activo" : "Inactivo"}
                       </span>
                     </div>
@@ -217,7 +213,7 @@ export default function UnidadesPage() {
               ))}
             </div>
           ) : (
-            <p className="text-center py-8 text-muted-foreground">No hay vehículos registrados</p>
+            <EmptyState>No hay vehículos registrados</EmptyState>
           )}
         </CardContent>
       </Card>
@@ -225,22 +221,81 @@ export default function UnidadesPage() {
   )
 }
 
-function Eye(props: React.ComponentProps<"svg">) {
+function PageHero({ eyebrow, title, description, icon: Icon }: { eyebrow: string; title: string; description: string; icon: LucideIcon }) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
+    <section className="tanko-glass rounded-lg p-5 lg:p-6">
+      <div className="flex items-start gap-4">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+          <Icon className="h-5 w-5" />
+        </div>
+        <div>
+          <p className="text-micro font-semibold uppercase tracking-[0.28em] text-primary">{eyebrow}</p>
+          <h1 className="mt-2 text-heading font-black text-white">{title}</h1>
+          <p className="mt-2 max-w-2xl text-body-sm text-muted-foreground">{description}</p>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function MetricCard({ label, value, detail, loading }: { label: string; value: string; detail: string; loading: boolean }) {
+  return (
+    <Card className="tanko-glass-subtle rounded-lg py-0">
+      <CardContent className="p-5">
+        <p className="text-body-sm text-muted-foreground">{label}</p>
+        {loading ? <Skeleton className="mt-3 h-8 w-20 bg-white/10" /> : <p className="mt-3 text-3xl font-black text-white">{value}</p>}
+        <p className="mt-2 text-caption text-muted-foreground">{detail}</p>
+      </CardContent>
+    </Card>
+  )
+}
+
+function InfoLine({ icon: Icon, children }: { icon: LucideIcon; children: ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 text-body-sm text-muted-foreground">
+      <Icon className="h-4 w-4 text-primary" />
+      <span>{children}</span>
+    </div>
+  )
+}
+
+function CardGridSkeleton() {
+  return (
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div key={index} className="rounded-lg border border-glass-border bg-glass p-5">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-12 w-12 bg-white/10" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-5 w-2/3 bg-white/10" />
+              <Skeleton className="h-4 w-20 bg-white/10" />
+            </div>
+          </div>
+          <Skeleton className="mt-5 h-10 w-full bg-white/10" />
+          <Skeleton className="mt-3 h-4 w-3/4 bg-white/10" />
+          <Skeleton className="mt-3 h-4 w-1/2 bg-white/10" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ErrorState({ title, message }: { title: string; message: string }) {
+  return (
+    <div className="flex h-[60vh] items-center justify-center">
+      <div className="tanko-glass flex max-w-md flex-col items-center gap-4 rounded-lg px-8 py-7 text-center">
+        <AlertCircle className="h-8 w-8 text-destructive" />
+        <p className="font-semibold text-destructive">{title}</p>
+        <p className="text-body-sm text-muted-foreground">{message}</p>
+      </div>
+    </div>
+  )
+}
+
+function EmptyState({ children }: { children: ReactNode }) {
+  return (
+    <div className="rounded-lg border border-dashed border-glass-border bg-glass p-8 text-center text-body-sm text-muted-foreground">
+      {children}
+    </div>
   )
 }

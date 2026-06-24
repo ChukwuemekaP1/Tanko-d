@@ -1,12 +1,27 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, Wallet, User, Users } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import {
+  ArrowRight,
+  CheckCircle2,
+  Loader2,
+  ShieldCheck,
+  User,
+  Users,
+  Wallet,
+} from 'lucide-react'
 import { useAuth, UserRole } from '@/providers/auth-provider'
 import { TankoLogoMinimal } from '@/components/logo'
+
+const TRUST_POINTS = [
+  'Stellar Testnet wallet access',
+  'Escrow-backed fuel approvals',
+  'Role-aware fleet workspace',
+]
 
 export default function LoginPage() {
   const router = useRouter()
@@ -39,7 +54,7 @@ export default function LoginPage() {
 
   const handleRoleSelect = (selectedRole: UserRole) => {
     setRole(selectedRole)
-    
+
     if (selectedRole === 'CONDUCTOR') {
       router.push('/dashboard/conductor')
     } else {
@@ -49,140 +64,207 @@ export default function LoginPage() {
 
   if (isConnecting) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-            <p className="text-muted-foreground">Conectando con Freighter...</p>
+      <AuthShell>
+        <Card className="tanko-glass w-full max-w-md rounded-lg py-0">
+          <CardContent className="flex flex-col items-center justify-center p-8 text-center">
+            <Loader2 className="mb-4 h-8 w-8 animate-spin text-primary" />
+            <p className="text-body-sm text-muted-foreground">
+              Conectando con Freighter...
+            </p>
           </CardContent>
         </Card>
-      </div>
+      </AuthShell>
     )
   }
 
   if (isConnected && address && !role) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
-        <Card className="w-full max-w-lg">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-                <TankoLogoMinimal size={28} className="text-primary-foreground" />
-              </div>
-            </div>
-            <CardTitle className="text-2xl">Bienvenido a Tanko</CardTitle>
-            <CardDescription>
-              Conecta tu wallet: {address.slice(0, 8)}...{address.slice(-8)}
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="space-y-6">
-            <p className="text-sm text-muted-foreground text-center">
-              ¿Cómo deseas acceder?
-            </p>
+      <AuthShell>
+        <Card className="tanko-glass w-full max-w-2xl rounded-lg py-0">
+          <CardContent className="p-5 sm:p-7">
+            <BrandHeader
+              eyebrow="Wallet connected"
+              title="Bienvenido a Tanko"
+              description={`Conecta tu wallet: ${address.slice(0, 8)}...${address.slice(-8)}`}
+            />
 
-            <div className="grid gap-4">
-              <button
+            <div className="mt-7 grid gap-3">
+              <RoleButton
+                icon={User}
+                title="Soy Conductor"
+                description="Solicitar fondos de combustible y cargar combustible"
+                accent="primary"
                 onClick={() => handleRoleSelect('CONDUCTOR')}
-                className="flex items-center gap-4 p-4 rounded-lg border-2 border-border hover:border-blue-500/50 hover:bg-blue-500/5 transition-all text-left"
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10">
-                  <User className="h-6 w-6 text-blue-600" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-foreground">Soy Conductor</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Solicitar fondos de combustible y cargar combustible
-                  </p>
-                </div>
-              </button>
-
-              <button
+              />
+              <RoleButton
+                icon={Users}
+                title="Soy Jefe de Flota"
+                description="Gestionar conductores, aprobar solicitudes y supervisar la flota"
+                accent="accent"
                 onClick={() => handleRoleSelect('JEFE')}
-                className="flex items-center gap-4 p-4 rounded-lg border-2 border-border hover:border-violet-500/50 hover:bg-violet-500/5 transition-all text-left"
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-violet-500/10">
-                  <Users className="h-6 w-6 text-violet-600" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-foreground">Soy Jefe de Flota</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Gestionar conductores, aprobar solicitudes y supervisar la flota
-                  </p>
-                </div>
-              </button>
+              />
             </div>
 
             <Button
               variant="ghost"
               onClick={disconnect}
-              className="w-full text-muted-foreground"
+              className="mt-5 w-full text-muted-foreground hover:bg-white/10 hover:text-white"
             >
               Desconectar wallet
             </Button>
           </CardContent>
         </Card>
-      </div>
+      </AuthShell>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-              <TankoLogoMinimal size={28} className="text-primary-foreground" />
-            </div>
-          </div>
-          <CardTitle className="text-2xl">Tanko</CardTitle>
-          <CardDescription>
-            Monedero electrónico descentralizado para combustible
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent className="space-y-4">
+    <AuthShell>
+      <Card className="tanko-glass w-full max-w-md rounded-lg py-0">
+        <CardContent className="p-5 sm:p-7">
+          <BrandHeader
+            eyebrow="Secure access"
+            title="Tanko"
+            description="Monedero electrónico descentralizado para combustible"
+          />
+
           {error && (
-            <div className="mb-4 p-3 text-sm text-destructive bg-destructive/10 rounded-lg">
+            <div className="mt-6 rounded-md border border-destructive/25 bg-destructive/10 p-3 text-body-sm text-destructive">
               {error}
             </div>
           )}
 
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground text-center">
-              Conecta tu wallet Freighter para comenzar
+          <div className="mt-7 space-y-4">
+            <p className="text-center text-body-sm text-muted-foreground">
+              Conecta tu wallet Freighter para comenzar.
             </p>
-            
+
             <Button
               onClick={handleWalletConnect}
-              className="w-full"
+              className="h-11 w-full"
               disabled={isLoading}
               size="lg"
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   Conectando...
                 </>
               ) : (
                 <>
-                  <Wallet className="mr-2 h-4 w-4" />
+                  <Wallet className="h-4 w-4" />
                   Conectar con Freighter
                 </>
               )}
             </Button>
           </div>
 
-          <div className="mt-6 p-4 rounded-lg bg-muted/50">
-            <h4 className="text-sm font-medium mb-2">Acerca de Freighter</h4>
-            <p className="text-xs text-muted-foreground">
-              Freighter es una wallet de Stellar que te permite interactuar con 
-              aplicaciones descentralizadas. Necesitarás crear una cuenta en 
+          <div className="mt-6 rounded-lg border border-glass-border bg-glass p-4">
+            <div className="mb-3 flex items-center gap-2 text-caption font-semibold uppercase tracking-[0.2em] text-primary">
+              <ShieldCheck className="h-4 w-4" />
+              Freighter
+            </div>
+            <p className="text-body-sm text-muted-foreground">
+              Freighter es una wallet de Stellar que te permite interactuar con
+              aplicaciones descentralizadas. Necesitarás crear una cuenta en
               Stellar Testnet para usar esta aplicación.
             </p>
           </div>
         </CardContent>
       </Card>
+    </AuthShell>
+  )
+}
+
+function AuthShell({ children }: { children: ReactNode }) {
+  return (
+    <main className="relative grid min-h-screen place-items-center overflow-hidden bg-background px-4 py-10 text-foreground">
+      <div className="tanko-surface-grid pointer-events-none fixed inset-0" />
+      <div className="relative grid w-full max-w-6xl items-center gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+        <section className="hidden lg:block">
+          <div className="max-w-xl">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-md border border-primary/20 bg-primary/10 px-3 py-2 text-caption font-semibold uppercase tracking-[0.22em] text-primary">
+              <Wallet className="h-4 w-4" />
+              Tanko Access
+            </div>
+            <h1 className="text-5xl font-black leading-tight tracking-normal text-white">
+              Wallet-first fuel control for fleet operators.
+            </h1>
+            <p className="mt-5 text-body text-muted-foreground">
+              Sign in with Freighter, choose your operational role, and enter the
+              Tanko dashboard with the same business flow already in place.
+            </p>
+            <div className="mt-8 space-y-3">
+              {TRUST_POINTS.map((point) => (
+                <div key={point} className="flex items-center gap-3 text-body-sm text-muted-foreground">
+                  <CheckCircle2 className="h-5 w-5 text-success" />
+                  <span>{point}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="flex justify-center">{children}</section>
+      </div>
+    </main>
+  )
+}
+
+function BrandHeader({
+  eyebrow,
+  title,
+  description,
+}: {
+  eyebrow: string
+  title: string
+  description: string
+}) {
+  return (
+    <div className="text-center">
+      <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-md border border-primary/30 bg-primary/10 shadow-glow-blue">
+        <TankoLogoMinimal size={26} className="text-primary" />
+      </div>
+      <p className="text-micro font-semibold uppercase tracking-[0.28em] text-primary">
+        {eyebrow}
+      </p>
+      <h1 className="mt-3 text-heading font-bold text-white">{title}</h1>
+      <p className="mt-2 text-body-sm text-muted-foreground">{description}</p>
     </div>
+  )
+}
+
+function RoleButton({
+  icon: Icon,
+  title,
+  description,
+  accent,
+  onClick,
+}: {
+  icon: typeof User
+  title: string
+  description: string
+  accent: 'primary' | 'accent'
+  onClick: () => void
+}) {
+  const accentClass =
+    accent === 'primary'
+      ? 'border-primary/20 bg-primary/10 text-primary'
+      : 'border-accent/25 bg-accent/10 text-accent'
+
+  return (
+    <button
+      onClick={onClick}
+      className="tanko-focus group flex items-center gap-4 rounded-lg border border-glass-border bg-glass p-4 text-left transition-all hover:border-primary/30 hover:bg-glass-strong"
+    >
+      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-md border ${accentClass}`}>
+        <Icon className="h-6 w-6" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <h2 className="font-semibold text-white">{title}</h2>
+        <p className="mt-1 text-body-sm text-muted-foreground">{description}</p>
+      </div>
+      <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+    </button>
   )
 }
