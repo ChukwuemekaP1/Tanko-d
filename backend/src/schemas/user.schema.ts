@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   stellarPubKeySchema,
+  avalancheCChainAddressSchema,
   emailSchema,
   optionalString,
   uuidSchema,
@@ -11,6 +12,8 @@ export const createUserSchema = z.object({
   email: emailSchema,
   phone: optionalString,
   stellarPubKey: stellarPubKeySchema.optional(),
+  avalancheCChainAddress: avalancheCChainAddressSchema.optional(),
+  avalancheChainId: optionalString,
   role: z.string().optional(),
 });
 

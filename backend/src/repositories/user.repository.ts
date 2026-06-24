@@ -1,4 +1,5 @@
 import prisma from '../db/prisma.js';
+import { randomUUID } from 'crypto';
 
 export type UserRole = 'ADMIN' | 'JEFE' | 'CONDUCTOR';
 export type Status = 'ACTIVE' | 'INACTIVE';
@@ -8,6 +9,8 @@ export interface CreateUserDTO {
   email: string;
   phone?: string;
   stellarPubKey?: string;
+  avalancheCChainAddress?: string;
+  avalancheChainId?: string;
   role?: UserRole;
   status?: Status;
   managerId?: string;
@@ -18,6 +21,8 @@ export interface UpdateUserDTO {
   email?: string;
   phone?: string;
   stellarPubKey?: string;
+  avalancheCChainAddress?: string;
+  avalancheChainId?: string;
   role?: UserRole;
   status?: Status;
   managerId?: string;
@@ -40,6 +45,43 @@ export class UserRepository {
 
   async findByStellarPubKey(pubKey: string) {
     return prisma.user.findFirst({ where: { stellarPubKey: pubKey } });
+  }
+
+  async findByAvalancheAddress(address: string) {
+    const rows = await prisma.$queryRawUnsafe<unknown[]>(
+      'SELECT * FROM "User" WHERE "avalancheCChainAddress" = $1 LIMIT 1',
+      address.toLowerCase(),
+    );
+    return rows[0] ?? null;
+  }
+
+  async upsertAvalancheWallet(address: string, chainId?: string | null) {
+    const normalized = address.toLowerCase();
+    const email = `avax-${normalized.slice(2, 12)}@tanko.wallet`;
+    const rows = await prisma.$queryRawUnsafe<unknown[]>(
+      `INSERT INTO "User" (
+        "id",
+        "name",
+        "email",
+        "avalancheCChainAddress",
+        "avalancheChainId",
+        "role",
+        "status",
+        "kycStatus",
+        "createdAt",
+        "updatedAt"
+      )
+      VALUES ($1, $2, $3, $4, $5, 'CONDUCTOR', 'ACTIVE', 'NOT_STARTED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      ON CONFLICT ("avalancheCChainAddress")
+      DO UPDATE SET "avalancheChainId" = EXCLUDED."avalancheChainId", "updatedAt" = CURRENT_TIMESTAMP
+      RETURNING *`,
+      randomUUID(),
+      `Core ${normalized.slice(0, 6)}...${normalized.slice(-4)}`,
+      email,
+      normalized,
+      chainId ?? null,
+    );
+    return rows[0] ?? null;
   }
 
   async findByRole(role: UserRole) {

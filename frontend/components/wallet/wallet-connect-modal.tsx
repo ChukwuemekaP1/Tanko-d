@@ -11,10 +11,13 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/providers/auth-provider";
 import {
+  CORE_WALLET,
   WALLET_OPTIONS,
+  type StellarWalletType,
   type WalletType,
 } from "@/lib/wallet/types";
-import { isWalletAvailable } from "@/lib/wallet/stellar-wallet-service";
+import { isStellarWalletAvailable } from "@/lib/wallet/stellar-wallet-service";
+import { CORE_INSTALL_URL, isCoreWalletInstalled } from "@/lib/wallet/core-wallet-service";
 
 interface WalletConnectModalProps {
   open: boolean;
@@ -40,13 +43,20 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
     }
   }
 
+  function isWalletAvailable(walletId: WalletType): boolean {
+    if (walletId === CORE_WALLET) {
+      return isCoreWalletInstalled();
+    }
+    return isStellarWalletAvailable(walletId as StellarWalletType);
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md border-white/10 bg-[#0F1E35] text-white">
         <DialogHeader>
           <DialogTitle className="text-white">Connect a wallet</DialogTitle>
           <DialogDescription className="text-white/50">
-            Choose Freighter, Albedo, or WalletConnect for mobile Stellar wallets.
+            Core Wallet is the primary Avalanche provider. Stellar wallets remain available for existing escrow flows.
           </DialogDescription>
         </DialogHeader>
 
@@ -86,14 +96,16 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                 <div>
                   <p className="text-sm font-semibold text-white">{wallet.name}</p>
                   <p className="mt-1 text-[11px] leading-snug text-white/45">
-                    {wallet.requiresProjectId && !available
+                    {wallet.id === CORE_WALLET && !available
+                      ? "Install the Core extension to continue"
+                      : wallet.requiresProjectId && !available
                       ? "Set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID"
                       : wallet.description}
                   </p>
                 </div>
                 {wallet.installUrl && (
                   <a
-                    href={wallet.installUrl}
+                    href={wallet.id === CORE_WALLET ? CORE_INSTALL_URL : wallet.installUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
@@ -109,7 +121,7 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
         </div>
 
         <p className="text-center text-[11px] text-white/30">
-          Stellar Testnet · Soroban signing supported across providers
+          Avalanche C-Chain / Fuji via Core Wallet
         </p>
       </DialogContent>
     </Dialog>
