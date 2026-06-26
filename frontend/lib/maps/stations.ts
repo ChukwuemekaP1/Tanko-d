@@ -2,7 +2,7 @@ export interface GasStationLike {
   id: string
   name: string
   address: string
-  hours?: string
+  hours?: string | null
   lat?: number | string | null
   lng?: number | string | null
 }

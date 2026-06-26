@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Geolocation, PermissionStatus } from '@capacitor/geolocation';
 import { Capacitor } from '@capacitor/core';
 
@@ -7,11 +7,21 @@ export function useGeolocation() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const getLocation = async () => {
+  const getLocation = useCallback(async () => {
+    setError(null);
+    setLoading(true);
+
     if (!Capacitor.isNativePlatform()) {
       // Fallback to browser geolocation
-      return new Promise((resolve, reject) => {
-        setLoading(true);
+      return new Promise<{ lat: number; lng: number }>((resolve, reject) => {
+        if (!navigator.geolocation) {
+          const err = 'Geolocation is not supported by this browser';
+          setError(err);
+          setLoading(false);
+          reject(new Error(err));
+          return;
+        }
+
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -20,29 +30,34 @@ export function useGeolocation() {
             resolve(coords);
           },
           (err) => {
-            setError(err.message);
+            let message = 'Error getting location';
+            if (err.code === err.PERMISSION_DENIED) message = 'Permission denied';
+            else if (err.code === err.POSITION_UNAVAILABLE) message = 'Position unavailable';
+            else if (err.code === err.TIMEOUT) message = 'Location request timed out';
+            
+            setError(message);
             setLoading(false);
-            reject(err);
+            reject(new Error(message));
           },
-          { enableHighAccuracy: true }
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
       });
     }
 
     try {
-      setLoading(true);
       const permissions = await Geolocation.checkPermissions();
       
-      if (permissions.location !== 'granted') {
+      if (permissions.location !== 'granted' && permissions.coarseLocation !== 'granted') {
         const request = await Geolocation.requestPermissions();
-        if (request.location !== 'granted') {
+        if (request.location !== 'granted' && request.coarseLocation !== 'granted') {
           throw new Error('Geolocation permission denied');
         }
       }
 
       const position = await Geolocation.getCurrentPosition({
         enableHighAccuracy: true,
-        timeout: 10000
+        timeout: 15000, // Slightly longer timeout for native
+        maximumAge: 0
       });
 
       const coords = {
@@ -54,11 +69,14 @@ export function useGeolocation() {
       setLoading(false);
       return coords;
     } catch (err: any) {
-      setError(err.message);
+      let message = err.message || 'Failed to get location';
+      if (message.includes('denied')) message = 'Permission denied';
+      
+      setError(message);
       setLoading(false);
-      throw err;
+      throw new Error(message);
     }
-  };
+  }, []);
 
   return { location, error, loading, getLocation };
 }
