@@ -15,6 +15,8 @@ import configRoutes from "./routes/config.routes.js";
 import stationRoutes from "./routes/station.routes.js";
 import kycRoutes from "./routes/kyc.routes.js";
 import exportRoutes from "./routes/export.routes.js";
+import { logger } from "./utils/logger.js";
+import { oracleCronService } from "./services/oracle-cron.service.js";
 import fs from "fs";
 import yaml from "js-yaml";
 import path from "path";
