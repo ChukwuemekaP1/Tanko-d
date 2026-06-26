@@ -14,6 +14,7 @@ import fuelLogRoutes from "./routes/fuelLog.routes.js";
 import configRoutes from "./routes/config.routes.js";
 import stationRoutes from "./routes/station.routes.js";
 import kycRoutes from "./routes/kyc.routes.js";
+import exportRoutes from "./routes/export.routes.js";
 import fs from "fs";
 import yaml from "js-yaml";
 import path from "path";
@@ -64,6 +65,7 @@ app.use("/api/v1", fuelLogRoutes);
 app.use("/api/v1/kyc", kycRoutes);
 app.use("/api/v1", configRoutes);
 app.use("/api/v1", stationRoutes);
+app.use("/api/v1", exportRoutes);
 app.use("/api/v1/helper", helperRoutes);
 
 app.use((req: Request, res: Response) => {
