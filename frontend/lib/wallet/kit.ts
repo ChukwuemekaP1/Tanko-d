@@ -20,7 +20,7 @@ export function getNetworkPassphrase(): string {
   return (
     process.env.NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE ||
     process.env.STELLAR_NETWORK_PASSPHRASE ||
-    Networks.TESTNET
+    "Test SDF Network ; September 2015"
   );
 }
 

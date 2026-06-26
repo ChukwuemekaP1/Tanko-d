@@ -11,29 +11,33 @@ export function useDeepLinks() {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
-    const handleDeepLink = (data: any) => {
-      // Example: tanko://dashboard/conductor
-      // data.url will be the full URL
+    let cancelled = false;
+
+    const handleDeepLink = (data: { url: string }) => {
       const slug = data.url.split('://').pop();
       if (slug) {
         router.push(`/${slug}`);
       }
     };
 
-    App.addListener('appUrlOpen', handleDeepLink);
+    const setup = async () => {
+      try {
+        await App.addListener('appUrlOpen', handleDeepLink);
 
-    // Handle the case where the app was opened via a deep link while it was closed
-    const checkInitialUrl = async () => {
-      const { url } = await App.getLaunchUrl() || { url: null };
-      if (url) {
-        handleDeepLink({ url });
+        const launch = await App.getLaunchUrl();
+        if (!cancelled && launch?.url) {
+          handleDeepLink({ url: launch.url });
+        }
+      } catch {
+        // Capacitor plugins are not available in the browser build.
       }
     };
 
-    checkInitialUrl();
+    void setup();
 
     return () => {
-      App.removeAllListeners();
+      cancelled = true;
+      void App.removeAllListeners();
     };
   }, [router]);
 }

@@ -1,31 +1,16 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { AlertCircle, Clock, Fuel, Loader2, MapPin, Search } from "lucide-react"
+import { Clock, Fuel, Loader2, MapPin, Plus, Search } from "lucide-react"
 import { StationMap, type StationMapLocation } from "@/components/station-map"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { useAuth } from "@/providers/auth-provider"
 import { toast } from "sonner"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001"
-
-// Dynamically import the map component with no SSR to avoid 'window is not defined' errors from Leaflet
-const StationsMap = dynamic(
-  () => import("@/components/maps/StationsMap"),
-  { 
-    ssr: false,
-    loading: () => (
-      <div className="flex h-full items-center justify-center bg-muted/20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
-)
 
 interface GasStation {
   id: string
@@ -128,17 +113,6 @@ export default function LocationsPage() {
     () => filtered.map(toMapLocation).filter((station): station is StationMapLocation => Boolean(station)),
     [filtered]
   )
-  const validStations = useMemo(() => getMappableStations(filtered), [filtered])
-  const coordinatesById = useMemo(
-    () =>
-      new Map(
-        getMappableStations(stations).map((station) => [
-          station.id,
-          { lat: station.lat, lng: station.lng },
-        ]),
-      ),
-    [stations],
-  )
 
   useEffect(() => {
     if (!selectedStationId || filtered.some((station) => station.id === selectedStationId)) return
@@ -153,27 +127,8 @@ export default function LocationsPage() {
           <p className="text-sm text-muted-foreground">Cargando ubicaciones...</p>
         </div>
       </div>
-      <h3 className="text-xl font-semibold text-foreground">No stations found</h3>
-      <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-        {searchQuery 
-          ? "We couldn't find any gas stations matching your search criteria. Try a different term."
-          : isJefe 
-            ? "Your fleet doesn't have any authorized gas stations yet. Start by adding your first one."
-            : "There are currently no authorized gas stations available for your route."}
-      </p>
-      {isJefe && !searchQuery && (
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button className="mt-6 gap-2" size="lg">
-              <Plus className="h-4 w-4" />
-              Register First Gas Station
-            </Button>
-          </SheetTrigger>
-          <StationForm />
-        </Sheet>
-      )}
-    </div>
-  )
+    )
+  }
 
   const StationForm = () => (
     <SheetContent className="sm:max-w-[500px]">
@@ -256,9 +211,24 @@ export default function LocationsPage() {
           </CardHeader>
           <CardContent>
             {filtered.length === 0 ? (
-              <p className="py-8 text-center text-muted-foreground">
-                {searchQuery ? "Sin resultados para tu busqueda" : "No hay gasolineras autorizadas"}
-              </p>
+              <div className="space-y-4 py-8 text-center">
+                <p className="text-muted-foreground">
+                  {searchQuery
+                    ? "Sin resultados para tu busqueda"
+                    : "No hay gasolineras autorizadas"}
+                </p>
+                {isJefe && !searchQuery && (
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button className="gap-2" size="lg">
+                        <Plus className="h-4 w-4" />
+                        Register First Gas Station
+                      </Button>
+                    </SheetTrigger>
+                    <StationForm />
+                  </Sheet>
+                )}
+              </div>
             ) : (
               <div className="max-h-[calc(100vh-320px)] min-h-[360px] space-y-3 overflow-y-auto pr-1">
                 {filtered.map((station) => {

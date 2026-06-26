@@ -1,13 +1,9 @@
-import { ALBEDO_ID } from "@creit.tech/stellar-wallets-kit/modules/albedo";
-import { FREIGHTER_ID } from "@creit.tech/stellar-wallets-kit/modules/freighter";
-import { WALLET_CONNECT_ID } from "@creit.tech/stellar-wallets-kit/modules/wallet-connect";
+/** Wallet module ids used by @creit.tech/stellar-wallets-kit (avoid importing kit modules here — SSR breaks). */
+export type WalletType = "freighter" | "albedo" | "wallet_connect";
 
-/** Wallet module ids used by @creit.tech/stellar-wallets-kit */
-export type WalletType = typeof FREIGHTER_ID | typeof ALBEDO_ID | typeof WALLET_CONNECT_ID;
-
-export const FREIGHTER_WALLET = FREIGHTER_ID as WalletType;
-export const ALBEDO_WALLET = ALBEDO_ID as WalletType;
-export const WALLET_CONNECT_WALLET = WALLET_CONNECT_ID as WalletType;
+export const FREIGHTER_WALLET: WalletType = "freighter";
+export const ALBEDO_WALLET: WalletType = "albedo";
+export const WALLET_CONNECT_WALLET: WalletType = "wallet_connect";
 
 export interface WalletOption {
   id: WalletType;
@@ -22,21 +18,21 @@ export const WALLET_OPTIONS: WalletOption[] = [
   {
     id: FREIGHTER_WALLET,
     name: "Freighter",
-    description: "Browser extension for Stellar",
+    description: "Extensión de navegador para Stellar",
     iconUrl: "https://stellar.creit.tech/wallet-icons/freighter.png",
     installUrl: "https://freighter.app",
   },
   {
     id: ALBEDO_WALLET,
     name: "Albedo",
-    description: "Web-based Stellar signer",
+    description: "Wallet web (sin extensión)",
     iconUrl: "https://stellar.creit.tech/wallet-icons/albedo.png",
     installUrl: "https://albedo.link",
   },
   {
     id: WALLET_CONNECT_WALLET,
     name: "WalletConnect",
-    description: "Mobile wallets via QR or deep link",
+    description: "Wallets móviles vía QR",
     iconUrl: "https://stellar.creit.tech/wallet-icons/walletconnect.png",
     requiresProjectId: true,
   },

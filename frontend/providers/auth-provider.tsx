@@ -127,13 +127,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Fallback: show last known address until user reconnects or disconnects
+      // Session expired — require reconnect instead of faking a live wallet
       setState({
         address: storedAddress,
         walletType: storedWalletType,
-        isConnected: true,
+        isConnected: false,
         isConnecting: false,
-        error: null,
+        error:
+          "Tu sesión de wallet expiró. Vuelve a conectar Freighter, Albedo o WalletConnect.",
         role: storedRole,
         userId: storedUserId,
       });

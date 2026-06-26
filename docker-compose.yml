@@ -1,0 +1,19 @@
+# PostgreSQL para desarrollo local (opcional).
+# Uso: docker compose up -d
+# Luego: npm run db:setup
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tanko-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tanko_db
+    volumes:
+      - tanko_pg_data:/var/lib/postgresql/data
+
+volumes:
+  tanko_pg_data:
