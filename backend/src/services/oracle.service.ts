@@ -253,18 +253,22 @@ export interface SignedPrice {
 // Extend the singleton with the simpler test-facing API
 const _svc = oracleService as any;
 
-_svc.getPublicKey = (): string | null => oracleService.getOraclePublicKey();
+function _getKeypair(): import('stellar-sdk').Keypair {
+  // Re-read from env each call so tests that set env before require() work
+  const secret = process.env.ORACLE_SECRET_KEY || process.env.ORACLE_PRIVATE_KEY || config.oracle.privateKey;
+  if (!secret) throw new Error('Oracle keypair not configured');
+  const { Keypair: KP } = require('stellar-sdk') as typeof import('stellar-sdk');
+  return KP.fromSecret(secret);
+}
+
+_svc.getPublicKey = (): string | null => {
+  try { return _getKeypair().publicKey(); } catch { return null; }
+};
 
 _svc.signPrice = (payload: { fuelType: string; pricePerLiter: number; timestamp: number }): SignedPrice => {
-  if (!_svc.oracleKeypair) throw new Error('Oracle keypair not configured');
-  const msgBuf = Buffer.from(
-    `${payload.fuelType}:${payload.pricePerLiter}:${payload.timestamp}`,
-    'utf8',
-  );
-  const signature = (_svc.oracleKeypair as import('stellar-sdk').Keypair)
-    .sign(msgBuf)
-    .toString('base64');
-  return { payload, signature, oraclePublicKey: _svc.oracleKeypair.publicKey() };
+  const kp = _getKeypair();
+  const msgBuf = Buffer.from(`${payload.fuelType}:${payload.pricePerLiter}:${payload.timestamp}`, 'utf8');
+  return { payload, signature: kp.sign(msgBuf).toString('base64'), oraclePublicKey: kp.publicKey() };
 };
 
 _svc.verifySignedPrice = (signed: SignedPrice): boolean => {
@@ -272,14 +276,9 @@ _svc.verifySignedPrice = (signed: SignedPrice): boolean => {
     if (!signed?.payload || !signed?.signature || !signed?.oraclePublicKey) return false;
     const { Keypair: KP } = require('stellar-sdk') as typeof import('stellar-sdk');
     const kp = KP.fromPublicKey(signed.oraclePublicKey);
-    const msgBuf = Buffer.from(
-      `${signed.payload.fuelType}:${signed.payload.pricePerLiter}:${signed.payload.timestamp}`,
-      'utf8',
-    );
+    const msgBuf = Buffer.from(`${signed.payload.fuelType}:${signed.payload.pricePerLiter}:${signed.payload.timestamp}`, 'utf8');
     return kp.verify(msgBuf, Buffer.from(signed.signature, 'base64'));
-  } catch {
-    return false;
-  }
+  } catch { return false; }
 };
 
 _svc.isPricefresh = (payload: { timestamp: number }): boolean => {
@@ -287,16 +286,11 @@ _svc.isPricefresh = (payload: { timestamp: number }): boolean => {
   return Date.now() - payload.timestamp < maxAge;
 };
 
-_svc.getMaxPriceAge = (): number =>
-  parseInt(process.env.ORACLE_MAX_PRICE_AGE || '3600000', 10);
+_svc.getMaxPriceAge = (): number => parseInt(process.env.ORACLE_MAX_PRICE_AGE || '3600000', 10);
 
 _svc.fetchFuelPrices = async (): Promise<Array<{ fuelType: string; pricePerLiter: number; timestamp: number }>> => {
   const records = await oracleService.fetchRegulatoryPrices();
-  return records.map((r) => ({
-    fuelType: r.fuel_type,
-    pricePerLiter: r.price_mxn,
-    timestamp: r.timestamp * 1000,
-  }));
+  return records.map((r) => ({ fuelType: r.fuel_type, pricePerLiter: r.price_mxn, timestamp: r.timestamp * 1000 }));
 };
 
 _svc.getSignedPrices = async (): Promise<SignedPrice[]> => {
