@@ -16,7 +16,8 @@ router.post('/trustline', validate(setTrustlineSchema), async (req, res) => {
 
 router.get('/escrows-by-role', validate(getEscrowsByRoleSchema, 'query'), async (req, res) => {
   try {
-    const result = await trustlessWorkService.getEscrowsByRole(req.query as any);
+    const { role, publicKey } = req.query as { role: string; publicKey: string };
+    const result = await trustlessWorkService.getEscrowsByRole(role, publicKey);
     res.status(result.success ? 200 : 400).json(result);
   } catch (error) {
     res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed' });
