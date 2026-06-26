@@ -73,6 +73,11 @@ jest.mock('../src/services/stellar.service', () => ({
   },
 }));
 
+jest.mock('../src/db/prisma', () => ({
+  prisma: {},
+  default: {},
+}));
+
 import escrowRoutes from '../src/routes/escrow.routes';
 import walletRoutes from '../src/routes/wallet.routes';
 import helperRoutes from '../src/routes/helper.routes';

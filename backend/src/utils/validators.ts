@@ -1,4 +1,39 @@
 import { z } from 'zod';
+import {
+  createEscrowSchema,
+  fundEscrowSchema,
+  approveMilestoneSchema,
+  getEscrowSchema,
+  disputeEscrowSchema,
+  resolveDisputeSchema,
+  trustlineSchema,
+} from '../schemas/escrow.schema.js';
+
+// Re-export escrow schemas so tests can import from validators
+export {
+  createEscrowSchema,
+  fundEscrowSchema,
+  approveMilestoneSchema,
+  getEscrowSchema,
+  disputeEscrowSchema,
+  resolveDisputeSchema,
+};
+
+// Multi-release escrow (alias of single with milestones required)
+export const createMultiReleaseEscrowSchema = createEscrowSchema.extend({
+  milestones: z.array(z.object({
+    title: z.string().optional(),
+    description: z.string().min(1),
+    amount: z.number().positive(),
+  })).min(1, 'At least one milestone is required'),
+});
+
+// Release funds schema
+export const releaseFundsSchema = z.object({
+  contractId: z.string().min(1, 'Contract ID is required'),
+  signer: z.string().min(1, 'Signer is required'),
+  rolePublicKey: z.string().min(1, 'Role public key is required'),
+});
 
 export const sendTransactionSchema = z.object({
   signedXdr: z.string().min(1, 'Signed XDR is required'),
