@@ -78,7 +78,7 @@ export const resolveDisputeSchema = z.object({
   contractId: z.string().min(1),
   signer: z.string().min(1),
   rolePublicKey: z.string().min(1),
-  resolver: z.enum(['serviceProvider', 'platformAddress', 'releaseSigner', 'disputeResolver']).optional(),
+  resolver: z.enum(['serviceProvider', 'platformAddress', 'releaseSigner', 'disputeResolver', 'receiver', 'sender', 'approver']).optional(),
   percentage: z.number().min(0).max(100),
 });
 
