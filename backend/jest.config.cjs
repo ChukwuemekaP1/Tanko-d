@@ -11,6 +11,7 @@ module.exports = {
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
     '^triple-beam$': '<rootDir>/tests/__mocks__/triple-beam.js',
+    '^.*/generated/prisma/client.*$': '<rootDir>/tests/__mocks__/prisma-client.js',
   },
   transform: {
     '^.+\\.tsx?$': [

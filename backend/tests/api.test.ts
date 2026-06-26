@@ -78,6 +78,10 @@ jest.mock('../src/db/prisma', () => ({
   default: {},
 }));
 
+jest.mock('../src/generated/prisma/client', () => ({
+  PrismaClient: jest.fn(() => ({})),
+}));
+
 import escrowRoutes from '../src/routes/escrow.routes';
 import walletRoutes from '../src/routes/wallet.routes';
 import helperRoutes from '../src/routes/helper.routes';
