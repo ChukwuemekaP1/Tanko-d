@@ -3,6 +3,7 @@ import { Keypair } from 'stellar-sdk';
 import { config } from '../config/index.js';
 import { fxService, MXN_SCALE, USDC_SCALE } from './fx.service.js';
 import { sorobanOracleService } from './sorobanOracle.service.js';
+import { logger } from '../utils/logger.js';
 
 export type FuelType = 'MAGNA' | 'PREMIUM' | 'DIESEL';
 
@@ -38,13 +39,12 @@ export class OracleService {
   private loadOracleKeypair(): void {
     const secret = config.oracle.privateKey;
     if (!secret) {
-      console.warn('[OracleService] ORACLE_PRIVATE_KEY not set — signing disabled');
       return;
     }
     try {
       this.oracleKeypair = Keypair.fromSecret(secret);
     } catch (error) {
-      console.error('[OracleService] Invalid ORACLE_PRIVATE_KEY', error);
+      logger.error("Invalid ORACLE_PRIVATE_KEY", error);
     }
   }
 
@@ -167,7 +167,7 @@ export class OracleService {
         const parsed = this.parseRegulatoryResponse(response.data);
         if (parsed.length > 0) return parsed;
       } catch (error) {
-        console.warn('[OracleService] Regulatory API fetch failed', error);
+        logger.debug("Regulatory API fetch failed", error);
       }
     }
 

@@ -21,6 +21,8 @@ import fs from "fs";
 import yaml from "js-yaml";
 import path from "path";
 import { ZodError } from "zod";
+import { oracleCronService } from "./services/oracle-cron.service.js";
+import { logger } from "./utils/logger.js";
 
 const app = express();
 
@@ -97,7 +99,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-app.listen(config.port, "0.0.0.0", () => {
+const server = app.listen(config.port, "0.0.0.0", () => {
   console.log(`
 ╔══════════════════════════════════════════════════════════════╗
 ║                    TANKO-scrow Backend                    ║
@@ -109,12 +111,23 @@ app.listen(config.port, "0.0.0.0", () => {
 ╚══════════════════════════════════════════════════════════════╝
   `);
 
-  // Initialize Oracle service
-  try {
-    oracleCronService.start();
-  } catch (error) {
-    logger.error('Failed to start Oracle service', error);
+  if (config.oracle.enabled) {
+    try {
+      oracleCronService.start();
+    } catch (error) {
+      logger.error("Failed to start Oracle cron service", error);
+    }
   }
+});
+
+server.on("error", (err: NodeJS.ErrnoException) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(
+      `\n[Tanko] Puerto ${config.port} ya está en uso. Cierra la otra instancia del backend o cambia PORT en .env.\n`,
+    );
+    process.exit(1);
+  }
+  throw err;
 });
 
 // Handle graceful shutdown

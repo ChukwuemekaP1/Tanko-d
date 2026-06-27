@@ -13,6 +13,8 @@
     "dev:frontend": "npm run dev --workspace=frontend",
     "build": "npm run build --workspace=frontend",
     "install:all": "npm install",
+    "setup": "node scripts/setup.mjs",
+    "db:setup": "npm run db:push --workspace=backend && npm run db:seed --workspace=backend",
     "lint": "npm run lint --workspace=frontend"
   },
   "devDependencies": {

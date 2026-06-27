@@ -9,7 +9,7 @@ if (rootEnv.error) {
 }
 
 export const config = {
-  port: parseInt(process.env.PORT || '3000', 10),
+  port: parseInt(process.env.PORT || '3001', 10),
   env: process.env.NODE_ENV || 'development',
 
   trustlessWork: {
@@ -64,6 +64,9 @@ export const config = {
       workerEnabled: process.env.ORACLE_WORKER_ENABLED !== 'false',
       workerIntervalMs: parseInt(process.env.ORACLE_WORKER_INTERVAL_MS || '3600000', 10),
       contractId: process.env.ORACLE_CONTRACT_ID || '',
+      /** Cron job in index.ts — off by default in dev to reduce console noise */
+      enabled: process.env.ORACLE_CRON_ENABLED === 'true',
+      cronExpression: process.env.ORACLE_CRON_EXPRESSION || '0 */6 * * *',
     };
   },
 };
