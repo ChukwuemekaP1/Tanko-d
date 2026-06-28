@@ -27,6 +27,27 @@ export function useDeepLinks() {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
+<<<<<<< HEAD
+    let cancelled = false;
+
+    const handleDeepLink = (data: { url: string }) => {
+      const slug = data.url.split('://').pop();
+      if (slug) {
+        router.push(`/${slug}`);
+      }
+    };
+
+    const setup = async () => {
+      try {
+        await App.addListener('appUrlOpen', handleDeepLink);
+
+        const launch = await App.getLaunchUrl();
+        if (!cancelled && launch?.url) {
+          handleDeepLink({ url: launch.url });
+        }
+      } catch {
+        // Capacitor plugins are not available in the browser build.
+=======
     const listener = App.addListener('appUrlOpen', (data) => {
       handleDeepLink(data.url);
     });
@@ -36,13 +57,19 @@ export function useDeepLinks() {
       const launchUrl = await App.getLaunchUrl();
       if (launchUrl?.url) {
         handleDeepLink(launchUrl.url);
+>>>>>>> 21af4aacb6c6923a34987e26adcaee911fdba006
       }
     };
 
-    checkInitialUrl();
+    void setup();
 
     return () => {
+<<<<<<< HEAD
+      cancelled = true;
+      void App.removeAllListeners();
+=======
       listener.then(l => l.remove());
+>>>>>>> 21af4aacb6c6923a34987e26adcaee911fdba006
     };
   }, [handleDeepLink]);
 }

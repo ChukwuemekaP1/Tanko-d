@@ -1,33 +1,22 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+<<<<<<< HEAD
+import { Clock, Fuel, Loader2, MapPin, Plus, Search } from "lucide-react"
+=======
 import dynamic from "next/dynamic"
 import { AlertCircle, Clock, Fuel, Loader2, MapPin, Search, Plus } from "lucide-react"
+>>>>>>> 21af4aacb6c6923a34987e26adcaee911fdba006
 import { StationMap, type StationMapLocation } from "@/components/station-map"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { useAuth } from "@/providers/auth-provider"
 import { toast } from "sonner"
 import { getMappableStations } from "@/lib/maps/stations"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001"
-
-// Dynamically import the map component with no SSR to avoid 'window is not defined' errors from Leaflet
-const StationsMap = dynamic(
-  () => import("@/components/maps/StationsMap"),
-  { 
-    ssr: false,
-    loading: () => (
-      <div className="flex h-full items-center justify-center bg-muted/20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
-)
 
 interface GasStation {
   id: string
@@ -130,23 +119,26 @@ export default function LocationsPage() {
     () => filtered.map(toMapLocation).filter((station): station is StationMapLocation => Boolean(station)),
     [filtered]
   )
-  const validStations = useMemo(() => getMappableStations(filtered), [filtered])
-  const coordinatesById = useMemo(
-    () =>
-      new Map(
-        getMappableStations(stations).map((station) => [
-          station.id,
-          { lat: station.lat, lng: station.lng },
-        ]),
-      ),
-    [stations],
-  )
 
   useEffect(() => {
     if (!selectedStationId || filtered.some((station) => station.id === selectedStationId)) return
     setSelectedStationId(mapStations[0]?.id ?? filtered[0]?.id ?? null)
   }, [filtered, mapStations, selectedStationId])
 
+<<<<<<< HEAD
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Cargando ubicaciones...</p>
+        </div>
+      </div>
+    )
+  }
+
+=======
+>>>>>>> 21af4aacb6c6923a34987e26adcaee911fdba006
   const StationForm = () => (
     <SheetContent className="sm:max-w-[500px]">
       <SheetHeader className="pb-6">
@@ -268,9 +260,24 @@ export default function LocationsPage() {
           </CardHeader>
           <CardContent>
             {filtered.length === 0 ? (
-              <p className="py-8 text-center text-muted-foreground">
-                {searchQuery ? "Sin resultados para tu busqueda" : "No hay gasolineras autorizadas"}
-              </p>
+              <div className="space-y-4 py-8 text-center">
+                <p className="text-muted-foreground">
+                  {searchQuery
+                    ? "Sin resultados para tu busqueda"
+                    : "No hay gasolineras autorizadas"}
+                </p>
+                {isJefe && !searchQuery && (
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button className="gap-2" size="lg">
+                        <Plus className="h-4 w-4" />
+                        Register First Gas Station
+                      </Button>
+                    </SheetTrigger>
+                    <StationForm />
+                  </Sheet>
+                )}
+              </div>
             ) : (
               <div className="max-h-[calc(100vh-320px)] min-h-[360px] space-y-3 overflow-y-auto pr-1">
                 {filtered.map((station) => {
