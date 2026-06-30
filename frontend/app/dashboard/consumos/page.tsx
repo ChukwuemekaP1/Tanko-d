@@ -17,6 +17,7 @@ import {
   Filter,
 } from "lucide-react";
 import { format, isValid, parseISO } from "date-fns";
+import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -81,6 +82,9 @@ function StatCard({
 }
 
 export default function FuelLogsPage() {
+  const t = useTranslations("consumos");
+  const tCommon = useTranslations("common");
+  const tFuel = useTranslations("fuelTypes");
   const { address: walletAddress } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -117,7 +121,7 @@ export default function FuelLogsPage() {
         const data = await res.json();
         setFuelLogs(data.success && data.data ? data.data : []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Connection Error");
+        setError(err instanceof Error ? err.message : tCommon("connectionError"));
         setFuelLogs([]);
       } finally {
         setLoading(false);
@@ -151,9 +155,9 @@ export default function FuelLogsPage() {
       <div className="flex h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4 text-center max-w-md px-4">
           <AlertCircle className="h-12 w-12 text-destructive" />
-          <h3 className="text-xl font-bold text-destructive">Unable to load records</h3>
+          <h3 className="text-xl font-bold text-destructive">{t("loadError")}</h3>
           <p className="text-sm text-muted-foreground">{error}</p>
-          <Button variant="outline" onClick={() => window.location.reload()}>Retry Connection</Button>
+          <Button variant="outline" onClick={() => window.location.reload()}>{t("retryConnection")}</Button>
         </div>
       </div>
     );
@@ -163,29 +167,29 @@ export default function FuelLogsPage() {
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground uppercase">Fuel Logs</h1>
-          <p className="text-muted-foreground mt-1">Audit trail for all fleet fueling operations.</p>
+          <h1 className="text-3xl font-black tracking-tight text-foreground uppercase">{t("title")}</h1>
+          <p className="text-muted-foreground mt-1">{t("subtitle")}</p>
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
-          label="Total Spend"
+          label={t("totalSpend")}
           value={`$${(totalAmount / 10000000).toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
           icon={Banknote}
-          helper="Aggregated cost of filtered transactions."
+          helper={t("totalSpendHelper")}
         />
         <StatCard
-          label="Total Volume"
+          label={t("totalVolume")}
           value={`${(totalLiters / 10000000).toLocaleString()} L`}
           icon={Fuel}
-          helper="Total liters delivered to the fleet."
+          helper={t("totalVolumeHelper")}
         />
         <StatCard
-          label="Transactions"
+          label={t("transactions")}
           value={filtered.length.toString()}
           icon={Users}
-          helper="Number of fueling events recorded."
+          helper={t("transactionsHelper")}
         />
       </div>
 
@@ -193,7 +197,7 @@ export default function FuelLogsPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
           <Input
-            placeholder="Search by driver, unit or station..."
+            placeholder={t("searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 h-12 bg-background border-muted"
@@ -202,7 +206,7 @@ export default function FuelLogsPage() {
         <DateRangePicker
           value={selectedRange}
           onChange={handleDateRangeChange}
-          placeholder="Filter by date range"
+          placeholder={t("dateRangePlaceholder")}
           className="h-12 sm:w-auto"
         />
       </div>
@@ -211,7 +215,7 @@ export default function FuelLogsPage() {
         <div className="flex h-[40vh] items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest">Synchronizing Logs...</p>
+            <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest">{t("synchronizing")}</p>
           </div>
         </div>
       ) : filtered.length === 0 ? (
@@ -220,11 +224,11 @@ export default function FuelLogsPage() {
             <EmptyMedia variant="icon">
               <Fuel className="size-10 text-muted-foreground/40" />
             </EmptyMedia>
-            <EmptyTitle className="text-xl font-bold mt-4">No records found</EmptyTitle>
+            <EmptyTitle className="text-xl font-bold mt-4">{t("noRecords")}</EmptyTitle>
             <EmptyDescription className="max-w-xs mx-auto mt-2">
               {searchQuery
-                ? `No fueling logs match "${searchQuery}". Try adjusting your filters.`
-                : "Your fleet hasn't recorded any fueling operations yet."}
+                ? t("noMatch", { query: searchQuery })
+                : t("emptyDesc")}
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
@@ -250,17 +254,17 @@ export default function FuelLogsPage() {
                           {(log.liters / 10000000).toFixed(2)} L
                         </span>
                         <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
-                          {log.fuelType || "Diesel"}
+                          {log.fuelType || tFuel("diesel")}
                         </span>
                       </div>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1.5 font-medium">
                           <User className="h-3.5 w-3.5" />
-                          {log.user?.name || "Unknown Driver"}
+                          {log.user?.name || t("unknownDriver")}
                         </span>
                         <span className="flex items-center gap-1.5 font-medium">
                           <Car className="h-3.5 w-3.5" />
-                          {log.unit ? `${log.unit.make} ${log.unit.model} (${log.unit.plates})` : "N/A"}
+                          {log.unit ? `${log.unit.make} ${log.unit.model} (${log.unit.plates})` : tCommon("notAvailableShort")}
                         </span>
                       </div>
                     </div>
