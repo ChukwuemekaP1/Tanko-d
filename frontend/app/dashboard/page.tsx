@@ -34,6 +34,7 @@ import {
   BarChart,
   Bar,
 } from "recharts";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/providers/auth-provider";
 import DriverKYCForm from "@/components/forms/DriverKYCForm";
 
@@ -93,6 +94,9 @@ interface TopUnit {
 }
 
 export default function DashboardPage() {
+  const t = useTranslations("dashboard");
+  const tRoles = useTranslations("roles");
+  const tCommon = useTranslations("common");
   const { address: walletAddress, role, userId } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [monthlyStats, setMonthlyStats] = useState<MonthlyStats[]>([]);
@@ -186,13 +190,13 @@ export default function DashboardPage() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        toast.success("Solicitud aprobada");
+        toast.success(t("requestApproved"));
         setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
       } else {
-        toast.error("Error al aprobar", { description: data.error });
+        toast.error(t("approveError"), { description: data.error });
       }
     } catch (err) {
-      toast.error("Error de conexión");
+      toast.error(tCommon("connectionError"));
     } finally {
       setProcessingId(null);
     }
@@ -209,13 +213,13 @@ export default function DashboardPage() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        toast.success("Solicitud rechazada");
+        toast.success(t("requestRejected"));
         setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
       } else {
-        toast.error("Error al rechazar", { description: data.error });
+        toast.error(t("rejectError"), { description: data.error });
       }
     } catch (err) {
-      toast.error("Error de conexión");
+      toast.error(tCommon("connectionError"));
     } finally {
       setProcessingId(null);
     }
@@ -237,14 +241,14 @@ export default function DashboardPage() {
 
   const statsCards = [
     {
-      title: "Total Gastado",
+      title: t("totalSpent"),
       value: `$${(displayStats.totalReleased / 10000000).toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
       trend: "up" as const,
       icon: DollarSign,
       color: "emerald",
     },
     {
-      title: "Solicitudes Pendientes",
+      title: t("pendingRequests"),
       value: displayStats.pendingRequests.toString(),
       trend: (pendingRequests.length > 0 ? "up" : "neutral") as
         | "up"
@@ -254,14 +258,14 @@ export default function DashboardPage() {
       color: "amber",
     },
     {
-      title: "Conductores Activos",
+      title: t("activeDrivers"),
       value: displayStats.activeUsers.toString(),
       trend: "neutral" as const,
       icon: Users,
       color: "blue",
     },
     {
-      title: "Litros Cargados",
+      title: t("litersLoaded"),
       value: `${(displayStats.totalLiters / 10000000).toLocaleString()} L`,
       trend: "neutral" as const,
       icon: Droplets,
@@ -274,7 +278,7 @@ export default function DashboardPage() {
       <div className="flex h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Cargando dashboard...</p>
+          <p className="text-sm text-muted-foreground">{t("loading")}</p>
         </div>
       </div>
     );
@@ -283,11 +287,9 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
         <p className="text-muted-foreground">
-          {role === "JEFE"
-            ? "Manage your fleet and fuel requests"
-            : "Monitor your unit and track your fuel logs"}
+          {role === "JEFE" ? t("subtitleManager") : t("subtitleDriver")}
         </p>
       </div>
 
@@ -297,20 +299,18 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-amber-600" />
               <CardTitle className="text-amber-800 dark:text-amber-400">
-                KYC Verification Required
+                {t("kycRequired")}
               </CardTitle>
             </div>
             <CardDescription className="text-amber-700 dark:text-amber-500">
-              {kycData?.status === "PENDING"
-                ? "Your KYC is currently under review. Please wait for an administrator to verify it."
-                : "You need to verify your driver's license before you can operate fleet units."}
+              {kycData?.status === "PENDING" ? t("kycPending") : t("kycNeeded")}
             </CardDescription>
           </CardHeader>
           {kycData?.status !== "PENDING" && (
             <CardContent>
               {!showKYCForm ? (
                 <Button onClick={() => setShowKYCForm(true)}>
-                  Start Verification
+                  {t("startVerification")}
                 </Button>
               ) : (
                 <div className="max-w-md bg-background p-6 rounded-xl border shadow-sm">
@@ -333,10 +333,10 @@ export default function DashboardPage() {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base text-amber-800 dark:text-amber-200">
               <AlertCircle className="h-5 w-5" />
-              Solicitudes Pendientes ({pendingRequests.length})
+              {t("pendingRequestsCount", { count: pendingRequests.length })}
             </CardTitle>
             <CardDescription className="text-amber-700 dark:text-amber-400">
-              Revisa y aprueba las solicitudes de combustible de tus conductores
+              {t("pendingRequestsDesc")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -351,7 +351,7 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <p className="font-medium text-foreground">
-                      {request.driver?.name || "Conductor"}
+                      {request.driver?.name || tRoles("driver")}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {request.liters}L · $
@@ -400,7 +400,7 @@ export default function DashboardPage() {
             ))}
             {pendingRequests.length > 3 && (
               <p className="text-center text-sm text-muted-foreground">
-                y {pendingRequests.length - 3} solicitudes más...
+                {t("andMoreRequests", { count: pendingRequests.length - 3 })}
               </p>
             )}
           </CardContent>
@@ -453,9 +453,9 @@ export default function DashboardPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Gasto Mensual</CardTitle>
+            <CardTitle>{t("monthlySpend")}</CardTitle>
             <CardDescription>
-              Gasto en combustible (USD) últimos 6 meses
+              {t("monthlySpendDesc")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -481,7 +481,7 @@ export default function DashboardPage() {
                   <Tooltip
                     formatter={(value: number) => [
                       `$${(value / 10000000).toLocaleString("en-US")}`,
-                      "Gasto",
+                      t("spend"),
                     ]}
                     contentStyle={{
                       backgroundColor: "hsl(var(--card))",
@@ -504,9 +504,9 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Litros por Mes</CardTitle>
+            <CardTitle>{t("litersPerMonth")}</CardTitle>
             <CardDescription>
-              Volumen de combustible cargado por mes
+              {t("litersPerMonthDesc")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -529,7 +529,7 @@ export default function DashboardPage() {
                   <Tooltip
                     formatter={(value: number) => [
                       `${(value / 10000000).toLocaleString("en-US")} L`,
-                      "Litros",
+                      t("liters"),
                     ]}
                     contentStyle={{
                       backgroundColor: "hsl(var(--card))",
@@ -552,9 +552,9 @@ export default function DashboardPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Transacciones Recientes</CardTitle>
+            <CardTitle>{t("recentTransactions")}</CardTitle>
             <CardDescription>
-              Últimas cargas de combustible registradas
+              {t("recentTransactionsDesc")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -593,7 +593,7 @@ export default function DashboardPage() {
                 ))
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No hay transacciones recientes
+                  {t("noRecentTransactions")}
                 </p>
               )}
             </div>
@@ -602,9 +602,9 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Unidades con Mayor Consumo</CardTitle>
+            <CardTitle>{t("topUnits")}</CardTitle>
             <CardDescription>
-              Top 5 unidades por gasto de combustible este mes
+              {t("topUnitsDesc")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -644,7 +644,7 @@ export default function DashboardPage() {
                 ))
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No hay unidades registradas
+                  {t("noUnits")}
                 </p>
               )}
             </div>

@@ -195,7 +195,7 @@ export async function disconnectStellarWallet(): Promise<void> {
   }
 }
 
-export const isWalletAvailable = isStellarWalletAvailable;
-export const connectWallet = connectStellarWallet;
+export const isStellarWalletAvailable = isWalletAvailable;
+export const connectStellarWallet = connectWallet;
 export const restoreWalletSession = restoreStellarWalletSession;
 export const disconnectWallet = disconnectStellarWallet;

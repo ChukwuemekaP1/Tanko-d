@@ -1,7 +1,10 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
+import createNextIntlPlugin from 'next-intl/plugin'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+const withNextIntl = createNextIntlPlugin()
 
 try {
   process.loadEnvFile(path.join(__dirname, '../.env'))
@@ -33,4 +36,4 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+export default withNextIntl(nextConfig)

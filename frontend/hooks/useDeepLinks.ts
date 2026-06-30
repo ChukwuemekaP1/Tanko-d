@@ -27,49 +27,29 @@ export function useDeepLinks() {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
-<<<<<<< HEAD
     let cancelled = false;
 
-    const handleDeepLink = (data: { url: string }) => {
-      const slug = data.url.split('://').pop();
-      if (slug) {
-        router.push(`/${slug}`);
-      }
-    };
-
-    const setup = async () => {
-      try {
-        await App.addListener('appUrlOpen', handleDeepLink);
-
-        const launch = await App.getLaunchUrl();
-        if (!cancelled && launch?.url) {
-          handleDeepLink({ url: launch.url });
-        }
-      } catch {
-        // Capacitor plugins are not available in the browser build.
-=======
     const listener = App.addListener('appUrlOpen', (data) => {
       handleDeepLink(data.url);
     });
 
-    // Handle the case where the app was opened via a deep link while it was closed
+    // Handle the case where the app was opened via a deep link while it was closed.
     const checkInitialUrl = async () => {
-      const launchUrl = await App.getLaunchUrl();
-      if (launchUrl?.url) {
-        handleDeepLink(launchUrl.url);
->>>>>>> 21af4aacb6c6923a34987e26adcaee911fdba006
+      try {
+        const launch = await App.getLaunchUrl();
+        if (!cancelled && launch?.url) {
+          handleDeepLink(launch.url);
+        }
+      } catch {
+        // Capacitor plugins are not available in the browser build.
       }
     };
 
-    void setup();
+    void checkInitialUrl();
 
     return () => {
-<<<<<<< HEAD
       cancelled = true;
-      void App.removeAllListeners();
-=======
       listener.then(l => l.remove());
->>>>>>> 21af4aacb6c6923a34987e26adcaee911fdba006
     };
   }, [handleDeepLink]);
 }

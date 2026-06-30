@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/providers/auth-provider";
 import { useToast } from "@/hooks/use-toast";
 
@@ -42,16 +43,14 @@ interface EscrowReserve {
   total_usdc_stroops: number;
 }
 
-const FUEL_LABELS: Record<FuelType, string> = {
-  MAGNA: "Gasolina Magna",
-  PREMIUM: "Gasolina Premium",
-  DIESEL: "Diésel",
-};
-
 const DEFAULT_MANAGER =
   process.env.NEXT_PUBLIC_MANAGER_PUBKEY ?? "";
 
 export default function ConductorFundRequestPage() {
+  const t = useTranslations("conductor");
+  const tFuel = useTranslations("fuelTypes");
+  const tCommon = useTranslations("common");
+  const fuelLabel = (fuel: FuelType) => tFuel(fuel.toLowerCase());
   const { address } = useAuth();
   const { toast } = useToast();
 
@@ -75,8 +74,8 @@ export default function ConductorFundRequestPage() {
         }
       } catch {
         toast({
-          title: "Error",
-          description: "No se pudieron cargar los precios del oráculo",
+          title: tCommon("error"),
+          description: t("pricesLoadError"),
           variant: "destructive",
         });
       } finally {
@@ -117,19 +116,19 @@ export default function ConductorFundRequestPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!address) {
-      toast({ title: "Wallet requerida", variant: "destructive" });
+      toast({ title: t("walletRequired"), variant: "destructive" });
       return;
     }
     if (!managerPubKey) {
       toast({
-        title: "Manager requerido",
-        description: "Ingresa la clave pública del jefe de flota",
+        title: t("managerRequired"),
+        description: t("managerRequiredDesc"),
         variant: "destructive",
       });
       return;
     }
     if (!reserve) {
-      toast({ title: "Calcula el monto primero", variant: "destructive" });
+      toast({ title: t("calculateFirst"), variant: "destructive" });
       return;
     }
 
@@ -145,24 +144,24 @@ export default function ConductorFundRequestPage() {
           amount: reserve.total_usdc_stroops,
           description:
             description ||
-            `${FUEL_LABELS[fuelType]} — ${reserve.liters}L @ $${reserve.price_per_liter_mxn.toFixed(2)} MXN/L`,
+            `${fuelLabel(fuelType)} — ${reserve.liters}L @ $${reserve.price_per_liter_mxn.toFixed(2)} MXN/L`,
         }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Error al crear solicitud");
+        throw new Error(data.error || t("createError"));
       }
       toast({
-        title: "Solicitud enviada",
-        description: `Reserva USDC: ${reserve.total_usdc.toFixed(4)}`,
+        title: t("requestSent"),
+        description: t("usdcReserve", { amount: reserve.total_usdc.toFixed(4) }),
       });
       setLiters("");
       setDescription("");
       setReserve(null);
     } catch (err) {
       toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Error desconocido",
+        title: tCommon("error"),
+        description: err instanceof Error ? err.message : tCommon("unknownError"),
         variant: "destructive",
       });
     } finally {
@@ -174,10 +173,10 @@ export default function ConductorFundRequestPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">
-          Solicitud de Combustible
+          {t("title")}
         </h1>
         <p className="text-muted-foreground">
-          Precios certificados por el oráculo Tanko — MXN y equivalente USDC
+          {t("subtitle")}
         </p>
       </div>
 
@@ -186,17 +185,17 @@ export default function ConductorFundRequestPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Fuel className="h-5 w-5 text-primary" />
-              Precios del Oráculo
+              {t("oraclePrices")}
             </CardTitle>
             <CardDescription>
-              Valoración en tiempo real para reserva de escrow
+              {t("oraclePricesDesc")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {loadingPrices ? (
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Cargando precios...
+                {t("loadingPrices")}
               </div>
             ) : (
               <div className="space-y-3">
@@ -211,7 +210,7 @@ export default function ConductorFundRequestPage() {
                           : "border-border"
                       }`}
                     >
-                      <p className="font-medium">{FUEL_LABELS[fuel]}</p>
+                      <p className="font-medium">{fuelLabel(fuel)}</p>
                       {p ? (
                         <p className="text-sm text-muted-foreground">
                           ${p.price_mxn.toFixed(2)} MXN/L ·{" "}
@@ -230,15 +229,15 @@ export default function ConductorFundRequestPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Nueva Solicitud</CardTitle>
+            <CardTitle>{t("newRequest")}</CardTitle>
             <CardDescription>
-              El monto en USDC se calcula automáticamente vía FX
+              {t("newRequestDesc")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label>Tipo de combustible</Label>
+                <Label>{t("fuelType")}</Label>
                 <Select
                   value={fuelType}
                   onValueChange={(v) => setFuelType(v as FuelType)}
@@ -250,7 +249,7 @@ export default function ConductorFundRequestPage() {
                     {(["MAGNA", "PREMIUM", "DIESEL"] as FuelType[]).map(
                       (fuel) => (
                         <SelectItem key={fuel} value={fuel}>
-                          {FUEL_LABELS[fuel]}
+                          {fuelLabel(fuel)}
                         </SelectItem>
                       ),
                     )}
@@ -259,13 +258,13 @@ export default function ConductorFundRequestPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="liters">Litros</Label>
+                <Label htmlFor="liters">{t("liters")}</Label>
                 <Input
                   id="liters"
                   type="number"
                   min="0"
                   step="0.01"
-                  placeholder="ej. 150"
+                  placeholder={t("litersPlaceholder")}
                   value={liters}
                   onChange={(e) => setLiters(e.target.value)}
                   required
@@ -273,7 +272,7 @@ export default function ConductorFundRequestPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="manager">Clave pública del jefe (G...)</Label>
+                <Label htmlFor="manager">{t("managerKey")}</Label>
                 <Input
                   id="manager"
                   placeholder="G..."
@@ -284,7 +283,7 @@ export default function ConductorFundRequestPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Descripción (opcional)</Label>
+                <Label htmlFor="description">{t("descriptionOptional")}</Label>
                 <Input
                   id="description"
                   value={description}
@@ -295,7 +294,7 @@ export default function ConductorFundRequestPage() {
               {selectedPrice && (
                 <div className="rounded-lg bg-muted/50 p-3 text-sm">
                   <p>
-                    Precio oráculo:{" "}
+                    {t("oraclePrice")}{" "}
                     <strong>${selectedPrice.price_mxn.toFixed(2)} MXN/L</strong>{" "}
                     · <strong>{selectedPrice.price_usdc.toFixed(4)} USDC/L</strong>
                   </p>
@@ -305,7 +304,7 @@ export default function ConductorFundRequestPage() {
               {reserve && (
                 <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
                   <p className="text-sm font-medium text-foreground">
-                    Reserva de escrow estimada
+                    {t("estimatedReserve")}
                   </p>
                   <p className="mt-1 text-lg font-bold">
                     ${reserve.total_mxn.toLocaleString("es-MX", {
@@ -329,7 +328,7 @@ export default function ConductorFundRequestPage() {
                 ) : (
                   <Send className="h-4 w-4 mr-2" />
                 )}
-                Enviar solicitud
+                {t("submitRequest")}
               </Button>
             </form>
           </CardContent>

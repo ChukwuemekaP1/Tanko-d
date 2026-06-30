@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, Wallet, User, Users } from 'lucide-react'
@@ -11,6 +12,8 @@ import { WalletConnectModal } from '@/components/wallet/wallet-connect-modal'
 
 export default function LoginPage() {
   const router = useRouter()
+  const t = useTranslations('auth.login')
+  const tCommon = useTranslations('common')
   const { address, isConnected, isConnecting, disconnect, setRole, role, networkLabel } = useAuth()
   const [modalOpen, setModalOpen] = useState(false)
 
@@ -40,7 +43,7 @@ export default function LoginPage() {
         <Card className="w-full max-w-md">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-            <p className="text-muted-foreground">Conectando wallet...</p>
+            <p className="text-muted-foreground">{t('connectingWallet')}</p>
           </CardContent>
         </Card>
       </div>
@@ -57,9 +60,9 @@ export default function LoginPage() {
                 <TankoLogoMinimal size={28} className="text-primary-foreground" />
               </div>
             </div>
-            <CardTitle className="text-2xl">Bienvenido a Tanko</CardTitle>
+            <CardTitle className="text-2xl">{t('welcome')}</CardTitle>
             <CardDescription>
-              Conecta tu wallet: {address.slice(0, 8)}...{address.slice(-8)}
+              {t('connectPrompt', { address: `${address.slice(0, 8)}...${address.slice(-8)}` })}
             </CardDescription>
             {networkLabel && (
               <div className="mt-3 flex justify-center">
@@ -72,7 +75,7 @@ export default function LoginPage() {
           
           <CardContent className="space-y-6">
             <p className="text-sm text-muted-foreground text-center">
-              ¿Cómo deseas acceder?
+              {t('howAccess')}
             </p>
 
             <div className="grid gap-4">
@@ -84,9 +87,9 @@ export default function LoginPage() {
                   <User className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-foreground">Soy Conductor</h3>
+                  <h3 className="font-semibold text-foreground">{t('iAmDriver')}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Solicitar fondos de combustible y cargar combustible
+                    {t('iAmDriverDesc')}
                   </p>
                 </div>
               </button>
@@ -99,9 +102,9 @@ export default function LoginPage() {
                   <Users className="h-6 w-6 text-violet-600" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-foreground">Soy Jefe de Flota</h3>
+                  <h3 className="font-semibold text-foreground">{t('iAmManager')}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Gestionar conductores, aprobar solicitudes y supervisar la flota
+                    {t('iAmManagerDesc')}
                   </p>
                 </div>
               </button>
@@ -112,7 +115,7 @@ export default function LoginPage() {
               onClick={disconnect}
               className="w-full text-muted-foreground"
             >
-              Desconectar wallet
+              {t('disconnectWallet')}
             </Button>
           </CardContent>
         </Card>
@@ -129,16 +132,16 @@ export default function LoginPage() {
               <TankoLogoMinimal size={28} className="text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Tanko</CardTitle>
+          <CardTitle className="text-2xl">{tCommon('appName')}</CardTitle>
           <CardDescription>
-            Monedero electrónico descentralizado para combustible
+            {t('subtitle')}
           </CardDescription>
         </CardHeader>
         
         <CardContent className="space-y-4">
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground text-center">
-              Core Wallet en Avalanche C-Chain. Stellar sigue disponible para flujos existentes.
+              {t('walletHint')}
             </p>
 
             <Button
@@ -150,12 +153,12 @@ export default function LoginPage() {
               {isConnecting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Conectando...
+                  {t('connecting')}
                 </>
               ) : (
                 <>
                   <Wallet className="mr-2 h-4 w-4" />
-                  Conectar wallet
+                  {t('connectWallet')}
                 </>
               )}
             </Button>

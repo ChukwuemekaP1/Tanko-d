@@ -15,16 +15,18 @@ import {
   UserCircle,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useAuth, type UserRole } from "@/providers/auth-provider";
 import { Loader2 } from "lucide-react";
 import { TankoLogoMinimal } from "@/components/logo";
+import { LanguageToggle } from "@/components/language-toggle";
 
 // ── Navigation config ────────────────────────────────────────────────────────
 // Each item declares which roles can see it. An empty `roles` array means
 // the item is visible to everyone who is authenticated.
 
 interface NavItem {
-  name: string;
+  labelKey: string;
   href: string;
   icon: React.ElementType;
   roles: UserRole[];
@@ -32,49 +34,49 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   {
-    name: "Overview",
+    labelKey: "nav.overview",
     href: "/dashboard",
     icon: LayoutDashboard,
     roles: ["JEFE"],
   },
   {
-    name: "Users",
+    labelKey: "nav.users",
     href: "/dashboard/usuarios",
     icon: Users,
     roles: ["JEFE"],
   },
   {
-    name: "Fleet",
+    labelKey: "nav.fleet",
     href: "/dashboard/unidades",
     icon: Car,
     roles: ["JEFE"],
   },
   {
-    name: "Fuel Logs",
+    labelKey: "nav.fuelLogs",
     href: "/dashboard/consumos",
     icon: Receipt,
     roles: ["JEFE"],
   },
   {
-    name: "Locations",
+    labelKey: "nav.locations",
     href: "/dashboard/ubicaciones",
     icon: MapPin,
     roles: ["JEFE"],
   },
   {
-    name: "Request Fuel",
+    labelKey: "nav.requestFuel",
     href: "/dashboard/conductor",
     icon: Fuel,
     roles: ["CONDUCTOR"],
   },
   {
-    name: "My Requests",
+    labelKey: "nav.myRequests",
     href: "/dashboard/solicitudes",
     icon: Fuel,
     roles: ["CONDUCTOR"],
   },
   {
-    name: "Profile",
+    labelKey: "nav.profile",
     href: "/dashboard/perfil",
     icon: UserCircle,
     roles: ["CONDUCTOR"],
@@ -96,6 +98,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const t = useTranslations();
   const pathname = usePathname();
   const router = useRouter();
   const { isConnected, isConnecting, address, role, disconnect } = useAuth();
@@ -127,7 +130,7 @@ export default function DashboardLayout({
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-sm text-muted-foreground">
-            Verifying connection...
+            {t("nav.verifyingConnection")}
           </p>
         </div>
       </div>
@@ -144,7 +147,7 @@ export default function DashboardLayout({
     router.push("/menu");
   };
 
-  const roleLabel = role === "CONDUCTOR" ? "Driver" : "Fleet Manager";
+  const roleLabel = role === "CONDUCTOR" ? t("roles.driver") : t("roles.manager");
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -173,13 +176,13 @@ export default function DashboardLayout({
               <TankoLogoMinimal size={20} className="text-white" />
             </div>
             <span className="text-xl font-black tracking-widest text-white">
-              TANKO
+              {t("common.brand")}
             </span>
           </div>
           <button
             className="lg:hidden"
             onClick={() => setIsSidebarOpen(false)}
-            aria-label="Close sidebar"
+            aria-label={t("nav.closeSidebar")}
           >
             <X className="h-5 w-5 text-white/50" />
           </button>
@@ -201,7 +204,7 @@ export default function DashboardLayout({
                 : pathname.startsWith(item.href);
             return (
               <Link
-                key={item.name}
+                key={item.href}
                 href={item.href}
                 onClick={() => setIsSidebarOpen(false)}
                 style={isActive ? { backgroundColor: "#22c55e" } : undefined}
@@ -212,7 +215,7 @@ export default function DashboardLayout({
                 }`}
               >
                 <item.icon className="h-5 w-5 shrink-0" />
-                {item.name}
+                {t(item.labelKey)}
               </Link>
             );
           })}
@@ -228,7 +231,7 @@ export default function DashboardLayout({
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/60 hover:bg-white/10 hover:text-white transition-colors"
           >
             <LogOut className="h-5 w-5" />
-            Disconnect
+            {t("common.disconnect")}
           </button>
         </div>
       </aside>
@@ -240,12 +243,13 @@ export default function DashboardLayout({
           <button
             className="lg:hidden"
             onClick={() => setIsSidebarOpen(true)}
-            aria-label="Open sidebar"
+            aria-label={t("nav.openSidebar")}
           >
             <Menu className="h-6 w-6 text-foreground" />
           </button>
           <div className="flex-1" />
           <div className="flex items-center gap-3">
+            <LanguageToggle />
             <div className="hidden sm:block text-right">
               <p className="text-sm font-medium text-foreground">{roleLabel}</p>
               <p className="text-xs text-muted-foreground font-mono">

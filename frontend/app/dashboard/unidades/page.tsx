@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
+import { useTranslations } from "next-intl"
 import { useAuth } from "@/providers/auth-provider"
 import { UnitGrid } from "@/components/UnitGrid"
 import {
@@ -54,6 +55,8 @@ interface Unit {
 }
 
 export default function UnidadesPage() {
+  const t = useTranslations("unidades");
+  const tCommon = useTranslations("common");
   const { address: walletAddress } = useAuth();
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +73,7 @@ export default function UnidadesPage() {
         const data = await res.json();
         setUnits(data.success && data.data ? data.data : []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error de conexión");
+        setError(err instanceof Error ? err.message : tCommon("connectionError"));
         setUnits([]);
       } finally {
         setLoading(false);
@@ -92,7 +95,7 @@ export default function UnidadesPage() {
       <div className="flex h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Cargando unidades...</p>
+          <p className="text-sm text-muted-foreground">{t("loading")}</p>
         </div>
       </div>
     );
@@ -104,7 +107,7 @@ export default function UnidadesPage() {
         <div className="flex flex-col items-center gap-4 text-center">
           <AlertCircle className="h-8 w-8 text-destructive" />
           <p className="font-medium text-destructive">
-            Error al cargar unidades
+            {t("loadError")}
           </p>
           <p className="text-sm text-muted-foreground">{error}</p>
         </div>
@@ -115,9 +118,9 @@ export default function UnidadesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Flota</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t("title")}</h1>
         <p className="text-muted-foreground">
-          Gestionar vehículos registrados en el sistema
+          {t("subtitle")}
         </p>
       </div>
 
@@ -125,15 +128,15 @@ export default function UnidadesPage() {
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle>Lista de Vehículos</CardTitle>
+              <CardTitle>{t("listTitle")}</CardTitle>
               <CardDescription>
-                Total: {units.length} vehículos registrados
+                {t("total", { count: units.length })}
               </CardDescription>
             </div>
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Buscar vehículo..."
+                placeholder={t("searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"

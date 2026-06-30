@@ -8,17 +8,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/providers/auth-provider";
 
 export default function PerfilPage() {
+  const t = useTranslations("perfil");
+  const tRoles = useTranslations("roles");
   const { address, role } = useAuth();
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Mi Perfil</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t("title")}</h1>
         <p className="text-muted-foreground">
-          Información de tu cuenta y wallet
+          {t("subtitle")}
         </p>
       </div>
 
@@ -29,9 +32,9 @@ export default function PerfilPage() {
               <UserCircle className="h-8 w-8 text-primary" />
             </div>
             <div>
-              <CardTitle>Conductor</CardTitle>
+              <CardTitle>{tRoles("driver")}</CardTitle>
               <CardDescription>
-                {role === "CONDUCTOR" ? "Conductor de flota" : (role ?? "—")}
+                {role === "CONDUCTOR" ? t("driverRole") : (role ?? "—")}
               </CardDescription>
             </div>
           </div>
@@ -41,7 +44,7 @@ export default function PerfilPage() {
             <div className="flex items-center gap-2 mb-1">
               <Wallet className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium text-foreground">
-                Wallet Stellar
+                {t("walletStellar")}
               </span>
             </div>
             <code className="text-xs font-mono text-muted-foreground break-all">

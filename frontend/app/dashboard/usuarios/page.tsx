@@ -25,6 +25,7 @@ import {
   EmptyTitle,
   EmptyDescription,
 } from "@/components/ui/empty";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/providers/auth-provider";
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001";
@@ -46,6 +47,9 @@ interface User {
 }
 
 export default function UsersPage() {
+  const t = useTranslations("usuarios");
+  const tCommon = useTranslations("common");
+  const tRoles = useTranslations("roles");
   const { address: walletAddress } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +66,7 @@ export default function UsersPage() {
         const data = await res.json();
         setUsers(data.success && data.data ? data.data : []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error de conexión");
+        setError(err instanceof Error ? err.message : tCommon("connectionError"));
         setUsers([]);
       } finally {
         setLoading(false);
@@ -83,7 +87,7 @@ export default function UsersPage() {
       <div className="flex h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Cargando usuarios...</p>
+          <p className="text-sm text-muted-foreground">{t("loading")}</p>
         </div>
       </div>
     );
@@ -95,7 +99,7 @@ export default function UsersPage() {
         <div className="flex flex-col items-center gap-4 text-center">
           <AlertCircle className="h-8 w-8 text-destructive" />
           <p className="font-medium text-destructive">
-            Error al cargar usuarios
+            {t("loadError")}
           </p>
           <p className="text-sm text-muted-foreground">{error}</p>
         </div>
@@ -106,9 +110,9 @@ export default function UsersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Usuarios</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t("title")}</h1>
         <p className="text-muted-foreground">
-          Gestionar conductores y usuarios de la wallet de flota
+          {t("subtitle")}
         </p>
       </div>
 
@@ -116,15 +120,15 @@ export default function UsersPage() {
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle>Lista de Usuarios</CardTitle>
+              <CardTitle>{t("listTitle")}</CardTitle>
               <CardDescription>
-                Total: {users.length} usuarios registrados
+                {t("total", { count: users.length })}
               </CardDescription>
             </div>
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Buscar usuario..."
+                placeholder={t("searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -139,19 +143,19 @@ export default function UsersPage() {
                 <thead>
                   <tr className="border-b border-border">
                     <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
-                      Usuario
+                      {t("colUser")}
                     </th>
                     <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
-                      Contacto
+                      {t("colContact")}
                     </th>
                     <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
-                      Wallet
+                      {t("colWallet")}
                     </th>
                     <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
-                      Unidades
+                      {t("colUnits")}
                     </th>
                     <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
-                      Rol
+                      {t("colRole")}
                     </th>
                   </tr>
                 </thead>
@@ -173,10 +177,9 @@ export default function UsersPage() {
                               {user.name}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              Creado:{" "}
-                              {new Date(user.createdAt).toLocaleDateString(
-                                "es-MX",
-                              )}
+                              {t("createdAt", {
+                                date: new Date(user.createdAt).toLocaleDateString("es-MX"),
+                              })}
                             </p>
                           </div>
                         </div>
@@ -219,7 +222,7 @@ export default function UsersPage() {
                               : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                           }`}
                         >
-                          {user.role === "JEFE" ? "Jefe de Flota" : "Conductor"}
+                          {user.role === "JEFE" ? tRoles("manager") : tRoles("driver")}
                         </span>
                       </td>
                     </tr>
@@ -234,14 +237,12 @@ export default function UsersPage() {
                   <Users className="size-5" />
                 </EmptyMedia>
                 <EmptyTitle>
-                  {searchQuery
-                    ? "Sin resultados"
-                    : "Sin conductores registrados"}
+                  {searchQuery ? tCommon("noResults") : t("noDrivers")}
                 </EmptyTitle>
                 <EmptyDescription>
                   {searchQuery
-                    ? `No hay usuarios que coincidan con "${searchQuery}". Intenta con otro término.`
-                    : "Aún no has agregado ningún conductor a la flota. Los conductores aparecerán aquí una vez que se registren."}
+                    ? t("noMatch", { query: searchQuery })
+                    : t("emptyDesc")}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>

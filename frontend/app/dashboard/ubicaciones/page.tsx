@@ -1,12 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-<<<<<<< HEAD
 import { Clock, Fuel, Loader2, MapPin, Plus, Search } from "lucide-react"
-=======
-import dynamic from "next/dynamic"
-import { AlertCircle, Clock, Fuel, Loader2, MapPin, Search, Plus } from "lucide-react"
->>>>>>> 21af4aacb6c6923a34987e26adcaee911fdba006
 import { StationMap, type StationMapLocation } from "@/components/station-map"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -125,7 +120,6 @@ export default function LocationsPage() {
     setSelectedStationId(mapStations[0]?.id ?? filtered[0]?.id ?? null)
   }, [filtered, mapStations, selectedStationId])
 
-<<<<<<< HEAD
   if (loading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
@@ -137,8 +131,6 @@ export default function LocationsPage() {
     )
   }
 
-=======
->>>>>>> 21af4aacb6c6923a34987e26adcaee911fdba006
   const StationForm = () => (
     <SheetContent className="sm:max-w-[500px]">
       <SheetHeader className="pb-6">
