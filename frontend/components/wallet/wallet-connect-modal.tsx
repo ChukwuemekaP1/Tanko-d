@@ -11,13 +11,19 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/providers/auth-provider";
 import {
+  CORE_WALLET,
   WALLET_OPTIONS,
+  type StellarWalletType,
   type WalletType,
 } from "@/lib/wallet/types";
 import {
   getWalletAvailability,
-  isWalletAvailable,
+  isStellarWalletAvailable,
 } from "@/lib/wallet/stellar-wallet-service";
+import {
+  CORE_INSTALL_URL,
+  isCoreWalletInstalled,
+} from "@/lib/wallet/core-wallet-service";
 
 interface WalletConnectModalProps {
   open: boolean;
@@ -78,20 +84,30 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
     if (availability) {
       return availability[walletId];
     }
-    return isWalletAvailable(walletId);
+
+    if (walletId === CORE_WALLET) {
+      return isCoreWalletInstalled();
+    }
+
+    return isStellarWalletAvailable(walletId as StellarWalletType);
   }
 
   function walletHint(walletId: WalletType, requiresProjectId?: boolean): string {
     const option = WALLET_OPTIONS.find((w) => w.id === walletId);
+
     if (!walletAvailable(walletId)) {
+      if (walletId === CORE_WALLET) {
+        return "Instala Core Wallet para Avalanche C-Chain";
+      }
       if (requiresProjectId) {
         return "Configura NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID en .env";
       }
       if (walletId === "freighter") {
-        return "Instala la extensión Freighter (Testnet)";
+        return "Instala la extension Freighter (Testnet)";
       }
       return "No disponible en este navegador";
     }
+
     return option?.description ?? "";
   }
 
@@ -101,7 +117,7 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
         <DialogHeader>
           <DialogTitle className="text-white">Conectar wallet</DialogTitle>
           <DialogDescription className="text-white/50">
-            Freighter (extensión), Albedo (web) o WalletConnect (móvil).
+            Core Wallet es el proveedor principal para Avalanche. Stellar sigue disponible para flujos existentes.
           </DialogDescription>
         </DialogHeader>
 
@@ -153,7 +169,7 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                 </div>
                 {wallet.installUrl && !available && (
                   <a
-                    href={wallet.installUrl}
+                    href={wallet.id === CORE_WALLET ? CORE_INSTALL_URL : wallet.installUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
@@ -169,7 +185,7 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
         </div>
 
         <p className="text-center text-[11px] text-white/30">
-          Stellar Testnet · Freighter debe estar en red Testnet
+          Avalanche C-Chain / Fuji via Core Wallet · Stellar Testnet
         </p>
       </DialogContent>
     </Dialog>

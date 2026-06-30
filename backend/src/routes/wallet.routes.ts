@@ -9,11 +9,11 @@ router.post('/wallet/generate', (req, res) => walletController.generateWallet(re
 // Validates the public key and logs the connection to the terminal.
 router.post('/wallet/connect', (req, res) => walletController.connectWallet(req, res));
 
+router.get('/wallet/validate', (req, res) => walletController.validateAddress(req, res));
+
 router.get('/wallet/:publicKey/info', (req, res) => walletController.getAccountInfo(req, res));
 
 router.get('/wallet/:publicKey/balances', (req, res) => walletController.getBalances(req, res));
-
-router.get('/wallet/validate', (req, res) => walletController.validateAddress(req, res));
 
 // TODO: Implement signAndSubmitTransaction in escrowController if needed
 
