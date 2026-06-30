@@ -6,13 +6,14 @@ import { WalletConnectModal } from '@/components/wallet/wallet-connect-modal'
 import { Wallet, ChevronDown, LogOut, Copy, CheckCheck, Loader2, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { CORE_WALLET } from '@/lib/wallet/types'
 
 interface WalletButtonProps {
   className?: string
 }
 
 export function WalletButton({ className }: WalletButtonProps) {
-  const { isConnected, isConnecting, address, walletLabel, disconnect } = useAuth()
+  const { isConnected, isConnecting, address, walletType, walletLabel, networkLabel, disconnect } = useAuth()
   const [open, setOpen] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -64,6 +65,11 @@ export function WalletButton({ className }: WalletButtonProps) {
             <div className="mb-3 rounded-lg bg-muted/50 p-3">
               <p className="text-xs font-medium text-muted-foreground mb-1">Connected wallet ({walletLabel})</p>
               <p className="font-mono text-xs text-foreground break-all leading-relaxed">{address}</p>
+              {networkLabel && (
+                <p className="mt-2 inline-flex rounded-md border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
+                  {networkLabel}
+                </p>
+              )}
             </div>
 
             <div className="space-y-1">
@@ -75,13 +81,17 @@ export function WalletButton({ className }: WalletButtonProps) {
                 {copied ? 'Copied!' : 'Copy address'}
               </button>
               <a
-                href={`https://stellar.expert/explorer/testnet/account/${address}`}
+                href={
+                  walletType === CORE_WALLET
+                    ? `https://snowtrace.io/address/${address}`
+                    : `https://stellar.expert/explorer/testnet/account/${address}`
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
               >
                 <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                View on Stellar Explorer
+                View on Explorer
               </a>
               <button
                 onClick={() => { void disconnect(); setOpen(false) }}

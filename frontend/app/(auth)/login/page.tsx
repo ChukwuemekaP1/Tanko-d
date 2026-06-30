@@ -11,7 +11,7 @@ import { WalletConnectModal } from '@/components/wallet/wallet-connect-modal'
 
 export default function LoginPage() {
   const router = useRouter()
-  const { address, isConnected, isConnecting, disconnect, setRole, role } = useAuth()
+  const { address, isConnected, isConnecting, disconnect, setRole, role, networkLabel } = useAuth()
   const [modalOpen, setModalOpen] = useState(false)
 
   useEffect(() => {
@@ -61,6 +61,13 @@ export default function LoginPage() {
             <CardDescription>
               Conecta tu wallet: {address.slice(0, 8)}...{address.slice(-8)}
             </CardDescription>
+            {networkLabel && (
+              <div className="mt-3 flex justify-center">
+                <span className="rounded-md border px-2 py-1 text-xs text-muted-foreground">
+                  {networkLabel}
+                </span>
+              </div>
+            )}
           </CardHeader>
           
           <CardContent className="space-y-6">
@@ -131,7 +138,7 @@ export default function LoginPage() {
         <CardContent className="space-y-4">
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground text-center">
-              Freighter, Albedo o WalletConnect en Stellar Testnet
+              Core Wallet en Avalanche C-Chain. Stellar sigue disponible para flujos existentes.
             </p>
 
             <Button

@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { stellarService } from '../services/stellar.service.js';
+import { avalancheCChainAddressSchema } from '../utils/validators.js';
+import { userRepository } from '../repositories/user.repository.js';
 
 export class WalletController {
   async generateWallet(req: Request, res: Response): Promise<void> {
@@ -26,10 +28,42 @@ export class WalletController {
    */
   async connectWallet(req: Request, res: Response): Promise<void> {
     try {
-      const { publicKey, walletType } = req.body as {
+      const { publicKey, walletType, avalancheAddress, chainId } = req.body as {
         publicKey?: string;
         walletType?: string;
+        avalancheAddress?: string;
+        chainId?: string;
       };
+
+      if (walletType === 'core') {
+        const parsed = avalancheCChainAddressSchema.safeParse(avalancheAddress);
+        if (!parsed.success) {
+          res.status(400).json({ success: false, error: 'Invalid Avalanche C-Chain address' });
+          return;
+        }
+
+        const normalized = parsed.data.toLowerCase();
+        let user: unknown = null;
+        try {
+          user = await userRepository.upsertAvalancheWallet(normalized, chainId);
+        } catch (error) {
+          console.warn('[Tanko] Avalanche wallet persistence failed:', error);
+        }
+
+        console.log(`\nCore Wallet connected on Avalanche C-Chain: ${normalized} (${chainId ?? 'unknown chain'})\n`);
+
+        res.status(200).json({
+          success: true,
+          data: {
+            avalancheAddress: normalized,
+            walletType: 'core',
+            chainId: chainId ?? null,
+            user,
+            connectedAt: new Date().toISOString(),
+          },
+        });
+        return;
+      }
 
       if (!publicKey || typeof publicKey !== 'string') {
         res.status(400).json({ success: false, error: 'publicKey is required' });
@@ -113,14 +147,17 @@ export class WalletController {
 
   async validateAddress(req: Request, res: Response): Promise<void> {
     try {
-      const { address } = req.query;
+      const { address, network } = req.query;
       
       if (typeof address !== 'string') {
         res.status(400).json({ success: false, error: 'Address is required' });
         return;
       }
 
-      const isValid = stellarService.validatePublicKey(address);
+      const isValid =
+        network === 'avalanche'
+          ? avalancheCChainAddressSchema.safeParse(address).success
+          : stellarService.validatePublicKey(address);
       res.status(200).json({ success: true, data: { isValid, address } });
     } catch (error) {
       res.status(500).json({

@@ -14,6 +14,7 @@ export default function ConnectPage() {
     address,
     walletType,
     walletLabel,
+    networkLabel,
     error,
     disconnect,
     setRole,
@@ -63,6 +64,11 @@ export default function ConnectPage() {
               <p className="font-mono text-sm text-white/90 break-all">
                 {address.slice(0, 16)}…{address.slice(-16)}
               </p>
+              {networkLabel && (
+                <p className="mt-3 inline-flex rounded-md border border-white/10 px-2 py-1 text-xs text-white/50">
+                  {networkLabel}
+                </p>
+              )}
             </div>
 
             <div className="w-full">
@@ -123,7 +129,7 @@ export default function ConnectPage() {
             <div>
               <h2 className="text-xl font-semibold text-white">Connect your wallet</h2>
               <p className="mt-1 text-sm text-white/45">
-                Freighter, Albedo, or WalletConnect on mobile
+                Core Wallet for Avalanche C-Chain. Stellar wallets remain available for existing flows.
               </p>
             </div>
 
@@ -154,7 +160,7 @@ export default function ConnectPage() {
       <WalletConnectModal open={modalOpen} onOpenChange={setModalOpen} />
 
       <p className="mt-10 text-xs text-white/20">
-        Stellar Testnet · Trustless Work · Hack+ Alebrije CDMX 2026 🚛
+        Avalanche C-Chain · Core Wallet · Trustless Work
       </p>
     </div>
   )

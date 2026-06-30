@@ -137,10 +137,10 @@ export async function connectWallet(walletType: WalletType): Promise<string> {
   }
 }
 
-export async function restoreWalletSession(
-  walletType: WalletType,
+export async function restoreStellarWalletSession(
+  walletType: StellarWalletType,
 ): Promise<string | null> {
-  if (!isWalletAvailable(walletType)) {
+  if (!isStellarWalletAvailable(walletType)) {
     return null;
   }
 
@@ -184,7 +184,7 @@ export async function signWalletTransaction(
   return signedTxXdr;
 }
 
-export async function disconnectWallet(): Promise<void> {
+export async function disconnectStellarWallet(): Promise<void> {
   if (typeof window === "undefined" || !isKitInitialized()) {
     return;
   }
@@ -194,3 +194,8 @@ export async function disconnectWallet(): Promise<void> {
     console.warn("[Tanko] Wallet disconnect:", err);
   }
 }
+
+export const isWalletAvailable = isStellarWalletAvailable;
+export const connectWallet = connectStellarWallet;
+export const restoreWalletSession = restoreStellarWalletSession;
+export const disconnectWallet = disconnectStellarWallet;

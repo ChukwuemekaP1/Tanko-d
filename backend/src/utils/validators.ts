@@ -122,6 +122,11 @@ export const stellarPubKeySchema = z
     'Invalid Stellar Public Key format (must start with G, uppercase letters A-Z and digits 2-7)',
   );
 
+export const avalancheCChainAddressSchema = z
+  .string()
+  .trim()
+  .regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid Avalanche C-Chain address');
+
 export const registerDriverSchema = z.object({
   name: z.string().min(1, 'Driver name is required').max(100, 'Name must be 100 characters or less'),
   stellarPubKey: stellarPubKeySchema,
