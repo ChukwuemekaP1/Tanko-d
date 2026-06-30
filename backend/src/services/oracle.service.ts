@@ -241,3 +241,59 @@ export class OracleService {
 }
 
 export const oracleService = new OracleService();
+
+// ── Compat API expected by oracle.test.ts ────────────────────────────────
+
+export interface SignedPrice {
+  payload: { fuelType: string; pricePerLiter: number; timestamp: number };
+  signature: string;
+  oraclePublicKey: string;
+}
+
+// Extend the singleton with the simpler test-facing API
+const _svc = oracleService as any;
+
+function _getKeypair(): import('stellar-sdk').Keypair {
+  // Re-read from env each call so tests that set env before require() work
+  const secret = process.env.ORACLE_SECRET_KEY || process.env.ORACLE_PRIVATE_KEY || config.oracle.privateKey;
+  if (!secret) throw new Error('Oracle keypair not configured');
+  const { Keypair: KP } = require('stellar-sdk') as typeof import('stellar-sdk');
+  return KP.fromSecret(secret);
+}
+
+_svc.getPublicKey = (): string | null => {
+  try { return _getKeypair().publicKey(); } catch { return null; }
+};
+
+_svc.signPrice = (payload: { fuelType: string; pricePerLiter: number; timestamp: number }): SignedPrice => {
+  const kp = _getKeypair();
+  const msgBuf = Buffer.from(`${payload.fuelType}:${payload.pricePerLiter}:${payload.timestamp}`, 'utf8');
+  return { payload, signature: kp.sign(msgBuf).toString('base64'), oraclePublicKey: kp.publicKey() };
+};
+
+_svc.verifySignedPrice = (signed: SignedPrice): boolean => {
+  try {
+    if (!signed?.payload || !signed?.signature || !signed?.oraclePublicKey) return false;
+    const { Keypair: KP } = require('stellar-sdk') as typeof import('stellar-sdk');
+    const kp = KP.fromPublicKey(signed.oraclePublicKey);
+    const msgBuf = Buffer.from(`${signed.payload.fuelType}:${signed.payload.pricePerLiter}:${signed.payload.timestamp}`, 'utf8');
+    return kp.verify(msgBuf, Buffer.from(signed.signature, 'base64'));
+  } catch { return false; }
+};
+
+_svc.isPricefresh = (payload: { timestamp: number }): boolean => {
+  const maxAge = parseInt(process.env.ORACLE_MAX_PRICE_AGE || '3600000', 10);
+  return Date.now() - payload.timestamp < maxAge;
+};
+
+_svc.getMaxPriceAge = (): number => parseInt(process.env.ORACLE_MAX_PRICE_AGE || '3600000', 10);
+
+_svc.fetchFuelPrices = async (): Promise<Array<{ fuelType: string; pricePerLiter: number; timestamp: number }>> => {
+  const records = await oracleService.fetchRegulatoryPrices();
+  return records.map((r) => ({ fuelType: r.fuel_type, pricePerLiter: r.price_mxn, timestamp: r.timestamp * 1000 }));
+};
+
+_svc.getSignedPrices = async (): Promise<SignedPrice[]> => {
+  const prices = await _svc.fetchFuelPrices();
+  return prices.map((p: { fuelType: string; pricePerLiter: number; timestamp: number }) => _svc.signPrice(p));
+};

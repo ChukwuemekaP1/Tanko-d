@@ -480,6 +480,44 @@ A GitHub Actions workflow runs automatically on every **push to `main`** and eve
 
 ---
 
+## Data Export
+
+Fleet managers (Jefes de Flota) can download a snapshot of all operational data as a ZIP of structured CSV files, ready to import into Microsoft Access for reporting and auditing.
+
+### Endpoint
+
+```
+GET /api/v1/exports/access
+Authorization: Bearer <JEFE JWT>
+```
+
+Optional query parameters:
+
+| Parameter | Format | Description |
+|-----------|--------|-------------|
+| `from` | `YYYY-MM-DD` | Start date (inclusive) |
+| `to` | `YYYY-MM-DD` | End date (inclusive) |
+
+### Response
+
+Returns `tanko-export-<timestamp>.zip` containing:
+
+- `users.csv` — Drivers and fleet managers
+- `units.csv` — Fleet vehicles
+- `fuel_logs.csv` — Fuel load records
+- `fund_requests.csv` — Fund requests and statuses
+- `escrow_config.csv` — Escrow configuration
+
+### Access Import
+
+For step-by-step instructions on importing the CSVs into Microsoft Access, see [`backend/docs/access-import-guide.md`](backend/docs/access-import-guide.md).
+
+### Linux / Docker note
+
+The export is always a `.zip` of CSV files (no Windows Access Database Engine required). The system `zip` binary must be present in the container/host — it is available by default on Debian/Ubuntu-based images.
+
+---
+
 ## License
 
 MIT - Hack+ Alebrije CDMX 2026

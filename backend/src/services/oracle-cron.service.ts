@@ -1,28 +1,13 @@
-import cron from 'node-cron';
-import { oracleService, SignedPrice } from './oracle.service.js';
+import { oracleService, OraclePriceRecord } from './oracle.service.js';
 import { config } from '../config/index.js';
 import { logger } from '../utils/logger.js';
 
-/**
- * OracleCronService - Manages scheduled price updates
- *
- * Responsibilities:
- * - Schedule periodic price fetching using cron
- * - Sign price payloads
- * - Store prices in database
- * - Handle errors gracefully
- * - Prevent blocking of user traffic
- */
 export class OracleCronService {
-  private cronJob: cron.ScheduledTask | null = null;
+  private timer: ReturnType<typeof setInterval> | null = null;
   private isRunning = false;
 
-  /**
-   * Initializes and starts the price update cron job
-   * Should be called during application startup
-   */
   start(): void {
-    if (!config.oracle.enabled) {
+    if (!config.oracle.workerEnabled) {
       logger.info('Oracle cron service is disabled');
       return;
     }
@@ -32,88 +17,46 @@ export class OracleCronService {
       return;
     }
 
-    try {
-      // Schedule the price fetch and sign job
-      this.cronJob = cron.schedule(config.oracle.cronExpression, async () => {
-        await this.updatePrices();
-      });
-
-      this.isRunning = true;
-      logger.info(`Oracle cron service started with expression: ${config.oracle.cronExpression}`);
-
-      // Optionally run immediately on startup
+    this.timer = setInterval(() => {
       this.updatePrices().catch((error) => {
-        logger.error('Failed to run initial price update:', error);
+        logger.error('Oracle cron: price update failed', error);
       });
-    } catch (error) {
-      logger.error('Failed to start Oracle cron service:', error);
-      throw error;
-    }
+    }, config.oracle.workerIntervalMs);
+
+    this.isRunning = true;
+    logger.info(`Oracle cron service started (interval: ${config.oracle.workerIntervalMs}ms)`);
+
+    this.updatePrices().catch((error) => {
+      logger.error('Oracle cron: initial price update failed', error);
+    });
   }
 
-  /**
-   * Stops the cron job
-   * Should be called during application shutdown
-   */
   stop(): void {
-    if (this.cronJob) {
-      this.cronJob.stop();
-      this.cronJob = null;
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
       this.isRunning = false;
       logger.info('Oracle cron service stopped');
     }
   }
 
-  /**
-   * Fetches, signs, and stores current fuel prices
-   * This runs in the background and should not block user requests
-   */
   private async updatePrices(): Promise<void> {
-    const startTime = Date.now();
-
+    const start = Date.now();
     try {
-      logger.debug('Oracle cron: Fetching and signing fuel prices');
-
-      // Fetch and sign prices
-      const signedPrices = await oracleService.getSignedPrices();
-
-      // TODO: Store prices in database (needs FuelPriceFeed table or similar)
-      // For v1, we just log them
-      logger.info(`Oracle cron: Successfully fetched and signed ${signedPrices.length} prices`, {
-        prices: signedPrices.map((p) => ({
-          fuelType: p.payload.fuelType,
-          price: p.payload.pricePerLiter,
-          timestamp: p.payload.timestamp,
-        })),
-      });
-
-      // TODO: Optionally submit prices to Soroban contract
-      // This would require invoking the contract's update_price function
-      // For v1, the frontend will read prices via API endpoint
-
-      const duration = Date.now() - startTime;
-      logger.debug(`Oracle cron: Price update completed in ${duration}ms`);
+      const prices = await oracleService.refreshPrices();
+      logger.info(`Oracle cron: updated ${prices.length} prices in ${Date.now() - start}ms`);
     } catch (error) {
-      const duration = Date.now() - startTime;
-      logger.error(`Oracle cron: Failed to update prices after ${duration}ms`, error);
-      // Don't throw - we want cron to continue running even if one update fails
+      logger.error(`Oracle cron: failed after ${Date.now() - start}ms`, error);
     }
   }
 
-  /**
-   * Manually trigger a price update (for testing or admin actions)
-   */
-  async updatePricesManually(): Promise<SignedPrice[]> {
-    return oracleService.getSignedPrices();
+  async updatePricesManually(): Promise<OraclePriceRecord[]> {
+    return oracleService.refreshPrices();
   }
 
-  /**
-   * Check if the cron service is running
-   */
   isActive(): boolean {
     return this.isRunning;
   }
 }
 
-// Singleton instance
 export const oracleCronService = new OracleCronService();
