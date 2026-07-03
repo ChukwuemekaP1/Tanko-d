@@ -26,7 +26,7 @@ const TRUST_POINTS = [
 
 export default function LoginPage() {
   const router = useRouter()
-  const { address, isConnected, isConnecting, disconnect, setRole, role } = useAuth()
+  const { address, isConnected, isConnecting, disconnect, setRole, role, networkLabel } = useAuth()
   const [modalOpen, setModalOpen] = useState(false)
 
   useEffect(() => {
@@ -66,14 +66,56 @@ export default function LoginPage() {
 
   if (isConnected && address && !role) {
     return (
-      <AuthShell>
-        <Card className="tanko-glass w-full max-w-2xl rounded-lg py-0">
-          <CardContent className="p-5 sm:p-7">
-            <BrandHeader
-              eyebrow="Wallet connected"
-              title="Bienvenido a Tanko"
-              description={`Conecta tu wallet: ${address.slice(0, 8)}...${address.slice(-8)}`}
+if (isConnected && address && !role) {
+  return (
+    <AuthShell>
+      <Card className="tanko-glass w-full max-w-2xl rounded-lg py-0">
+        <CardContent className="p-5 sm:p-7">
+          <BrandHeader
+            eyebrow="Wallet connected"
+            title="Bienvenido a Tanko"
+            description={`Conecta tu wallet: ${address.slice(0,8)}...${address.slice(-8)}`}
+          />
+
+          {networkLabel && (
+            <div className="mt-4 flex justify-center">
+              <span className="rounded-md border px-2 py-1 text-xs text-muted-foreground">
+                {networkLabel}
+              </span>
+            </div>
+          )}
+
+          <div className="mt-7 grid gap-3">
+            <RoleButton
+              icon={User}
+              title="Soy Conductor"
+              description="Solicitar fondos de combustible y cargar combustible"
+              accent="primary"
+              onClick={() => handleRoleSelect('CONDUCTOR')}
             />
+
+            <RoleButton
+              icon={Users}
+              title="Soy Jefe de Flota"
+              description="Gestionar conductores, aprobar solicitudes y supervisar la flota"
+              accent="accent"
+              onClick={() => handleRoleSelect('JEFE')}
+            />
+          </div>
+
+          <Button
+            variant="ghost"
+            onClick={disconnect}
+            className="mt-5 w-full text-muted-foreground hover:bg-white/10 hover:text-white"
+          >
+            Desconectar wallet
+          </Button>
+        </CardContent>
+      </Card>
+    </AuthShell>
+  )
+}
+
 
             <div className="mt-7 grid gap-3">
               <RoleButton
@@ -124,6 +166,17 @@ export default function LoginPage() {
           <div className="mt-7 space-y-4">
             <p className="text-center text-body-sm text-muted-foreground">
               Conecta tu wallet Freighter para comenzar.
+          </div>
+          <CardTitle className="text-2xl">Tanko</CardTitle>
+          <CardDescription>
+            Monedero electrónico descentralizado para combustible
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground text-center">
+              Core Wallet en Avalanche C-Chain. Stellar sigue disponible para flujos existentes.
             </p>
 
             <Button

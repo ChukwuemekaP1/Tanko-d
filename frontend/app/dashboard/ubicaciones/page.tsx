@@ -1,16 +1,21 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import type { ReactNode } from "react"
+
+import dynamic from "next/dynamic"
+
 import {
   AlertCircle,
   Clock,
   Fuel,
-  type LucideIcon,
+  Loader2,
   MapPin,
   Navigation,
+  Plus,
   Search,
   Star,
+  type LucideIcon,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import {
@@ -21,21 +26,20 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useEffect, useMemo, useState } from "react"
+import { Clock, Fuel, Loader2, MapPin, Plus, Search } from "lucide-react"
+import dynamic from "next/dynamic"
+import { AlertCircle, Clock, Fuel, Loader2, MapPin, Search, Plus } from "lucide-react"
+import { StationMap, type StationMapLocation } from "@/components/station-map"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { useAuth } from "@/providers/auth-provider"
+import { toast } from "sonner"
+import { getMappableStations } from "@/lib/maps/stations"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001"
-
-// Dynamically import the map component with no SSR to avoid 'window is not defined' errors from Leaflet
-const StationsMap = dynamic(
-  () => import("@/components/maps/StationsMap"),
-  { 
-    ssr: false,
-    loading: () => (
-      <div className="flex h-full items-center justify-center bg-muted/20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
-)
 
 interface GasStation {
   id: string
@@ -138,17 +142,6 @@ export default function LocationsPage() {
     () => filtered.map(toMapLocation).filter((station): station is StationMapLocation => Boolean(station)),
     [filtered]
   )
-  const validStations = useMemo(() => getMappableStations(filtered), [filtered])
-  const coordinatesById = useMemo(
-    () =>
-      new Map(
-        getMappableStations(stations).map((station) => [
-          station.id,
-          { lat: station.lat, lng: station.lng },
-        ]),
-      ),
-    [stations],
-  )
 
   useEffect(() => {
     if (!selectedStationId || filtered.some((station) => station.id === selectedStationId)) return
@@ -228,29 +221,46 @@ export default function LocationsPage() {
                 className="bg-glass pl-10"
               />
             </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-5 pt-0">
-          {loading ? (
-            <LocationSkeleton />
-          ) : filteredLocations.length > 0 ? (
-            <div className="grid gap-4 lg:grid-cols-2">
-              {filteredLocations.map((location) => (
-                <div
-                  key={location.id}
-                  className="rounded-lg border border-glass-border bg-glass p-5 transition-all hover:border-primary/30 hover:bg-glass-strong"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                      <Fuel className="h-6 w-6" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="font-semibold text-white">{location.name}</h4>
-                        <span className="inline-flex items-center gap-1 rounded-md border border-success/20 bg-success/10 px-2 py-0.5 text-caption font-semibold text-success">
-                          <Star className="h-3 w-3" />
-                          Activa
-                        </span>
+          </CardHeader>
+          <CardContent>
+            {filtered.length === 0 ? (
+              <div className="space-y-4 py-8 text-center">
+                <p className="text-muted-foreground">
+                  {searchQuery
+                    ? "Sin resultados para tu busqueda"
+                    : "No hay gasolineras autorizadas"}
+                </p>
+                {isJefe && !searchQuery && (
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button className="gap-2" size="lg">
+                        <Plus className="h-4 w-4" />
+                        Register First Gas Station
+                      </Button>
+                    </SheetTrigger>
+                    <StationForm />
+                  </Sheet>
+                )}
+              </div>
+            ) : (
+              <div className="max-h-[calc(100vh-320px)] min-h-[360px] space-y-3 overflow-y-auto pr-1">
+                {filtered.map((station) => {
+                  const mapLocation = toMapLocation(station)
+                  const isSelected = selectedStationId === station.id
+
+                  return (
+                    <button
+                      key={station.id}
+                      type="button"
+                      onClick={() => setSelectedStationId(station.id)}
+                      className={`flex w-full items-start gap-3 rounded-lg border p-4 text-left transition-all ${
+                        isSelected
+                          ? "border-primary bg-primary/5 shadow-sm"
+                          : "border-border bg-card hover:border-primary/40"
+                      }`}
+                    >
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-primary/10">
+                        <Fuel className="h-5 w-5 text-primary" />
                       </div>
                       <InfoLine icon={MapPin}>{location.address}</InfoLine>
                       {location.city && (

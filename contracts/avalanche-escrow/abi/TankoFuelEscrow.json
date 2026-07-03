@@ -1,0 +1,58 @@
+[
+  {
+    "type": "function",
+    "name": "createFuelEscrow",
+    "stateMutability": "payable",
+    "inputs": [
+      { "name": "driver", "type": "address" },
+      { "name": "reference", "type": "string" }
+    ],
+    "outputs": [{ "name": "escrowId", "type": "uint256" }]
+  },
+  {
+    "type": "function",
+    "name": "releaseFuelEscrow",
+    "stateMutability": "nonpayable",
+    "inputs": [{ "name": "escrowId", "type": "uint256" }],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "refundFuelEscrow",
+    "stateMutability": "nonpayable",
+    "inputs": [{ "name": "escrowId", "type": "uint256" }],
+    "outputs": []
+  },
+  {
+    "type": "event",
+    "name": "FuelEscrowCreated",
+    "inputs": [
+      { "name": "escrowId", "type": "uint256", "indexed": true },
+      { "name": "manager", "type": "address", "indexed": true },
+      { "name": "driver", "type": "address", "indexed": true },
+      { "name": "amount", "type": "uint256", "indexed": false },
+      { "name": "reference", "type": "string", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "FuelEscrowReleased",
+    "inputs": [
+      { "name": "escrowId", "type": "uint256", "indexed": true },
+      { "name": "driver", "type": "address", "indexed": true },
+      { "name": "amount", "type": "uint256", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "FuelEscrowRefunded",
+    "inputs": [
+      { "name": "escrowId", "type": "uint256", "indexed": true },
+      { "name": "manager", "type": "address", "indexed": true },
+      { "name": "amount", "type": "uint256", "indexed": false }
+    ],
+    "anonymous": false
+  }
+]

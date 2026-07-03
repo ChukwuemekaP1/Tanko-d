@@ -9,14 +9,24 @@ import React, {
   ReactNode,
 } from "react";
 import {
-  connectWallet,
-  disconnectWallet,
-  restoreWalletSession,
+  connectStellarWallet,
+  disconnectStellarWallet,
+  restoreStellarWalletSession,
   signWalletTransaction,
 } from "@/lib/wallet/stellar-wallet-service";
 import {
+  connectCoreWallet,
+  getAvalancheNetworkLabel,
+  getCoreProvider,
+  isAvalancheAddress,
+  restoreCoreWalletSession,
+  type CoreWalletSession,
+} from "@/lib/wallet/core-wallet-service";
+import {
+  CORE_WALLET,
   STORAGE_KEYS,
   FREIGHTER_WALLET,
+  type StellarWalletType,
   type WalletType,
 } from "@/lib/wallet/types";
 
@@ -26,7 +36,8 @@ function parseStoredWalletType(raw: string | null): WalletType | null {
   if (
     raw === "freighter" ||
     raw === "albedo" ||
-    raw === "wallet_connect"
+    raw === "wallet_connect" ||
+    raw === "core"
   ) {
     return raw;
   }
@@ -41,14 +52,18 @@ function walletLabel(walletType: WalletType | null): string {
       return "Albedo";
     case "wallet_connect":
       return "WalletConnect";
+    case "core":
+      return "Core Wallet";
     default:
-      return "Stellar";
+      return "Wallet";
   }
 }
 
 interface AuthState {
   address: string | null;
   walletType: WalletType | null;
+  chainId: string | null;
+  networkLabel: string | null;
   isConnected: boolean;
   isConnecting: boolean;
   error: string | null;
@@ -59,6 +74,8 @@ interface AuthState {
 interface AuthContextType extends AuthState {
   /** Unified alias for `address` (issue #31) */
   walletAddress: string | null;
+  isAvalancheWallet: boolean;
+  networkLabel: string | null;
   setRole: (role: UserRole) => void;
   setUserId: (id: string | null) => void;
   connectWithWallet: (walletType: WalletType) => Promise<void>;
@@ -75,6 +92,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     address: null,
     walletType: null,
+    chainId: null,
+    networkLabel: null,
     isConnected: false,
     isConnecting: false,
     error: null,
@@ -83,9 +102,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const persistSession = useCallback(
-    (address: string, walletType: WalletType) => {
+    (address: string, walletType: WalletType, chainId?: string | null) => {
       localStorage.setItem(STORAGE_KEYS.ADDRESS, address);
       localStorage.setItem(STORAGE_KEYS.WALLET_TYPE, walletType);
+      if (chainId) {
+        localStorage.setItem(STORAGE_KEYS.CHAIN_ID, chainId);
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.CHAIN_ID);
+      }
     },
     [],
   );
@@ -93,9 +117,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const clearWalletSession = useCallback(() => {
     localStorage.removeItem(STORAGE_KEYS.ADDRESS);
     localStorage.removeItem(STORAGE_KEYS.WALLET_TYPE);
+    localStorage.removeItem(STORAGE_KEYS.CHAIN_ID);
     localStorage.removeItem(STORAGE_KEYS.ROLE);
     localStorage.removeItem(STORAGE_KEYS.USER_ID);
   }, []);
+
+  const persistBackendWalletConnection = useCallback(
+    async (address: string, walletType: WalletType, chainId?: string | null) => {
+      try {
+        await fetch("/api/wallet/connect", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            publicKey: walletType === CORE_WALLET ? undefined : address,
+            avalancheAddress: walletType === CORE_WALLET ? address : undefined,
+            walletType,
+            chainId,
+          }),
+        });
+      } catch (err) {
+        console.warn("[Tanko] Wallet backend persistence skipped:", err);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     async function restore() {
@@ -103,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const storedWalletType = parseStoredWalletType(
         localStorage.getItem(STORAGE_KEYS.WALLET_TYPE),
       );
+      const storedChainId = localStorage.getItem(STORAGE_KEYS.CHAIN_ID);
       const storedRole = localStorage.getItem(STORAGE_KEYS.ROLE) as UserRole;
       const storedUserId = localStorage.getItem(STORAGE_KEYS.USER_ID);
 
@@ -110,13 +156,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (storedWalletType) {
-        const liveAddress = await restoreWalletSession(storedWalletType);
+      if (storedWalletType === CORE_WALLET) {
+        const session = await restoreCoreWalletSession();
+        if (session) {
+          persistSession(session.address, CORE_WALLET, session.chainId);
+          setState({
+            address: session.address,
+            walletType: CORE_WALLET,
+            chainId: session.chainId,
+            networkLabel: session.networkLabel,
+            isConnected: true,
+            isConnecting: false,
+            error: null,
+            role: storedRole,
+            userId: storedUserId,
+          });
+          return;
+        }
+      } else if (storedWalletType) {
+        const liveAddress = await restoreStellarWalletSession(storedWalletType as StellarWalletType);
         if (liveAddress) {
           persistSession(liveAddress, storedWalletType);
           setState({
             address: liveAddress,
             walletType: storedWalletType,
+            chainId: null,
+            networkLabel: "Stellar Testnet",
             isConnected: true,
             isConnecting: false,
             error: null,
@@ -127,13 +192,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Fallback: show last known address until user reconnects or disconnects
+      // Session expired — require reconnect instead of faking a live wallet
       setState({
         address: storedAddress,
         walletType: storedWalletType,
-        isConnected: true,
+chainId: storedChainId,
+networkLabel:
+  storedWalletType === CORE_WALLET && storedChainId
+    ? getAvalancheNetworkLabel(storedChainId)
+    : storedWalletType
+      ? "Stellar Testnet"
+      : null,
+isConnected: true,
         isConnecting: false,
-        error: null,
+        error:
+          "Tu sesión de wallet expiró. Vuelve a conectar Freighter, Albedo o WalletConnect.",
         role: storedRole,
         userId: storedUserId,
       });
@@ -148,12 +221,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (walletType: WalletType) => {
       setState((prev) => ({ ...prev, isConnecting: true, error: null }));
       try {
-        const address = await connectWallet(walletType);
-        persistSession(address, walletType);
+        let address: string;
+        let chainId: string | null = null;
+        let networkLabel = "Stellar Testnet";
+
+        if (walletType === CORE_WALLET) {
+          const session: CoreWalletSession = await connectCoreWallet();
+          address = session.address;
+          chainId = session.chainId;
+          networkLabel = session.networkLabel;
+        } else {
+          address = await connectStellarWallet(walletType as StellarWalletType);
+        }
+
+        persistSession(address, walletType, chainId);
+        void persistBackendWalletConnection(address, walletType, chainId);
         setState((prev) => ({
           ...prev,
           address,
           walletType,
+          chainId,
+          networkLabel,
           isConnected: true,
           isConnecting: false,
           error: null,
@@ -173,7 +261,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }));
       }
     },
-    [persistSession],
+    [persistBackendWalletConnection, persistSession],
   );
 
   const connect = useCallback(async () => {
@@ -185,6 +273,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!state.address) {
         throw new Error("No wallet connected.");
       }
+      if (state.walletType === CORE_WALLET) {
+        throw new Error("Core Wallet cannot sign Stellar XDR transactions.");
+      }
       try {
         return await signWalletTransaction(xdr, state.address);
       } catch (err: unknown) {
@@ -194,15 +285,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [state.address],
+    [state.address, state.walletType],
   );
 
   const disconnect = useCallback(async () => {
-    await disconnectWallet();
+    if (state.walletType !== CORE_WALLET) {
+      await disconnectStellarWallet();
+    }
     clearWalletSession();
     setState({
       address: null,
       walletType: null,
+      chainId: null,
+      networkLabel: null,
       isConnected: false,
       isConnecting: false,
       error: null,
@@ -213,7 +308,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (typeof window !== "undefined") {
       window.location.href = "/connect";
     }
-  }, [clearWalletSession]);
+  }, [clearWalletSession, state.walletType]);
+
+  useEffect(() => {
+    const provider = getCoreProvider();
+    if (!provider?.on) {
+      return;
+    }
+
+    const handleAccountsChanged = (...args: unknown[]) => {
+      const accounts = Array.isArray(args[0]) ? (args[0] as string[]) : [];
+      const nextAddress = accounts[0];
+      if (!nextAddress) {
+        void disconnect();
+        return;
+      }
+      if (!isAvalancheAddress(nextAddress)) {
+        return;
+      }
+      const normalized = nextAddress.toLowerCase();
+      setState((prev) => {
+        if (prev.walletType !== CORE_WALLET) {
+          return prev;
+        }
+        persistSession(normalized, CORE_WALLET, prev.chainId);
+        void persistBackendWalletConnection(normalized, CORE_WALLET, prev.chainId);
+        return { ...prev, address: normalized, isConnected: true };
+      });
+    };
+
+    const handleChainChanged = (...args: unknown[]) => {
+      const chainId = typeof args[0] === "string" ? args[0].toLowerCase() : null;
+      if (!chainId) {
+        return;
+      }
+      setState((prev) => {
+        if (prev.walletType !== CORE_WALLET || !prev.address) {
+          return prev;
+        }
+        persistSession(prev.address, CORE_WALLET, chainId);
+        void persistBackendWalletConnection(prev.address, CORE_WALLET, chainId);
+        return { ...prev, chainId, networkLabel: getAvalancheNetworkLabel(chainId) };
+      });
+    };
+
+    provider.on("accountsChanged", handleAccountsChanged);
+    provider.on("chainChanged", handleChainChanged);
+    return () => {
+      provider.removeListener?.("accountsChanged", handleAccountsChanged);
+      provider.removeListener?.("chainChanged", handleChainChanged);
+    };
+  }, [disconnect, persistBackendWalletConnection, persistSession]);
 
   const setRole = useCallback((role: UserRole) => {
     if (role) {
@@ -238,6 +383,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         ...state,
         walletAddress: state.address,
+        isAvalancheWallet: state.walletType === CORE_WALLET,
+        networkLabel: state.networkLabel,
         connectWithWallet,
         connect,
         signTransaction,

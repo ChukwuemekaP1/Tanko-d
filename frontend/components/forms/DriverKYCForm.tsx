@@ -70,7 +70,7 @@ export default function DriverKYCForm({ userId, onSuccess }: DriverKYCFormProps)
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <div className="grid gap-2">
-          <Label htmlFor="licenseNumber">Driver's License Number</Label>
+          <Label htmlFor="licenseNumber">Driver&apos;s License Number</Label>
           <div className="relative">
             <FileText className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input

@@ -46,6 +46,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className="dark">
+    <html lang="es" suppressHydrationWarning>
       <body className="font-sans antialiased">
         <Providers>
           {children}
