@@ -23,6 +23,7 @@ import {
   EmptyTitle,
   EmptyDescription,
 } from "@/components/ui/empty";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/providers/auth-provider";
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001";
@@ -38,25 +39,27 @@ interface FundRequest {
 
 const STATUS_CONFIG = {
   PENDING: {
-    label: "Pendiente",
+    labelKey: "status.pending",
     icon: Clock,
     className:
       "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
   },
   APPROVED: {
-    label: "Aprobada",
+    labelKey: "status.approved",
     icon: CheckCircle2,
     className:
       "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
   },
   REJECTED: {
-    label: "Rechazada",
+    labelKey: "status.rejected",
     icon: XCircle,
     className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
   },
 };
 
 export default function SolicitudesPage() {
+  const t = useTranslations("solicitudes");
+  const tCommon = useTranslations("common");
   const { userId } = useAuth();
   const [requests, setRequests] = useState<FundRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,7 +78,7 @@ export default function SolicitudesPage() {
         const data = await res.json();
         setRequests(data.success && data.data ? data.data : []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error de conexión");
+        setError(err instanceof Error ? err.message : tCommon("connectionError"));
         setRequests([]);
       } finally {
         setLoading(false);
@@ -90,7 +93,7 @@ export default function SolicitudesPage() {
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-sm text-muted-foreground">
-            Cargando solicitudes...
+            {t("loading")}
           </p>
         </div>
       </div>
@@ -103,7 +106,7 @@ export default function SolicitudesPage() {
         <div className="flex flex-col items-center gap-4 text-center">
           <AlertCircle className="h-8 w-8 text-destructive" />
           <p className="font-medium text-destructive">
-            Error al cargar solicitudes
+            {t("loadError")}
           </p>
           <p className="text-sm text-muted-foreground">{error}</p>
         </div>
@@ -114,17 +117,17 @@ export default function SolicitudesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Mis Solicitudes</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t("title")}</h1>
         <p className="text-muted-foreground">
-          Historial de tus solicitudes de combustible
+          {t("subtitle")}
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Solicitudes de Combustible</CardTitle>
+          <CardTitle>{t("listTitle")}</CardTitle>
           <CardDescription>
-            Total: {requests.length} solicitudes
+            {t("total", { count: requests.length })}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -151,7 +154,7 @@ export default function SolicitudesPage() {
                           })}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {req.description || "Sin descripción"}
+                          {req.description || t("noDescription")}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {new Date(req.createdAt).toLocaleDateString("es-MX", {
@@ -164,7 +167,7 @@ export default function SolicitudesPage() {
                       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${status.className}`}
                     >
                       <StatusIcon className="h-3.5 w-3.5" />
-                      {status.label}
+                      {t(status.labelKey)}
                     </span>
                   </div>
                 );
@@ -176,10 +179,9 @@ export default function SolicitudesPage() {
                 <EmptyMedia variant="icon">
                   <Fuel className="size-5" />
                 </EmptyMedia>
-                <EmptyTitle>Sin solicitudes</EmptyTitle>
+                <EmptyTitle>{t("empty")}</EmptyTitle>
                 <EmptyDescription>
-                  Aún no has realizado ninguna solicitud de combustible. Tus
-                  solicitudes aparecerán aquí.
+                  {t("emptyDesc")}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>

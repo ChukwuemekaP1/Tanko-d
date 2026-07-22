@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -26,6 +27,8 @@ const TRUST_POINTS = [
 
 export default function LoginPage() {
   const router = useRouter()
+  const t = useTranslations('auth.login')
+  const tCommon = useTranslations('common')
   const { address, isConnected, isConnecting, disconnect, setRole, role, networkLabel } = useAuth()
   const [modalOpen, setModalOpen] = useState(false)
 
@@ -139,7 +142,7 @@ if (isConnected && address && !role) {
               onClick={disconnect}
               className="mt-5 w-full text-muted-foreground hover:bg-white/10 hover:text-white"
             >
-              Desconectar wallet
+              {t('disconnectWallet')}
             </Button>
           </CardContent>
         </Card>
@@ -167,16 +170,16 @@ if (isConnected && address && !role) {
             <p className="text-center text-body-sm text-muted-foreground">
               Conecta tu wallet Freighter para comenzar.
           </div>
-          <CardTitle className="text-2xl">Tanko</CardTitle>
+          <CardTitle className="text-2xl">{tCommon('appName')}</CardTitle>
           <CardDescription>
-            Monedero electrónico descentralizado para combustible
+            {t('subtitle')}
           </CardDescription>
         </CardHeader>
         
         <CardContent className="space-y-4">
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground text-center">
-              Core Wallet en Avalanche C-Chain. Stellar sigue disponible para flujos existentes.
+              {t('walletHint')}
             </p>
 
             <Button

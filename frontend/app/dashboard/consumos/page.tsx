@@ -81,6 +81,9 @@ function StatCard({
 }
 
 export default function FuelLogsPage() {
+  const t = useTranslations("consumos");
+  const tCommon = useTranslations("common");
+  const tFuel = useTranslations("fuelTypes");
   const { address: walletAddress } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -117,7 +120,7 @@ export default function FuelLogsPage() {
         const data = await res.json();
         setFuelLogs(data.success && data.data ? data.data : []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Connection Error");
+        setError(err instanceof Error ? err.message : tCommon("connectionError"));
         setFuelLogs([]);
       } finally {
         setLoading(false);

@@ -203,7 +203,7 @@ export default function DashboardLayout({
     router.push("/menu");
   };
 
-  const roleLabel = role === "CONDUCTOR" ? "Driver" : "Fleet Manager";
+  const roleLabel = role === "CONDUCTOR" ? t("roles.driver") : t("roles.manager");
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -238,7 +238,7 @@ export default function DashboardLayout({
           <button
             className="lg:hidden"
             onClick={() => setIsSidebarOpen(false)}
-            aria-label="Close sidebar"
+            aria-label={t("nav.closeSidebar")}
           >
             <X className="h-5 w-5 text-white/50" />
           </button>
@@ -260,7 +260,7 @@ export default function DashboardLayout({
                 : pathname.startsWith(item.href);
             return (
               <Link
-                key={item.name}
+                key={item.href}
                 href={item.href}
                 onClick={() => setIsSidebarOpen(false)}
                 className={cn(
@@ -367,12 +367,13 @@ export default function DashboardLayout({
           <button
             className="lg:hidden"
             onClick={() => setIsSidebarOpen(true)}
-            aria-label="Open sidebar"
+            aria-label={t("nav.openSidebar")}
           >
             <Menu className="h-6 w-6 text-foreground" />
           </button>
           <div className="flex-1" />
           <div className="flex items-center gap-3">
+            <LanguageToggle />
             <div className="hidden sm:block text-right">
               <p className="text-sm font-medium text-foreground">{roleLabel}</p>
               <p className="text-xs text-muted-foreground font-mono">

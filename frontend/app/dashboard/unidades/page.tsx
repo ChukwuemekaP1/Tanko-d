@@ -28,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
+import { useTranslations } from "next-intl"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/providers/auth-provider"
 import { cn } from "@/lib/utils"
@@ -50,6 +51,8 @@ interface Unit {
 }
 
 export default function UnidadesPage() {
+  const t = useTranslations("unidades");
+  const tCommon = useTranslations("common");
   const { address: walletAddress } = useAuth();
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,7 +69,7 @@ export default function UnidadesPage() {
         const data = await res.json();
         setUnits(data.success && data.data ? data.data : []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error de conexión");
+        setError(err instanceof Error ? err.message : tCommon("connectionError"));
         setUnits([]);
       } finally {
         setLoading(false);
@@ -83,6 +86,29 @@ export default function UnidadesPage() {
       unit.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">{t("loading")}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <p className="font-medium text-destructive">
+            {t("loadError")}
+          </p>
+          <p className="text-sm text-muted-foreground">{error}</p>
+        </div>
+      </div>
+    );
   const activeUnits = units.filter(unit => unit.isActive).length
   const assignedUnits = units.filter(unit => unit.user?.name).length
 
@@ -92,6 +118,11 @@ export default function UnidadesPage() {
 
   return (
     <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">{t("title")}</h1>
+        <p className="text-muted-foreground">
+          {t("subtitle")}
+        </p>
       <PageHero
         eyebrow="Fleet registry"
         title="Flota"
@@ -109,13 +140,17 @@ export default function UnidadesPage() {
         <CardHeader className="p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
+              <CardTitle>{t("listTitle")}</CardTitle>
+              <CardDescription>
+                {t("total", { count: units.length })}
+              </CardDescription>
               <CardTitle className="text-title text-white">Lista de vehículos</CardTitle>
               <CardDescription>Total: {units.length} vehículos registrados</CardDescription>
             </div>
             <div className="relative w-full sm:w-80">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Buscar vehículo..."
+                placeholder={t("searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="bg-glass pl-10"

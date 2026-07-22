@@ -38,6 +38,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { useAuth } from "@/providers/auth-provider"
 import { toast } from "sonner"
 import { getMappableStations } from "@/lib/maps/stations"
+import { useTranslations } from "next-intl"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001"
 
@@ -88,6 +89,8 @@ function toMapLocation(station: GasStation): StationMapLocation | null {
 }
 
 export default function LocationsPage() {
+  const t = useTranslations("ubicaciones")
+  const tCommon = useTranslations("common")
   const { role } = useAuth()
   const [stations, setStations] = useState<GasStation[]>([])
   const [loading, setLoading] = useState(true)
@@ -114,7 +117,7 @@ export default function LocationsPage() {
         setStations(nextStations)
         setSelectedStationId(firstMappableStation?.id ?? nextStations[0]?.id ?? null)
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error de conexion")
+        setError(err instanceof Error ? err.message : tCommon("connectionError"))
         setStations([])
         setSelectedStationId(null)
       } finally {
@@ -151,37 +154,37 @@ export default function LocationsPage() {
   const StationForm = () => (
     <SheetContent className="sm:max-w-[500px]">
       <SheetHeader className="pb-6">
-        <SheetTitle className="text-2xl font-bold">Add New Gas Station</SheetTitle>
+        <SheetTitle className="text-2xl font-bold">{t("addStation")}</SheetTitle>
         <SheetDescription>
-          Register a new authorized fueling location for your fleet.
+          {t("addStationDesc")}
         </SheetDescription>
       </SheetHeader>
       <div className="space-y-6 py-4">
         {/* Mock form fields for now */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Station Name</label>
-          <Input placeholder="e.g. Pemex Santa Fe" />
+          <label className="text-sm font-medium">{t("stationName")}</label>
+          <Input placeholder={t("stationNamePlaceholder")} />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium">Full Address</label>
-          <Input placeholder="Avenida Siempre Viva 123..." />
+          <label className="text-sm font-medium">{t("fullAddress")}</label>
+          <Input placeholder={t("fullAddressPlaceholder")} />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">City</label>
-            <Input placeholder="CDMX" />
+            <label className="text-sm font-medium">{t("city")}</label>
+            <Input placeholder={t("cityPlaceholder")} />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">State</label>
-            <Input placeholder="Mexico" />
+            <label className="text-sm font-medium">{t("state")}</label>
+            <Input placeholder={t("statePlaceholder")} />
           </div>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium">Operating Hours</label>
-          <Input placeholder="e.g. 24/7 or 06:00 - 22:00" />
+          <label className="text-sm font-medium">{t("hours")}</label>
+          <Input placeholder={t("hoursPlaceholder")} />
         </div>
-        <Button className="w-full mt-4" onClick={() => toast.success("Feature coming soon!")}>
-          Register Station
+        <Button className="w-full mt-4" onClick={() => toast.success(t("comingSoon"))}>
+          {t("registerStation")}
         </Button>
       </div>
     </SheetContent>
@@ -227,15 +230,15 @@ export default function LocationsPage() {
               <div className="space-y-4 py-8 text-center">
                 <p className="text-muted-foreground">
                   {searchQuery
-                    ? "Sin resultados para tu busqueda"
-                    : "No hay gasolineras autorizadas"}
+                    ? t("noSearchResults")
+                    : t("noAuthorized")}
                 </p>
                 {isJefe && !searchQuery && (
                   <Sheet>
                     <SheetTrigger asChild>
                       <Button className="gap-2" size="lg">
                         <Plus className="h-4 w-4" />
-                        Register First Gas Station
+                        {t("registerFirst")}
                       </Button>
                     </SheetTrigger>
                     <StationForm />

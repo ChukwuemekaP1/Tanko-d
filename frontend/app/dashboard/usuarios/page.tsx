@@ -18,6 +18,16 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+} from "@/components/ui/card";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+} from "@/components/ui/empty";
+import { useTranslations } from "next-intl";
+import { useAuth } from "@/providers/auth-provider";
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/providers/auth-provider"
@@ -42,6 +52,9 @@ interface User {
 }
 
 export default function UsersPage() {
+  const t = useTranslations("usuarios");
+  const tCommon = useTranslations("common");
+  const tRoles = useTranslations("roles");
   const { address: walletAddress } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +71,7 @@ export default function UsersPage() {
         const data = await res.json();
         setUsers(data.success && data.data ? data.data : []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error de conexión");
+        setError(err instanceof Error ? err.message : tCommon("connectionError"));
         setUsers([]);
       } finally {
         setLoading(false);
@@ -74,6 +87,29 @@ export default function UsersPage() {
       user.stellarPubKey?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">{t("loading")}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <p className="font-medium text-destructive">
+            {t("loadError")}
+          </p>
+          <p className="text-sm text-muted-foreground">{error}</p>
+        </div>
+      </div>
+    );
   const managerCount = users.filter(user => user.role === "JEFE").length
   const driverCount = users.filter(user => user.role !== "JEFE").length
   const assignedUnits = users.reduce((total, user) => total + (user.units?.length || 0), 0)
@@ -84,6 +120,11 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">{t("title")}</h1>
+        <p className="text-muted-foreground">
+          {t("subtitle")}
+        </p>
       <PageHero
         eyebrow="Identity registry"
         title="Usuarios"
@@ -101,13 +142,17 @@ export default function UsersPage() {
         <CardHeader className="p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
+              <CardTitle>{t("listTitle")}</CardTitle>
+              <CardDescription>
+                {t("total", { count: users.length })}
+              </CardDescription>
               <CardTitle className="text-title text-white">Lista de usuarios</CardTitle>
               <CardDescription>Total: {users.length} usuarios registrados</CardDescription>
             </div>
             <div className="relative w-full sm:w-80">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Buscar usuario..."
+                placeholder={t("searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="bg-glass pl-10"
@@ -139,6 +184,13 @@ export default function UsersPage() {
                             {user.name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase()}
                           </div>
                           <div>
+                            <p className="font-medium text-foreground">
+                              {user.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {t("createdAt", {
+                                date: new Date(user.createdAt).toLocaleDateString("es-MX"),
+                              })}
                             <p className="font-semibold text-white">{user.name}</p>
                             <p className="text-caption text-muted-foreground">
                               Creado: {new Date(user.createdAt).toLocaleDateString("es-MX")}
@@ -173,6 +225,16 @@ export default function UsersPage() {
                           <span className="text-body-sm text-white">{user.units?.length || 0}</span>
                         </div>
                       </td>
+                      <td className="py-4">
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            user.role === "JEFE"
+                              ? "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400"
+                              : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                          }`}
+                        >
+                          {user.role === "JEFE" ? tRoles("manager") : tRoles("driver")}
+                        </span>
                       <td className="px-4 py-4">
                         <RoleBadge role={user.role} />
                       </td>
@@ -182,6 +244,21 @@ export default function UsersPage() {
               </table>
             </div>
           ) : (
+            <Empty className="border border-dashed border-border my-4">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Users className="size-5" />
+                </EmptyMedia>
+                <EmptyTitle>
+                  {searchQuery ? tCommon("noResults") : t("noDrivers")}
+                </EmptyTitle>
+                <EmptyDescription>
+                  {searchQuery
+                    ? t("noMatch", { query: searchQuery })
+                    : t("emptyDesc")}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
             <EmptyState>No hay usuarios registrados</EmptyState>
           )}
         </CardContent>

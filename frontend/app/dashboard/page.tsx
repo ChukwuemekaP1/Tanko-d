@@ -98,6 +98,9 @@ interface TopUnit {
 }
 
 export default function DashboardPage() {
+  const t = useTranslations("dashboard");
+  const tRoles = useTranslations("roles");
+  const tCommon = useTranslations("common");
   const { address: walletAddress, role, userId } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [monthlyStats, setMonthlyStats] = useState<MonthlyStats[]>([]);
@@ -191,13 +194,13 @@ export default function DashboardPage() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        toast.success("Solicitud aprobada");
+        toast.success(t("requestApproved"));
         setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
       } else {
-        toast.error("Error al aprobar", { description: data.error });
+        toast.error(t("approveError"), { description: data.error });
       }
     } catch (err) {
-      toast.error("Error de conexión");
+      toast.error(tCommon("connectionError"));
     } finally {
       setProcessingId(null);
     }
@@ -214,13 +217,13 @@ export default function DashboardPage() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        toast.success("Solicitud rechazada");
+        toast.success(t("requestRejected"));
         setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
       } else {
-        toast.error("Error al rechazar", { description: data.error });
+        toast.error(t("rejectError"), { description: data.error });
       }
     } catch (err) {
-      toast.error("Error de conexión");
+      toast.error(tCommon("connectionError"));
     } finally {
       setProcessingId(null);
     }
@@ -311,20 +314,18 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-amber-600" />
               <CardTitle className="text-amber-800 dark:text-amber-400">
-                KYC Verification Required
+                {t("kycRequired")}
               </CardTitle>
             </div>
             <CardDescription className="text-amber-700 dark:text-amber-500">
-              {kycData?.status === "PENDING"
-                ? "Your KYC is currently under review. Please wait for an administrator to verify it."
-                : "You need to verify your driver's license before you can operate fleet units."}
+              {kycData?.status === "PENDING" ? t("kycPending") : t("kycNeeded")}
             </CardDescription>
           </CardHeader>
           {kycData?.status !== "PENDING" && (
             <CardContent>
               {!showKYCForm ? (
                 <Button onClick={() => setShowKYCForm(true)}>
-                  Start Verification
+                  {t("startVerification")}
                 </Button>
               ) : (
                 <div className="max-w-md bg-background p-6 rounded-xl border shadow-sm">

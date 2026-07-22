@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { Fuel, Wallet, CheckCircle2, Loader2, AlertCircle, Building2, Truck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/providers/auth-provider'
@@ -20,6 +21,9 @@ export default function ConnectPage() {
     setRole,
   } = useAuth()
   const router = useRouter()
+  const t = useTranslations('auth.connect')
+  const tRoles = useTranslations('roles')
+  const tCommon = useTranslations('common')
   const [modalOpen, setModalOpen] = useState(false)
 
   const handleSelectRole = (role: 'JEFE' | 'CONDUCTOR') => {
@@ -44,9 +48,9 @@ export default function ConnectPage() {
           <Fuel className="h-10 w-10 text-white" />
         </div>
         <div className="text-center">
-          <h1 className="text-5xl font-bold text-white tracking-tight">TANKO</h1>
+          <h1 className="text-5xl font-bold text-white tracking-tight">{tCommon('brand')}</h1>
           <p className="mt-2 text-base text-white/50">
-            Decentralized fuel management for transport fleets
+            {t('subtitle')}
           </p>
         </div>
       </div>
@@ -59,7 +63,7 @@ export default function ConnectPage() {
             </div>
             <div>
               <p className="text-xs font-medium uppercase tracking-widest text-white/40 mb-2">
-                Wallet connected{walletType ? ` · ${walletLabel}` : ''}
+                {t('walletConnected')}{walletType ? ` · ${walletLabel}` : ''}
               </p>
               <p className="font-mono text-sm text-white/90 break-all">
                 {address.slice(0, 16)}…{address.slice(-16)}
@@ -73,7 +77,7 @@ export default function ConnectPage() {
 
             <div className="w-full">
               <p className="text-sm text-white/50 mb-4">
-                Select your role to continue:
+                {t('selectRole')}
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <button
@@ -87,8 +91,8 @@ export default function ConnectPage() {
                     <Building2 className="h-6 w-6" style={{ color: '#22c55e' }} />
                   </div>
                   <div className="text-center">
-                    <p className="font-semibold text-white">Fleet Manager</p>
-                    <p className="text-xs text-white/40 mt-1">Manage fleet</p>
+                    <p className="font-semibold text-white">{tRoles('manager')}</p>
+                    <p className="text-xs text-white/40 mt-1">{t('manageFleet')}</p>
                   </div>
                 </button>
                 <button
@@ -102,8 +106,8 @@ export default function ConnectPage() {
                     <Truck className="h-6 w-6" style={{ color: '#38d9a9' }} />
                   </div>
                   <div className="text-center">
-                    <p className="font-semibold text-white">Driver</p>
-                    <p className="text-xs text-white/40 mt-1">Fuel requests</p>
+                    <p className="font-semibold text-white">{tRoles('driver')}</p>
+                    <p className="text-xs text-white/40 mt-1">{t('fuelRequests')}</p>
                   </div>
                 </button>
               </div>
@@ -115,7 +119,7 @@ export default function ConnectPage() {
               className="text-white/30 hover:text-white/50"
               onClick={() => void disconnect()}
             >
-              Disconnect Wallet
+              {t('disconnectWallet')}
             </Button>
           </div>
         ) : (
@@ -127,9 +131,9 @@ export default function ConnectPage() {
               <Wallet className="h-8 w-8" style={{ color: '#22c55e' }} />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-white">Connect your wallet</h2>
+              <h2 className="text-xl font-semibold text-white">{t('connectTitle')}</h2>
               <p className="mt-1 text-sm text-white/45">
-                Core Wallet for Avalanche C-Chain. Stellar wallets remain available for existing flows.
+                {t('connectDesc')}
               </p>
             </div>
 
@@ -148,9 +152,9 @@ export default function ConnectPage() {
               onClick={() => setModalOpen(true)}
             >
               {isConnecting ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Connecting…</>
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('connecting')}</>
               ) : (
-                <><Wallet className="mr-2 h-4 w-4" />Connect Wallet</>
+                <><Wallet className="mr-2 h-4 w-4" />{t('connectButton')}</>
               )}
             </Button>
           </div>
@@ -160,7 +164,7 @@ export default function ConnectPage() {
       <WalletConnectModal open={modalOpen} onOpenChange={setModalOpen} />
 
       <p className="mt-10 text-xs text-white/20">
-        Avalanche C-Chain · Core Wallet · Trustless Work
+        {t('footer')}
       </p>
     </div>
   )
