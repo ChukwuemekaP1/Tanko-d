@@ -1,42 +1,46 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
+import type { ReactNode } from "react"
 import {
-  Fuel,
-  Users,
-  ArrowUpRight,
-  ArrowDownRight,
-  Clock,
-  CheckCircle2,
-  XCircle,
   AlertCircle,
-  Loader2,
+  ArrowUpRight,
+  BarChart3,
+  CheckCircle2,
+  Clock,
   DollarSign,
   Droplets,
-} from "lucide-react";
+  Fuel,
+  Loader2,
+  LucideIcon,
+  Receipt,
+  ShieldCheck,
+  Truck,
+  Users,
+  XCircle,
+} from "lucide-react"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+} from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 import {
-  AreaChart,
   Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-} from "recharts";
-import { useTranslations } from "next-intl";
-import { useAuth } from "@/providers/auth-provider";
-import DriverKYCForm from "@/components/forms/DriverKYCForm";
+} from "recharts"
+import { useAuth } from "@/providers/auth-provider"
+import { cn } from "@/lib/utils"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001";
 
@@ -241,57 +245,68 @@ export default function DashboardPage() {
 
   const statsCards = [
     {
-      title: t("totalSpent"),
+      title: "Total liberado",
       value: `$${(displayStats.totalReleased / 10000000).toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
-      trend: "up" as const,
+      detail: "USD via escrow",
       icon: DollarSign,
-      color: "emerald",
+      tone: "primary" as const,
     },
     {
-      title: t("pendingRequests"),
+      title: "Solicitudes pendientes",
       value: displayStats.pendingRequests.toString(),
-      trend: (pendingRequests.length > 0 ? "up" : "neutral") as
-        | "up"
-        | "down"
-        | "neutral",
+      detail: pendingRequests.length > 0 ? "Requieren revisión" : "Sin bloqueos",
       icon: Clock,
-      color: "amber",
+      tone: "warning" as const,
     },
     {
-      title: t("activeDrivers"),
+      title: "Conductores activos",
       value: displayStats.activeUsers.toString(),
-      trend: "neutral" as const,
+      detail: `${displayStats.registeredUnits} unidades registradas`,
       icon: Users,
-      color: "blue",
+      tone: "accent" as const,
     },
     {
-      title: t("litersLoaded"),
+      title: "Litros cargados",
       value: `${(displayStats.totalLiters / 10000000).toLocaleString()} L`,
-      trend: "neutral" as const,
+      detail: `${displayStats.transactionCount} transacciones`,
       icon: Droplets,
-      color: "violet",
+      tone: "success" as const,
     },
   ];
 
   if (loading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
+        <div className="tanko-glass flex flex-col items-center gap-4 rounded-lg px-8 py-7">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">{t("loading")}</p>
+          <p className="text-body-sm text-muted-foreground">Cargando dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
-        <p className="text-muted-foreground">
-          {role === "JEFE" ? t("subtitleManager") : t("subtitleDriver")}
-        </p>
-      </div>
+    <div className="space-y-6">
+      <section className="tanko-glass overflow-hidden rounded-lg p-5 lg:p-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="mb-3 flex items-center gap-2 text-micro font-semibold uppercase tracking-[0.28em] text-primary">
+              <ShieldCheck className="h-4 w-4" />
+              Fleet control plane
+            </div>
+            <h1 className="text-heading font-black text-white">Panel de Control</h1>
+            <p className="mt-2 max-w-2xl text-body-sm text-muted-foreground">
+              Resumen operativo de solicitudes, liberaciones, litros y unidades
+              para tu flota conectada a Tanko.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:flex">
+            <Signal label="Escrow" value={`$${(displayStats.escrowBalance / 10000000).toLocaleString("en-US", { minimumFractionDigits: 2 })}`} />
+            <Signal label="Activas" value={displayStats.activeUnits.toString()} />
+          </div>
+        </div>
+      </section>
 
       {role === "CONDUCTOR" && kycData?.status !== "VERIFIED" && (
         <Card className="border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-900/10">
@@ -329,37 +344,32 @@ export default function DashboardPage() {
       )}
 
       {pendingRequests.length > 0 && (
-        <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-800/30 dark:bg-amber-900/10">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base text-amber-800 dark:text-amber-200">
-              <AlertCircle className="h-5 w-5" />
-              {t("pendingRequestsCount", { count: pendingRequests.length })}
+        <Card className="tanko-glass rounded-lg border-warning/25 py-0">
+          <CardHeader className="border-b border-warning/15 p-5">
+            <CardTitle className="flex items-center gap-2 text-title text-white">
+              <AlertCircle className="h-5 w-5 text-warning" />
+              Solicitudes Pendientes ({pendingRequests.length})
             </CardTitle>
-            <CardDescription className="text-amber-700 dark:text-amber-400">
-              {t("pendingRequestsDesc")}
+            <CardDescription>
+              Revisa y aprueba las solicitudes de combustible de tus conductores.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 p-5">
             {pendingRequests.slice(0, 3).map((request) => (
               <div
                 key={request.id}
-                className="flex items-center justify-between rounded-lg border border-amber-200/50 bg-white p-4 dark:border-amber-800/50 dark:bg-card"
+                className="grid gap-4 rounded-lg border border-glass-border bg-glass p-4 sm:grid-cols-[1fr_auto] sm:items-center"
               >
                 <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/30">
-                    <Fuel className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-warning/10 text-warning">
+                    <Fuel className="h-6 w-6" />
                   </div>
-                  <div>
-                    <p className="font-medium text-foreground">
-                      {request.driver?.name || tRoles("driver")}
+                  <div className="min-w-0">
+                    <p className="font-semibold text-white">{request.driver?.name || "Conductor"}</p>
+                    <p className="text-body-sm text-muted-foreground">
+                      {request.liters}L · ${(request.amount / 10000000).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                     </p>
-                    <p className="text-sm text-muted-foreground">
-                      {request.liters}L · $
-                      {(request.amount / 10000000).toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                      })}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-caption text-muted-foreground">
                       {new Date(request.createdAt).toLocaleDateString("es-MX", {
                         day: "numeric",
                         month: "short",
@@ -369,13 +379,14 @@ export default function DashboardPage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-end gap-2">
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => handleReject(request.id)}
                     disabled={processingId === request.id}
-                    className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400"
+                    className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                    aria-label="Rechazar solicitud"
                   >
                     {processingId === request.id ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -387,7 +398,8 @@ export default function DashboardPage() {
                     size="sm"
                     onClick={() => handleApprove(request.id)}
                     disabled={processingId === request.id}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                    className="bg-success text-success-foreground hover:bg-success/90"
+                    aria-label="Aprobar solicitud"
                   >
                     {processingId === request.id ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -399,258 +411,257 @@ export default function DashboardPage() {
               </div>
             ))}
             {pendingRequests.length > 3 && (
-              <p className="text-center text-sm text-muted-foreground">
-                {t("andMoreRequests", { count: pendingRequests.length - 3 })}
+              <p className="text-center text-body-sm text-muted-foreground">
+                y {pendingRequests.length - 3} solicitudes más...
               </p>
             )}
           </CardContent>
         </Card>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {statsCards.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
-              <div
-                className={`flex h-9 w-9 items-center justify-center rounded-lg bg-${stat.color}-500/10`}
-              >
-                <stat.icon
-                  className={`h-5 w-5 text-${stat.color}-600 dark:text-${stat.color}-400`}
-                />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">
-                {stat.value}
-              </div>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                {stat.trend === "up" && (
-                  <ArrowUpRight className="h-3 w-3 text-emerald-500" />
-                )}
-                {stat.trend === "down" && (
-                  <ArrowDownRight className="h-3 w-3 text-red-500" />
-                )}
-                <span
-                  className={
-                    stat.trend === "up"
-                      ? "text-emerald-500"
-                      : stat.trend === "down"
-                        ? "text-red-500"
-                        : ""
-                  }
-                >
-                  {stat.title}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+          <MetricCard key={stat.title} {...stat} />
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("monthlySpend")}</CardTitle>
-            <CardDescription>
-              {t("monthlySpendDesc")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={monthlyStats.length > 0 ? monthlyStats : []}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    className="stroke-border"
-                  />
-                  <XAxis
-                    dataKey="month"
-                    className="text-xs text-muted-foreground"
-                    tick={{ fill: "currentColor" }}
-                  />
-                  <YAxis
-                    className="text-xs text-muted-foreground"
-                    tick={{ fill: "currentColor" }}
-                    tickFormatter={(value) =>
-                      `$${(value / 1000000).toFixed(0)}M`
-                    }
-                  />
-                  <Tooltip
-                    formatter={(value: number) => [
-                      `$${(value / 10000000).toLocaleString("en-US")}`,
-                      t("spend"),
-                    ]}
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="spend"
-                    stroke="hsl(var(--primary))"
-                    fill="hsl(var(--primary) / 0.2)"
-                    strokeWidth={2}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid gap-6 xl:grid-cols-2">
+        <DashboardChart
+          title="Gasto Mensual"
+          description="Gasto en combustible (USD) últimos 6 meses"
+          icon={BarChart3}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={monthlyStats.length > 0 ? monthlyStats : []}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgb(255 255 255 / 0.08)" />
+              <XAxis dataKey="month" tick={{ fill: "#8f9bb3", fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis
+                tick={{ fill: "#8f9bb3", fontSize: 12 }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(value) => `$${(value / 1000000).toFixed(0)}M`}
+              />
+              <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => [`$${(value / 10000000).toLocaleString("en-US")}`, "Gasto"]} />
+              <Area type="monotone" dataKey="spend" stroke="var(--primary)" fill="rgb(0 194 255 / 0.18)" strokeWidth={2} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </DashboardChart>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("litersPerMonth")}</CardTitle>
-            <CardDescription>
-              {t("litersPerMonthDesc")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyStats.length > 0 ? monthlyStats : []}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    className="stroke-border"
-                  />
-                  <XAxis
-                    dataKey="month"
-                    className="text-xs text-muted-foreground"
-                    tick={{ fill: "currentColor" }}
-                  />
-                  <YAxis
-                    className="text-xs text-muted-foreground"
-                    tick={{ fill: "currentColor" }}
-                  />
-                  <Tooltip
-                    formatter={(value: number) => [
-                      `${(value / 10000000).toLocaleString("en-US")} L`,
-                      t("liters"),
-                    ]}
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <Bar
-                    dataKey="liters"
-                    fill="hsl(var(--primary))"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <DashboardChart
+          title="Litros por Mes"
+          description="Volumen de combustible cargado por mes"
+          icon={Droplets}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={monthlyStats.length > 0 ? monthlyStats : []}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgb(255 255 255 / 0.08)" />
+              <XAxis dataKey="month" tick={{ fill: "#8f9bb3", fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "#8f9bb3", fontSize: 12 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => [`${(value / 10000000).toLocaleString("en-US")} L`, "Litros"]} />
+              <Bar dataKey="liters" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </DashboardChart>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("recentTransactions")}</CardTitle>
-            <CardDescription>
-              {t("recentTransactionsDesc")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {(recentTransactions || []).length > 0 ? (
-                (recentTransactions || []).map((tx) => (
-                  <div
-                    key={tx.id}
-                    className="flex items-center justify-between rounded-lg border border-border p-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                        <Fuel className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">
-                          {tx.driver}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {tx.unit} - {tx.plates}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-foreground">
-                        $
-                        {(tx.amount / 10000000).toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                        })}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {(tx.liters / 10000000).toLocaleString()} L
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  {t("noRecentTransactions")}
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid gap-6 xl:grid-cols-2">
+        <ActivityPanel
+          title="Transacciones Recientes"
+          description="Últimas cargas de combustible registradas"
+          icon={Receipt}
+        >
+          {recentTransactions.length > 0 ? recentTransactions.map((tx) => (
+            <ListRow
+              key={tx.id}
+              icon={Fuel}
+              title={tx.driver}
+              subtitle={`${tx.unit} - ${tx.plates}`}
+              value={`$${(tx.amount / 10000000).toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+              meta={`${(tx.liters / 10000000).toLocaleString()} L`}
+            />
+          )) : (
+            <EmptyState>No hay transacciones aún</EmptyState>
+          )}
+        </ActivityPanel>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("topUnits")}</CardTitle>
-            <CardDescription>
-              {t("topUnitsDesc")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {topUnits.length > 0 ? (
-                topUnits.map((unit, index) => (
-                  <div
-                    key={unit.id}
-                    className="flex items-center justify-between rounded-lg border border-border p-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-sm font-bold text-muted-foreground">
-                        #{index + 1}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">
-                          {unit.make} {unit.model}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {unit.plates}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-foreground">
-                        $
-                        {(unit.monthlySpend / 10000000).toLocaleString(
-                          "en-US",
-                          { minimumFractionDigits: 2 },
-                        )}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {(unit.totalLiters / 10000000).toLocaleString()} L
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  {t("noUnits")}
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <ActivityPanel
+          title="Unidades con Mayor Consumo"
+          description="Top 5 unidades por gasto de combustible este mes"
+          icon={Truck}
+        >
+          {topUnits.length > 0 ? topUnits.map((unit, index) => (
+            <ListRow
+              key={unit.id}
+              badge={`#${index + 1}`}
+              title={`${unit.make} ${unit.model}`}
+              subtitle={unit.plates}
+              value={`$${(unit.monthlySpend / 10000000).toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+              meta={`${(unit.totalLiters / 10000000).toLocaleString()} L`}
+            />
+          )) : (
+            <EmptyState>No hay unidades registradas</EmptyState>
+          )}
+        </ActivityPanel>
+      </div>
+    </div>
+  )
+}
+
+const tooltipStyle = {
+  backgroundColor: "var(--card)",
+  border: "1px solid var(--glass-border)",
+  borderRadius: "8px",
+  color: "var(--foreground)",
+}
+
+function Signal({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-glass-border bg-glass px-4 py-3">
+      <p className="text-micro font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1 text-title font-bold text-white">{value}</p>
+    </div>
+  )
+}
+
+function MetricCard({
+  title,
+  value,
+  detail,
+  icon: Icon,
+  tone,
+}: {
+  title: string
+  value: string
+  detail: string
+  icon: LucideIcon
+  tone: "primary" | "warning" | "accent" | "success"
+}) {
+  const toneClass = {
+    primary: "bg-primary/10 text-primary border-primary/20",
+    warning: "bg-warning/10 text-warning border-warning/20",
+    accent: "bg-accent/10 text-accent border-accent/20",
+    success: "bg-success/10 text-success border-success/20",
+  }[tone]
+
+  return (
+    <Card className="tanko-glass-subtle rounded-lg py-0">
+      <CardContent className="p-5">
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <p className="text-body-sm font-medium text-muted-foreground">{title}</p>
+          <div className={cn("flex h-10 w-10 items-center justify-center rounded-md border", toneClass)}>
+            <Icon className="h-5 w-5" />
+          </div>
+        </div>
+        <p className="text-3xl font-black text-white">{value}</p>
+        <div className="mt-3 flex items-center gap-1 text-caption text-muted-foreground">
+          <ArrowUpRight className="h-3.5 w-3.5 text-success" />
+          <span>{detail}</span>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function DashboardChart({
+  title,
+  description,
+  icon: Icon,
+  children,
+}: {
+  title: string
+  description: string
+  icon: LucideIcon
+  children: ReactNode
+}) {
+  return (
+    <Card className="tanko-glass-subtle rounded-lg py-0">
+      <CardHeader className="p-5">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary">
+            <Icon className="h-5 w-5" />
+          </div>
+          <div>
+            <CardTitle className="text-title text-white">{title}</CardTitle>
+            <CardDescription>{description}</CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="p-5 pt-0">
+        <div className="h-[300px]">{children}</div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function ActivityPanel({
+  title,
+  description,
+  icon: Icon,
+  children,
+}: {
+  title: string
+  description: string
+  icon: LucideIcon
+  children: ReactNode
+}) {
+  return (
+    <Card className="tanko-glass-subtle rounded-lg py-0">
+      <CardHeader className="p-5">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary">
+            <Icon className="h-5 w-5" />
+          </div>
+          <div>
+            <CardTitle className="text-title text-white">{title}</CardTitle>
+            <CardDescription>{description}</CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3 p-5 pt-0">{children}</CardContent>
+    </Card>
+  )
+}
+
+function ListRow({
+  icon: Icon,
+  badge,
+  title,
+  subtitle,
+  value,
+  meta,
+}: {
+  icon?: LucideIcon
+  badge?: string
+  title: string
+  subtitle: string
+  value: string
+  meta: string
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-lg border border-glass-border bg-glass p-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+          {Icon ? <Icon className="h-5 w-5" /> : <span className="text-caption font-bold">{badge}</span>}
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-body-sm font-semibold text-white">{title}</p>
+          <p className="truncate text-caption text-muted-foreground">{subtitle}</p>
+        </div>
+      </div>
+      <div className="shrink-0 text-right">
+        <p className="text-body-sm font-semibold text-white">{value}</p>
+        <p className="text-caption text-muted-foreground">{meta}</p>
       </div>
     </div>
   );
+}
+
+function EmptyState({ children }: { children: ReactNode }) {
+  return (
+    <div className="rounded-lg border border-dashed border-glass-border bg-glass p-6 text-center text-body-sm text-muted-foreground">
+      {children}
+    </div>
+  )
 }
