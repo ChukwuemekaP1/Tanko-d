@@ -1,6 +1,6 @@
 import request from 'supertest';
 import express from 'express';
-import { Keypair } from 'stellar-sdk';
+import { Keypair } from '@stellar/stellar-sdk';
 
 const mockContractId = 'CD1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
 const mockXdr = 'AAAA4K4KNVGYVLBUJHTHV2WYQXNKA6IJHGBNHWSOHIQB2M4BKZPGQABZABO4IA+pD+YW5T2J6D7E8F9G0H1I2J3';

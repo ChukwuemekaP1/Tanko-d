@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { Keypair } from 'stellar-sdk';
+import { Keypair } from '@stellar/stellar-sdk';
 
 const testKeypair = Keypair.random();
 

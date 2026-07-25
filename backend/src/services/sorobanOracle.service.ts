@@ -6,7 +6,7 @@ import {
   scValToNative,
   TransactionBuilder,
   xdr,
-} from 'stellar-sdk';
+} from '@stellar/stellar-sdk';
 import { config } from '../config/index.js';
 import { OraclePriceRecord } from './oracle.service.js';
 

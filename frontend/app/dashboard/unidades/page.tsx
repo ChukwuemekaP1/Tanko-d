@@ -8,6 +8,7 @@ import {
   Car,
   Eye,
   Fuel,
+  Loader2,
   type LucideIcon,
   MoreHorizontal,
   Search,
@@ -109,12 +110,10 @@ export default function UnidadesPage() {
         </div>
       </div>
     );
+  }
+
   const activeUnits = units.filter(unit => unit.isActive).length
   const assignedUnits = units.filter(unit => unit.user?.name).length
-
-  if (error) {
-    return <ErrorState title="Error al cargar unidades" message={error} />
-  }
 
   return (
     <div className="space-y-6">
