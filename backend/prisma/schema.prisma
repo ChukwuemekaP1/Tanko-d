@@ -12,6 +12,7 @@ model User {
   id            String    @id @default(uuid())
   name          String
   email         String    @unique
+  passwordHash  String?
   phone         String?
   stellarPubKey String?   @unique
   avalancheCChainAddress String? @unique
@@ -28,6 +29,9 @@ model User {
   managerRequests FundRequest[] @relation("manager")
   fuelLogs        FuelLog[]
   driverKyc       DriverKyc?
+  managerProfile  ManagerProfile?
+  driverProfile   DriverProfile?
+  fuelWallet      FuelWallet?
   manager         User?         @relation("ManagerDrivers", fields: [managerId], references: [id])
   drivers         User[]        @relation("ManagerDrivers")
 
@@ -52,6 +56,33 @@ model DriverKyc {
   updatedAt       DateTime @updatedAt
 
   @@index([status])
+}
+
+model ManagerProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documentId  String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model DriverProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documentId  String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model FuelWallet {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance     Float    @default(0.00)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Unit {
