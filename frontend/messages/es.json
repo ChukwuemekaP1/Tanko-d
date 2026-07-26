@@ -222,7 +222,9 @@
     "noSearchResults": "No se encontraron resultados",
     "noSearchResultsDescription": "No se encontraron vehículos que coincidan con \"{query}\"",
     "clearSearch": "Limpiar búsqueda",
-    "exportCsv": "Exportar CSV"
+    "exportCsv": "Exportar CSV",
+    "authError": "Sesión expirada. Conecta tu wallet para continuar.",
+    "retryLoad": "Reintentar"
   },
   "usuarios": {
     "title": "Usuarios",
