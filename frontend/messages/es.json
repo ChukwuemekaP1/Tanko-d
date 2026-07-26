@@ -216,7 +216,13 @@
     "loadError": "Error al cargar unidades",
     "listTitle": "Lista de Vehículos",
     "total": "Total: {count} vehículos registrados",
-    "searchPlaceholder": "Buscar vehículo..."
+    "searchPlaceholder": "Buscar vehículo...",
+    "emptyFleet": "No hay vehículos registrados",
+    "emptyFleetDescription": "Comienza agregando tu primer vehículo a la flota",
+    "noSearchResults": "No se encontraron resultados",
+    "noSearchResultsDescription": "No se encontraron vehículos que coincidan con \"{query}\"",
+    "clearSearch": "Limpiar búsqueda",
+    "exportCsv": "Exportar CSV"
   },
   "usuarios": {
     "title": "Usuarios",
