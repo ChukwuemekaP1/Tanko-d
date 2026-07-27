@@ -130,6 +130,32 @@ export class UnitController {
       });
     }
   }
+  async assignDriver(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { userId } = req.body;
+
+      const unit = await unitRepository.assignDriver(id, userId);
+
+      res.status(200).json({ success: true, data: unit });
+    } catch (error: any) {
+      if (error.code === "P2025") {
+        res.status(404).json({ success: false, error: "Unit not found" });
+        return;
+      }
+
+      if (error.code === "P2003") {
+        res.status(400).json({ success: false, error: "Driver not found" });
+        return;
+      }
+
+      res.status(500).json({
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Failed to assign driver",
+      });
+    }
+  }
 }
 
 export const unitController = new UnitController();

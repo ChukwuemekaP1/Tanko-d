@@ -216,7 +216,18 @@
     "loadError": "Error al cargar unidades",
     "listTitle": "Lista de Vehículos",
     "total": "Total: {count} vehículos registrados",
-    "searchPlaceholder": "Buscar vehículo..."
+    "searchPlaceholder": "Buscar vehículo...",
+    "assignDriver": "Asignar Conductor",
+    "changeDriver": "Cambiar Conductor",
+    "detachDriver": "Desvincular Conductor",
+    "searchDriver": "Buscar conductor...",
+    "noDrivers": "Sin conductores disponibles",
+    "noDriver": "Sin Conductor",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "assignSuccess": "Conductor asignado correctamente",
+    "detachSuccess": "Conductor desvinculado correctamente",
+    "assignError": "Error al asignar conductor"
   },
   "usuarios": {
     "title": "Usuarios",

@@ -216,7 +216,18 @@
     "loadError": "Failed to load units",
     "listTitle": "Vehicle List",
     "total": "Total: {count} registered vehicles",
-    "searchPlaceholder": "Search vehicle..."
+    "searchPlaceholder": "Search vehicle...",
+    "assignDriver": "Assign Driver",
+    "changeDriver": "Change Driver",
+    "detachDriver": "Detach Driver",
+    "searchDriver": "Search driver...",
+    "noDrivers": "No drivers available",
+    "noDriver": "No Driver",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "assignSuccess": "Driver assigned successfully",
+    "detachSuccess": "Driver detached successfully",
+    "assignError": "Failed to assign driver"
   },
   "usuarios": {
     "title": "Users",

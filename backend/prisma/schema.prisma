@@ -65,8 +65,8 @@ model Unit {
   permitExpiry  DateTime?
   monthlySpend  Float    @default(0)
   status        String   @default("ACTIVE")
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   fuelLogs      FuelLog[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
