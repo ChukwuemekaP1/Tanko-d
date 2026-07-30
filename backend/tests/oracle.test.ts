@@ -1,5 +1,5 @@
 import { oracleService, SignedPrice } from '../src/services/oracle.service';
-import { Keypair } from 'stellar-sdk';
+import { Keypair } from '@stellar/stellar-sdk';
 
 describe('OracleService', () => {
   let service: any;

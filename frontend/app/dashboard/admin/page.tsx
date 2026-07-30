@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { WalletButton } from '@/components/wallet/wallet-button'
@@ -12,9 +12,7 @@ import {
   Clock, 
   CheckCircle, 
   XCircle,
-  RefreshCw,
-  Download,
-  Plus
+  RefreshCw
 } from 'lucide-react'
 import Link from 'next/link'
 

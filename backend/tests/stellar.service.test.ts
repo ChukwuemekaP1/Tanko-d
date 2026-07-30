@@ -1,4 +1,4 @@
-import { StrKey, Keypair } from 'stellar-sdk';
+import { StrKey, Keypair } from '@stellar/stellar-sdk';
 
 describe('Stellar SDK Utilities', () => {
   const validKeypair = Keypair.random();
@@ -44,12 +44,12 @@ describe('Stellar SDK Utilities', () => {
 
   describe('Transaction Operations', () => {
     it('should have Transaction class available', async () => {
-      const { Transaction } = await import('stellar-sdk');
+      const { Transaction } = await import('@stellar/stellar-sdk');
       expect(Transaction).toBeDefined();
     });
 
     it('should have Networks constant', async () => {
-      const { Networks } = await import('stellar-sdk');
+      const { Networks } = await import('@stellar/stellar-sdk');
       expect(Networks.TESTNET).toBeDefined();
       expect(Networks.PUBLIC).toBeDefined();
     });
@@ -57,7 +57,7 @@ describe('Stellar SDK Utilities', () => {
 
   describe('Horizon Server', () => {
     it('should have Horizon Server available', async () => {
-      const { Horizon } = await import('stellar-sdk');
+      const { Horizon } = await import('@stellar/stellar-sdk');
       expect(Horizon.Server).toBeDefined();
     });
   });

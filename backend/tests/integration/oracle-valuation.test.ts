@@ -1,6 +1,6 @@
 import request from 'supertest';
 import express from 'express';
-import { Keypair } from 'stellar-sdk';
+import { Keypair } from '@stellar/stellar-sdk';
 
 process.env.ORACLE_SEED_PRICE_MAGNA = '24.00';
 process.env.ORACLE_SEED_PRICE_PREMIUM = '28.66';

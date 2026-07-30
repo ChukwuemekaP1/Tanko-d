@@ -6,8 +6,10 @@ import {
   AlertCircle,
   Calendar,
   Car,
+  Download,
   Eye,
   Fuel,
+  Loader2,
   type LucideIcon,
   MoreHorizontal,
   Search,
@@ -34,8 +36,17 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/providers/auth-provider"
 import { cn } from "@/lib/utils"
 import { AssignDriverModal } from "@/components/AssignDriverModal"
+import { exportUnitsToCSV } from "@/lib/csv/export-units"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001";
+
+function normalize(str: string): string {
+  return str
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+}
 
 interface Unit {
   id: string;
@@ -91,12 +102,14 @@ export default function UnidadesPage() {
     fetchUnits();
   }, [walletAddress]);
 
+  const query = normalize(searchQuery)
   const filteredUnits = units.filter(
     (unit) =>
-      unit.make?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      unit.model?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      unit.plates?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      unit.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()),
+      !query ||
+      normalize(unit.make ?? "").includes(query) ||
+      normalize(unit.model ?? "").includes(query) ||
+      normalize(unit.plates ?? "").includes(query) ||
+      normalize(unit.user?.name ?? "").includes(query),
   );
 
   if (loading) {
@@ -122,12 +135,10 @@ export default function UnidadesPage() {
         </div>
       </div>
     );
+  }
+
   const activeUnits = units.filter(unit => unit.isActive).length
   const assignedUnits = units.filter(unit => unit.user?.name).length
-
-  if (error) {
-    return <ErrorState title="Error al cargar unidades" message={error} />
-  }
 
   return (
     <div className="space-y-6">
@@ -136,6 +147,7 @@ export default function UnidadesPage() {
         <p className="text-muted-foreground">
           {t("subtitle")}
         </p>
+      </div>
       <PageHero
         eyebrow="Fleet registry"
         title="Flota"
@@ -157,17 +169,28 @@ export default function UnidadesPage() {
               <CardDescription>
                 {t("total", { count: units.length })}
               </CardDescription>
-              <CardTitle className="text-title text-white">Lista de vehículos</CardTitle>
-              <CardDescription>Total: {units.length} vehículos registrados</CardDescription>
             </div>
-            <div className="relative w-full sm:w-80">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder={t("searchPlaceholder")}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-glass pl-10"
-              />
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              {filteredUnits.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => exportUnitsToCSV(filteredUnits)}
+                  className="shrink-0"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  {t("exportCsv")}
+                </Button>
+              )}
+              <div className="relative w-full sm:w-80">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder={t("searchPlaceholder")}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-glass pl-10"
+                />
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -250,8 +273,34 @@ export default function UnidadesPage() {
                 </div>
               ))}
             </div>
+          ) : units.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-glass-border bg-glass p-8 text-center">
+              <Car className="mx-auto h-10 w-10 text-muted-foreground" />
+              <p className="mt-3 font-medium text-foreground">
+                {t("emptyFleet")}
+              </p>
+              <p className="mt-1 text-body-sm text-muted-foreground">
+                {t("emptyFleetDescription")}
+              </p>
+            </div>
           ) : (
-            <EmptyState>No hay vehículos registrados</EmptyState>
+            <div className="rounded-lg border border-dashed border-glass-border bg-glass p-8 text-center">
+              <Search className="mx-auto h-10 w-10 text-muted-foreground" />
+              <p className="mt-3 font-medium text-foreground">
+                {t("noSearchResults")}
+              </p>
+              <p className="mt-1 text-body-sm text-muted-foreground">
+                {t("noSearchResultsDescription", { query: searchQuery })}
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4"
+                onClick={() => setSearchQuery("")}
+              >
+                {t("clearSearch")}
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>

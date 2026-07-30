@@ -217,17 +217,12 @@
     "listTitle": "Vehicle List",
     "total": "Total: {count} registered vehicles",
     "searchPlaceholder": "Search vehicle...",
-    "assignDriver": "Assign Driver",
-    "changeDriver": "Change Driver",
-    "detachDriver": "Detach Driver",
-    "searchDriver": "Search driver...",
-    "noDrivers": "No drivers available",
-    "noDriver": "No Driver",
-    "confirm": "Confirm",
-    "cancel": "Cancel",
-    "assignSuccess": "Driver assigned successfully",
-    "detachSuccess": "Driver detached successfully",
-    "assignError": "Failed to assign driver"
+    "emptyFleet": "No vehicles registered",
+    "emptyFleetDescription": "Start by adding your first vehicle to the fleet",
+    "noSearchResults": "No results found",
+    "noSearchResultsDescription": "No vehicles match \"{query}\"",
+    "clearSearch": "Clear search",
+    "exportCsv": "Export CSV"
   },
   "usuarios": {
     "title": "Users",
