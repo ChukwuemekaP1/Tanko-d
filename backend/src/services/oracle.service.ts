@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { Keypair } from 'stellar-sdk';
+import { Keypair } from '@stellar/stellar-sdk';
 import { config } from '../config/index.js';
 import { fxService, MXN_SCALE, USDC_SCALE } from './fx.service.js';
 import { sorobanOracleService } from './sorobanOracle.service.js';
@@ -253,11 +253,11 @@ export interface SignedPrice {
 // Extend the singleton with the simpler test-facing API
 const _svc = oracleService as any;
 
-function _getKeypair(): import('stellar-sdk').Keypair {
+function _getKeypair(): import('@stellar/stellar-sdk').Keypair {
   // Re-read from env each call so tests that set env before require() work
   const secret = process.env.ORACLE_SECRET_KEY || process.env.ORACLE_PRIVATE_KEY || config.oracle.privateKey;
   if (!secret) throw new Error('Oracle keypair not configured');
-  const { Keypair: KP } = require('stellar-sdk') as typeof import('stellar-sdk');
+  const { Keypair: KP } = require('@stellar/stellar-sdk') as typeof import('@stellar/stellar-sdk');
   return KP.fromSecret(secret);
 }
 
@@ -274,7 +274,7 @@ _svc.signPrice = (payload: { fuelType: string; pricePerLiter: number; timestamp:
 _svc.verifySignedPrice = (signed: SignedPrice): boolean => {
   try {
     if (!signed?.payload || !signed?.signature || !signed?.oraclePublicKey) return false;
-    const { Keypair: KP } = require('stellar-sdk') as typeof import('stellar-sdk');
+  const { Keypair: KP } = require('@stellar/stellar-sdk') as typeof import('@stellar/stellar-sdk');
     const kp = KP.fromPublicKey(signed.oraclePublicKey);
     const msgBuf = Buffer.from(`${signed.payload.fuelType}:${signed.payload.pricePerLiter}:${signed.payload.timestamp}`, 'utf8');
     return kp.verify(msgBuf, Buffer.from(signed.signature, 'base64'));

@@ -9,12 +9,8 @@ import {
   AlertCircle,
   Clock,
   Fuel,
-  Loader2,
   MapPin,
-  Navigation,
-  Plus,
   Search,
-  Star,
   type LucideIcon,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
@@ -26,10 +22,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useEffect, useMemo, useState } from "react"
-import { Clock, Fuel, Loader2, MapPin, Plus, Search } from "lucide-react"
-import dynamic from "next/dynamic"
-import { AlertCircle, Clock, Fuel, Loader2, MapPin, Search, Plus } from "lucide-react"
 import { StationMap, type StationMapLocation } from "@/components/station-map"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
