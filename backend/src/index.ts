@@ -15,6 +15,7 @@ import configRoutes from "./routes/config.routes.js";
 import stationRoutes from "./routes/station.routes.js";
 import kycRoutes from "./routes/kyc.routes.js";
 import exportRoutes from "./routes/export.routes.js";
+import authRoutes from "./routes/auth.routes.js";
 import { logger } from "./utils/logger.js";
 import { oracleCronService } from "./services/oracle-cron.service.js";
 import fs from "fs";
@@ -60,6 +61,7 @@ app.get("/api/v1/openapi.json", (req, res) => {
 });
 
 app.use("/api/v1", escrowRoutes);
+app.use("/api/v1", authRoutes);
 app.use("/api/v1", walletRoutes);
 app.use("/api/v1", fundsRoutes);
 app.use("/api/v1", statsRoutes);
