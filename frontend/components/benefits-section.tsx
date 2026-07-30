@@ -5,7 +5,9 @@ import {
   BarChart3, 
   CreditCard, 
   Users,
-  CheckCircle2
+  CheckCircle2,
+  Shield,
+  Lock
 } from "lucide-react"
 
 const benefits = [
@@ -17,7 +19,8 @@ const benefits = [
       "Only 0.5% per transaction",
       "No hidden costs",
       "Guaranteed savings"
-    ]
+    ],
+    badge: "Best Value"
   },
   {
     icon: Zap,
@@ -27,7 +30,8 @@ const benefits = [
       "Sign up in 5 minutes",
       "Automatic verification",
       "Immediate activation"
-    ]
+    ],
+    badge: "Fast"
   },
   {
     icon: MapPin,
@@ -37,7 +41,8 @@ const benefits = [
       "Nationwide coverage",
       "Real-time map",
       "Exclusive benefits"
-    ]
+    ],
+    badge: "5,000+ Stations"
   },
   {
     icon: BarChart3,
@@ -47,68 +52,79 @@ const benefits = [
       "Real-time reports",
       "Per-unit analytics",
       "Data export"
-    ]
+    ],
+    badge: "Analytics"
   },
   {
-    icon: CreditCard,
-    title: "Secure Payments",
-    description: "State-of-the-art encryption technology. Your transactions are protected by the highest security standards.",
+    icon: Shield,
+    title: "Blockchain Security",
+    description: "Your transactions are protected by blockchain technology. Verifiable, transparent, and immutable records.",
     features: [
-      "SSL encryption",
-      "Fraud protection",
-      "Secure transactions"
-    ]
+      "Blockchain verification",
+      "Transparent records",
+      "Immutable ledger"
+    ],
+    badge: "Secure"
   },
   {
-    icon: Users,
-    title: "Fleet Management",
-    description: "Manage multiple units and drivers from a single panel. Centralized control for companies of any size.",
+    icon: Lock,
+    title: "Zero Intermediaries",
+    description: "Direct transactions between fleet and stations. No middlemen, no delays, no extra costs.",
     features: [
-      "Multiple users",
-      "Per-unit limits",
-      "Custom alerts"
-    ]
+      "Direct payments",
+      "No intermediaries",
+      "Instant settlement"
+    ],
+    badge: "Direct"
   }
 ]
 
 export function BenefitsSection() {
   return (
-    <section id="benefits" className="bg-card py-20 md:py-28">
-      <div className="container mx-auto px-4">
+    <section id="benefits" className="relative bg-card py-24 md:py-32">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(34,197,94,0.06),transparent_50%)]" />
+      
+      <div className="container relative mx-auto px-4">
         <div className="mx-auto max-w-3xl text-center">
-          <span className="inline-block rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
+          <div className="tanko-badge tanko-badge-green mb-6 inline-flex items-center gap-2">
             Benefits
-          </span>
-          <h2 className="mt-6 text-balance text-3xl font-bold tracking-tight text-foreground md:text-5xl">
+          </div>
+          <h2 className="text-balance text-4xl font-black tracking-tight text-white md:text-5xl lg:text-6xl">
             What sets us apart
           </h2>
-          <p className="mt-4 text-pretty text-lg text-muted-foreground">
+          <p className="mt-6 text-pretty text-xl font-medium text-gray-300 md:text-2xl">
             Built for transport companies and fleets that want to optimize fuel spending with the best technology and service.
           </p>
         </div>
 
-        <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-20 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {benefits.map((benefit) => (
             <div
               key={benefit.title}
-              className="group rounded-2xl border border-border bg-background p-8 transition-all hover:border-primary/30 hover:shadow-lg"
+              className="tanko-glass group relative overflow-hidden rounded-2xl border border-primary/20 bg-card/50 p-8 transition-all hover:border-primary/40 hover:shadow-glow-green backdrop-blur-sm"
             >
-              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/20">
-                <benefit.icon className="h-7 w-7 text-primary" />
+              <div className="absolute top-4 right-4">
+                <span className="tanko-badge tanko-badge-yellow text-xs">
+                  {benefit.badge}
+                </span>
               </div>
               
-              <h3 className="mb-3 text-xl font-semibold text-foreground">
+              <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/20 transition-colors group-hover:bg-primary/30 shadow-glow-green">
+                <benefit.icon className="h-8 w-8 text-primary" />
+              </div>
+              
+              <h3 className="mb-4 text-2xl font-bold text-white">
                 {benefit.title}
               </h3>
               
-              <p className="mb-6 text-muted-foreground">
+              <p className="mb-6 text-base font-medium text-gray-300">
                 {benefit.description}
               </p>
               
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {benefit.features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-2 text-sm text-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                  <li key={feature} className="flex items-center gap-3 text-sm font-semibold text-gray-200">
+                    <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-primary" />
                     {feature}
                   </li>
                 ))}

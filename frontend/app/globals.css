@@ -7,51 +7,51 @@
 :root {
   color-scheme: dark;
 
-  --background: #0a0a0f;
-  --foreground: #f5f8ff;
-  --card: #10111d;
-  --card-foreground: #f5f8ff;
-  --popover: #10111d;
-  --popover-foreground: #f5f8ff;
-  --primary: #00c2ff;
-  --primary-foreground: #061018;
-  --secondary: #17192a;
-  --secondary-foreground: #dce7ff;
-  --muted: #17192a;
-  --muted-foreground: #8f9bb3;
-  --accent: #7b61ff;
-  --accent-foreground: #ffffff;
-  --destructive: #ff4d6d;
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #0a0f0a;
+  --card-foreground: #ffffff;
+  --popover: #0a0f0a;
+  --popover-foreground: #ffffff;
+  --primary: #22c55e;
+  --primary-foreground: #000000;
+  --secondary: #1a2e1a;
+  --secondary-foreground: #e8f5e8;
+  --muted: #1a2e1a;
+  --muted-foreground: #9ca3af;
+  --accent: #fbbf24;
+  --accent-foreground: #000000;
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: rgb(255 255 255 / 0.1);
-  --input: rgb(255 255 255 / 0.12);
-  --ring: #00c2ff;
-  --chart-1: #00c2ff;
-  --chart-2: #7b61ff;
-  --chart-3: #38d9a9;
-  --chart-4: #f5c400;
-  --chart-5: #ff6b8a;
-  --radius: 0.625rem;
-  --surface-1: #10111d;
-  --surface-2: #1a1a2e;
-  --surface-3: #22243b;
-  --glass: rgb(255 255 255 / 0.065);
-  --glass-strong: rgb(255 255 255 / 0.105);
-  --glass-border: rgb(255 255 255 / 0.13);
-  --glow-blue: rgb(0 194 255 / 0.34);
-  --glow-purple: rgb(123 97 255 / 0.3);
-  --success: #38d9a9;
-  --success-foreground: #031711;
-  --warning: #f5c400;
-  --warning-foreground: #1a1300;
-  --sidebar: #0d0e18;
-  --sidebar-foreground: #dce7ff;
-  --sidebar-primary: #00c2ff;
-  --sidebar-primary-foreground: #061018;
-  --sidebar-accent: rgb(255 255 255 / 0.08);
+  --border: rgb(34 197 94 / 0.2);
+  --input: rgb(34 197 94 / 0.15);
+  --ring: #22c55e;
+  --chart-1: #22c55e;
+  --chart-2: #16a34a;
+  --chart-3: #15803d;
+  --chart-4: #fbbf24;
+  --chart-5: #f59e0b;
+  --radius: 0.75rem;
+  --surface-1: #0a0f0a;
+  --surface-2: #0d120d;
+  --surface-3: #111611;
+  --glass: rgb(34 197 94 / 0.05);
+  --glass-strong: rgb(34 197 94 / 0.1);
+  --glass-border: rgb(34 197 94 / 0.25);
+  --glow-green: rgb(34 197 94 / 0.4);
+  --glow-yellow: rgb(251 191 36 / 0.35);
+  --success: #22c55e;
+  --success-foreground: #000000;
+  --warning: #fbbf24;
+  --warning-foreground: #000000;
+  --sidebar: #050705;
+  --sidebar-foreground: #e8f5e8;
+  --sidebar-primary: #22c55e;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: rgb(34 197 94 / 0.08);
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: rgb(255 255 255 / 0.1);
-  --sidebar-ring: #00c2ff;
+  --sidebar-border: rgb(34 197 94 / 0.15);
+  --sidebar-ring: #22c55e;
 }
 
 .dark {
@@ -115,8 +115,8 @@
   --text-display--line-height: 1;
   --tracking-interface: 0.01em;
   --shadow-glass: 0 24px 70px rgb(0 0 0 / 0.35);
-  --shadow-glow-blue: 0 0 32px var(--glow-blue);
-  --shadow-glow-purple: 0 0 32px var(--glow-purple);
+  --shadow-glow-green: 0 0 32px var(--glow-green);
+  --shadow-glow-yellow: 0 0 32px var(--glow-yellow);
   --ease-fluid: cubic-bezier(0.22, 1, 0.36, 1);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -156,9 +156,10 @@ body.scanner-active .scanner-ui {
     min-height: 100vh;
     letter-spacing: var(--tracking-interface);
     background:
-      radial-gradient(circle at 18% 0%, rgb(0 194 255 / 0.14), transparent 28rem),
-      radial-gradient(circle at 82% 10%, rgb(123 97 255 / 0.16), transparent 30rem),
-      linear-gradient(180deg, #0a0a0f 0%, #0c0d16 48%, #090a0f 100%);
+      radial-gradient(circle at 15% 0%, rgb(34 197 94 / 0.15), transparent 32rem),
+      radial-gradient(circle at 85% 15%, rgb(251 191 36 / 0.12), transparent 35rem),
+      radial-gradient(circle at 50% 100%, rgb(34 197 94 / 0.08), transparent 40rem),
+      linear-gradient(180deg, #000000 0%, #050a05 48%, #000000 100%);
   }
 }
 
@@ -185,9 +186,44 @@ body.scanner-active .scanner-ui {
   }
 
   .tanko-text-gradient {
-    background: linear-gradient(90deg, var(--primary), var(--accent));
+    background: linear-gradient(135deg, var(--primary), var(--accent));
     background-clip: text;
     color: transparent;
+  }
+
+  .tanko-gradient-green {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+  }
+
+  .tanko-gradient-yellow {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  }
+
+  .tanko-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.875rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-strong);
+    backdrop-filter: blur(12px);
+  }
+
+  .tanko-badge-green {
+    border-color: rgb(34 197 94 / 0.3);
+    background: rgb(34 197 94 / 0.1);
+    color: #22c55e;
+  }
+
+  .tanko-badge-yellow {
+    border-color: rgb(251 191 36 / 0.3);
+    background: rgb(251 191 36 / 0.1);
+    color: #fbbf24;
   }
 
   .tanko-focus {
