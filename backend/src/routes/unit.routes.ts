@@ -7,6 +7,7 @@ import {
   unitQuerySchema,
   createUnitSchema,
   updateUnitSchema,
+  assignDriverSchema,
 } from "../schemas/unit.schema.js";
 
 const router = Router();
@@ -31,6 +32,13 @@ router.put(
   validate(unitIdParamSchema, "params"),
   validate(updateUnitSchema),
   unitController.update,
+);
+
+router.patch(
+  "/units/:id",
+  validate(unitIdParamSchema, "params"),
+  validate(assignDriverSchema),
+  unitController.assignDriver,
 );
 
 router.delete(

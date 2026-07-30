@@ -24,3 +24,7 @@ export const createUnitSchema = z.object({
 });
 
 export const updateUnitSchema = createUnitSchema.partial();
+
+export const assignDriverSchema = z.object({
+  userId: uuidSchema.nullable(),
+});

@@ -14,6 +14,7 @@ import {
   MoreHorizontal,
   Search,
   User,
+  UserPlus,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import {
@@ -34,6 +35,7 @@ import { useTranslations } from "next-intl"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/providers/auth-provider"
 import { cn } from "@/lib/utils"
+import { AssignDriverModal } from "@/components/AssignDriverModal"
 import { exportUnitsToCSV } from "@/lib/csv/export-units"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:3001";
@@ -56,9 +58,11 @@ interface Unit {
   specs?: string;
   permitNumber?: string;
   permitExpiry?: string;
+  userId?: string | null;
   user?: {
+    id: string;
     name: string;
-  };
+  } | null;
 }
 
 export default function UnidadesPage() {
@@ -69,6 +73,15 @@ export default function UnidadesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [assignModalUnit, setAssignModalUnit] = useState<Unit | null>(null);
+
+  function handleDriverAssigned(unitId: string, driver: { id: string; name: string } | null) {
+    setUnits((prev) =>
+      prev.map((u) =>
+        u.id === unitId ? { ...u, userId: driver?.id ?? null, user: driver } : u,
+      ),
+    );
+  }
 
   useEffect(() => {
     async function fetchUnits() {
@@ -216,6 +229,10 @@ export default function UnidadesPage() {
                           <Eye className="mr-2 h-4 w-4" />
                           Ver detalles
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setAssignModalUnit(unit)}>
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          {unit.user ? t("changeDriver") : t("assignDriver")}
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -287,6 +304,15 @@ export default function UnidadesPage() {
           )}
         </CardContent>
       </Card>
+
+      <AssignDriverModal
+        open={!!assignModalUnit}
+        onOpenChange={(open) => { if (!open) setAssignModalUnit(null) }}
+        unitId={assignModalUnit?.id ?? ''}
+        unitName={assignModalUnit ? `${assignModalUnit.make} ${assignModalUnit.model} — ${assignModalUnit.plates}` : ''}
+        currentDriverId={assignModalUnit?.user?.id ?? null}
+        onAssigned={handleDriverAssigned}
+      />
     </div>
   )
 }

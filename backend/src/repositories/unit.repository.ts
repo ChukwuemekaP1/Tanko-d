@@ -12,7 +12,7 @@ export interface CreateUnitDTO {
   permitExpiry?: Date;
   monthlySpend?: number;
   status?: Status;
-  userId: string;
+  userId?: string;
 }
 
 export interface UpdateUnitDTO {
@@ -25,7 +25,7 @@ export interface UpdateUnitDTO {
   permitExpiry?: Date;
   monthlySpend?: number;
   status?: Status;
-  userId?: string;
+  userId?: string | null;
 }
 
 export class UnitRepository {
@@ -76,6 +76,14 @@ export class UnitRepository {
 
   async delete(id: string) {
     return prisma.unit.delete({ where: { id } });
+  }
+
+  async assignDriver(id: string, userId: string | null) {
+    return prisma.unit.update({
+      where: { id },
+      data: { userId },
+      include: { user: { select: { id: true, name: true } } },
+    });
   }
 
   async count() {
