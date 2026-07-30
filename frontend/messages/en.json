@@ -216,7 +216,13 @@
     "loadError": "Failed to load units",
     "listTitle": "Vehicle List",
     "total": "Total: {count} registered vehicles",
-    "searchPlaceholder": "Search vehicle..."
+    "searchPlaceholder": "Search vehicle...",
+    "emptyFleet": "No vehicles registered",
+    "emptyFleetDescription": "Start by adding your first vehicle to the fleet",
+    "noSearchResults": "No results found",
+    "noSearchResultsDescription": "No vehicles match \"{query}\"",
+    "clearSearch": "Clear search",
+    "exportCsv": "Export CSV"
   },
   "usuarios": {
     "title": "Users",
