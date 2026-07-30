@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import type { ReactNode } from "react"
 import {
   AlertCircle,
@@ -12,6 +12,7 @@ import {
   Loader2,
   type LucideIcon,
   MoreHorizontal,
+  RefreshCw,
   Search,
   User,
   UserPlus,
@@ -48,6 +49,26 @@ function normalize(str: string): string {
     .replace(/[\u0300-\u036f]/g, "")
 }
 
+async function fetchWithRetry(
+  url: string,
+  { retries = 3, delay = 1000 } = {},
+): Promise<Response> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok && res.status >= 500 && retries > 0) {
+      await new Promise((r) => setTimeout(r, delay));
+      return fetchWithRetry(url, { retries: retries - 1, delay: delay * 2 });
+    }
+    return res;
+  } catch (err) {
+    if (retries > 0) {
+      await new Promise((r) => setTimeout(r, delay));
+      return fetchWithRetry(url, { retries: retries - 1, delay: delay * 2 });
+    }
+    throw err;
+  }
+}
+
 interface Unit {
   id: string;
   make: string;
@@ -72,6 +93,7 @@ export default function UnidadesPage() {
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [assignModalUnit, setAssignModalUnit] = useState<Unit | null>(null);
 
@@ -83,24 +105,30 @@ export default function UnidadesPage() {
     );
   }
 
-  useEffect(() => {
-    async function fetchUnits() {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch(`${BACKEND}/api/v1/units`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        setUnits(data.success && data.data ? data.data : []);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : tCommon("connectionError"));
-        setUnits([]);
-      } finally {
-        setLoading(false);
+  const fetchUnits = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    setAuthError(false);
+    try {
+      const res = await fetchWithRetry(`${BACKEND}/api/v1/units`);
+      if (res.status === 401 || res.status === 403) {
+        setAuthError(true);
+        setError(tCommon("connectionError"));
+        return;
       }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setUnits(data.success && data.data ? data.data : []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : tCommon("connectionError"));
+    } finally {
+      setLoading(false);
     }
+  }, [tCommon]);
+
+  useEffect(() => {
     fetchUnits();
-  }, [walletAddress]);
+  }, [fetchUnits, walletAddress]);
 
   const query = normalize(searchQuery)
   const filteredUnits = units.filter(
@@ -131,7 +159,29 @@ export default function UnidadesPage() {
           <p className="font-medium text-destructive">
             {t("loadError")}
           </p>
-          <p className="text-sm text-muted-foreground">{error}</p>
+          <p className="text-sm text-muted-foreground">
+            {authError ? t("authError") : error}
+          </p>
+          {authError ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.location.href = "/connect"}
+              className="mt-2"
+            >
+              {tCommon("disconnect")}
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchUnits()}
+              className="mt-2"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              {t("retryLoad")}
+            </Button>
+          )}
         </div>
       </div>
     );

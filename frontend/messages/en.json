@@ -222,7 +222,9 @@
     "noSearchResults": "No results found",
     "noSearchResultsDescription": "No vehicles match \"{query}\"",
     "clearSearch": "Clear search",
-    "exportCsv": "Export CSV"
+    "exportCsv": "Export CSV",
+    "authError": "Session expired. Connect your wallet to continue.",
+    "retryLoad": "Retry"
   },
   "usuarios": {
     "title": "Users",
