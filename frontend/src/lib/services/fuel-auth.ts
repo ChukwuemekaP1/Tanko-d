@@ -1,8 +1,10 @@
+'use server';
+
 // @ts-ignore
-import { Horizon, TransactionBuilder, Networks, Address, xdr, Operation } from '@stellar/stellar-sdk';
+import { rpc, Account, TransactionBuilder, Networks, Address, xdr, Operation, scValToNative, StrKey } from '@stellar/stellar-sdk';
 import axios from 'axios';
 
-const HORIZON_URL = process.env.NEXT_PUBLIC_STELLAR_HORIZON_URL || 'https://horizon-testnet.stellar.org';
+const SOROBAN_RPC_URL = process.env.NEXT_PUBLIC_SOROBAN_RPC_URL || 'https://soroban-testnet.stellar.org';
 const SOROBAN_CONTRACT_ID = process.env.SOROBAN_CONTRACT_ID;
 const TRUSTLESS_WORK_API_URL = process.env.TRUSTLESS_WORK_API_URL || 'https://dev.api.trustlesswork.com';
 const TRUSTLESS_WORK_API_KEY = process.env.TRUSTLESS_WORK_API_KEY;
@@ -47,12 +49,12 @@ interface TrustlessWorkResponse<T> {
 }
 
 export class FuelAuthorizationService {
-  private horizonServer: any;
+  private sorobanServer: rpc.Server;
   private contractId: string;
   private escrowId: string;
 
   constructor() {
-    this.horizonServer = new Horizon.Server(HORIZON_URL);
+    this.sorobanServer = new rpc.Server(SOROBAN_RPC_URL);
     this.contractId = SOROBAN_CONTRACT_ID || '';
     this.escrowId = ESCROW_ID || '';
   }
@@ -62,7 +64,11 @@ export class FuelAuthorizationService {
     stationWallet: string
   ): Promise<boolean> {
     try {
-      const account = await this.horizonServer.loadAccount(driverWallet);
+      if (!StrKey.isValidEd25519PublicKey(driverWallet) || !StrKey.isValidEd25519PublicKey(stationWallet)) {
+        throw new Error(AuthorizationError.VALIDATION_ERROR);
+      }
+
+      const account = new Account(driverWallet, "0");
       
       const tx = new TransactionBuilder(account, {
         fee: '1000',
@@ -86,14 +92,14 @@ export class FuelAuthorizationService {
         .setTimeout(0)
         .build();
 
-      const result = await this.horizonServer.simulateTransaction(tx);
+      const simulation = await this.sorobanServer.simulateTransaction(tx);
 
-      if (result.error) {
-        console.error('[CONTRACT] Verification failed:', result.error);
-        return false;
+      if (rpc.Api.isSimulationSuccess(simulation)) {
+        const retval = simulation.result?.retval;
+        return retval ? Boolean(scValToNative(retval)) : false;
       }
 
-      return true;
+      return false;
     } catch (error: any) {
       console.error('[CONTRACT] Error invoking contract:', error.message);
       if (error.message?.includes('could not resolve')) {
@@ -123,6 +129,7 @@ export class FuelAuthorizationService {
             'Content-Type': 'application/json',
             'x-api-key': TRUSTLESS_WORK_API_KEY,
           },
+          timeout: 10000,
         }
       );
 
@@ -149,6 +156,7 @@ export class FuelAuthorizationService {
             'Content-Type': 'application/json',
             'x-api-key': TRUSTLESS_WORK_API_KEY,
           },
+          timeout: 10000,
         }
       );
 
@@ -254,6 +262,14 @@ export class FuelAuthorizationService {
           success: false,
           error: 'Unauthorized: Driver or station not registered in smart contract',
           errorType: AuthorizationError.CONTRACT_UNAUTHORIZED,
+        };
+      }
+
+      if (error.message === AuthorizationError.VALIDATION_ERROR) {
+        return {
+          success: false,
+          error: 'Invalid wallet address provided',
+          errorType: AuthorizationError.VALIDATION_ERROR,
         };
       }
 
