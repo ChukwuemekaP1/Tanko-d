@@ -1,10 +1,12 @@
 use soroban_sdk::{
-    testutils::Address as _, Env, BytesN, Address,
+    testutils::{Address as _, Ledger as _},
+    Address, BytesN, Env,
 };
 
 #[test]
 fn test_oracle_initialization() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register_contract(None, tanko_registry::TankoRegistry);
     let admin = Address::generate(&env);
 
@@ -28,6 +30,7 @@ fn test_oracle_initialization() {
 #[test]
 fn test_oracle_price_update() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register_contract(None, tanko_registry::TankoRegistry);
     let admin = Address::generate(&env);
 
@@ -46,9 +49,9 @@ fn test_oracle_price_update() {
 
     tanko_registry::TankoRegistryClient::new(&env, &contract_id).update_price(
         &admin,
-        price_per_liter,
-        timestamp,
-        fuel_type,
+        &price_per_liter,
+        &timestamp,
+        &fuel_type,
         &None,
         &signature,
     );
@@ -64,6 +67,7 @@ fn test_oracle_price_update() {
 #[test]
 fn test_oracle_max_price_age() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register_contract(None, tanko_registry::TankoRegistry);
     let admin = Address::generate(&env);
 
@@ -83,7 +87,7 @@ fn test_oracle_max_price_age() {
     // Update max price age
     let new_max_age = 7200u64; // 2 hours
     tanko_registry::TankoRegistryClient::new(&env, &contract_id)
-        .set_max_price_age(&admin, new_max_age);
+        .set_max_price_age(&admin, &new_max_age);
 
     // Verify new max age
     let updated_max_age = tanko_registry::TankoRegistryClient::new(&env, &contract_id)
@@ -95,6 +99,7 @@ fn test_oracle_max_price_age() {
 #[test]
 fn test_price_freshness_check() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register_contract(None, tanko_registry::TankoRegistry);
     let admin = Address::generate(&env);
 
@@ -113,9 +118,9 @@ fn test_price_freshness_check() {
 
     tanko_registry::TankoRegistryClient::new(&env, &contract_id).update_price(
         &admin,
-        price_per_liter,
-        timestamp,
-        fuel_type,
+        &price_per_liter,
+        &timestamp,
+        &fuel_type,
         &None,
         &signature,
     );
@@ -131,6 +136,7 @@ fn test_price_freshness_check() {
 #[should_panic(expected = "Only admin can initialize oracle")]
 fn test_oracle_init_non_admin_fails() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register_contract(None, tanko_registry::TankoRegistry);
     let admin = Address::generate(&env);
     let non_admin = Address::generate(&env);
@@ -148,6 +154,7 @@ fn test_oracle_init_non_admin_fails() {
 #[should_panic(expected = "Only admin can update prices")]
 fn test_oracle_price_update_non_admin_fails() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register_contract(None, tanko_registry::TankoRegistry);
     let admin = Address::generate(&env);
     let non_admin = Address::generate(&env);
@@ -167,9 +174,9 @@ fn test_oracle_price_update_non_admin_fails() {
 
     tanko_registry::TankoRegistryClient::new(&env, &contract_id).update_price(
         &non_admin,
-        price_per_liter,
-        timestamp,
-        fuel_type,
+        &price_per_liter,
+        &timestamp,
+        &fuel_type,
         &None,
         &signature,
     );
@@ -179,8 +186,12 @@ fn test_oracle_price_update_non_admin_fails() {
 #[should_panic(expected = "Price timestamp is too old")]
 fn test_oracle_stale_price_rejected() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register_contract(None, tanko_registry::TankoRegistry);
     let admin = Address::generate(&env);
+
+    // Advance ledger time so a stale timestamp can be constructed without underflow
+    env.ledger().set_timestamp(10_000);
 
     // Initialize contract and oracle
     tanko_registry::TankoRegistryClient::new(&env, &contract_id).init(&admin);
@@ -192,7 +203,7 @@ fn test_oracle_stale_price_rejected() {
     // Set max price age to 1 hour
     let max_age = 3600u64;
     tanko_registry::TankoRegistryClient::new(&env, &contract_id)
-        .set_max_price_age(&admin, max_age);
+        .set_max_price_age(&admin, &max_age);
 
     // Try to update with stale timestamp (more than 1 hour ago)
     let now = env.ledger().timestamp() as u64;
@@ -203,9 +214,9 @@ fn test_oracle_stale_price_rejected() {
 
     tanko_registry::TankoRegistryClient::new(&env, &contract_id).update_price(
         &admin,
-        price_per_liter,
-        stale_timestamp,
-        fuel_type,
+        &price_per_liter,
+        &stale_timestamp,
+        &fuel_type,
         &None,
         &signature,
     );
@@ -214,6 +225,7 @@ fn test_oracle_stale_price_rejected() {
 #[test]
 fn test_oracle_regional_price() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register_contract(None, tanko_registry::TankoRegistry);
     let admin = Address::generate(&env);
 
@@ -233,9 +245,9 @@ fn test_oracle_regional_price() {
 
     tanko_registry::TankoRegistryClient::new(&env, &contract_id).update_price(
         &admin,
-        price_per_liter,
-        timestamp,
-        fuel_type,
+        &price_per_liter,
+        &timestamp,
+        &fuel_type,
         &station_id,
         &signature,
     );

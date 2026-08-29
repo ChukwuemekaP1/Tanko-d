@@ -18,7 +18,7 @@ pub struct FuelPrice {
     /// Price per liter in stroops (Stellar's smallest unit, 1 XLM = 10^7 stroops)
     /// For fiat prices: multiply by 10^7 (e.g., $25/liter = 250000000 stroops)
     pub price_per_liter: u64,
-    /// Unix timestamp in milliseconds when the price was fetched
+    /// Unix timestamp in seconds when the price was fetched
     pub timestamp: u64,
     /// Fuel type identifier (e.g., "Diesel" = 1, "Premium" = 2, "Magna" = 3)
     pub fuel_type: u32,
@@ -72,13 +72,13 @@ pub fn verify_signature(
  *
  * @param env - Soroban environment
  * @param price - The fuel price to check
- * @param max_age_ms - Maximum age in milliseconds (e.g., 3600000 for 1 hour)
+ * @param max_age_seconds - Maximum age in seconds (e.g., 3600 for 1 hour)
  * @returns true if price is fresh
  */
-pub fn is_price_fresh(env: &Env, price: &FuelPrice, max_age_ms: u64) -> bool {
-    let now = env.ledger().timestamp() as u64 * 1000; // Convert to milliseconds
+pub fn is_price_fresh(env: &Env, price: &FuelPrice, max_age_seconds: u64) -> bool {
+    let now = env.ledger().timestamp() as u64;
     let age = now.saturating_sub(price.timestamp);
-    age <= max_age_ms
+    age <= max_age_seconds
 }
 
 /**
