@@ -1,7 +1,7 @@
 #![no_std]
 
 use soroban_sdk::{
-    contract, contractimpl, contracttype, symbol_short, Bytes, BytesN, Env, Map, Symbol,
+    contract, contractimpl, contracttype, symbol_short, Address, Bytes, BytesN, Env, Symbol,
 };
 
 /// Maximum age of a price update (1 hour).
@@ -12,6 +12,13 @@ pub const MXN_SCALE: u64 = 10_000;
 
 /// Fixed-point scale for USDC (7 decimals): 1.39 → 13_900_000.
 pub const USDC_SCALE: u64 = 10_000_000;
+
+/// Storage TTL refresh threshold in ledgers (~7 hours at 5s/ledger).
+/// When a key's remaining TTL drops below this, it is bumped on the next access.
+pub const TTL_THRESHOLD: u32 = 5_000;
+
+/// Storage TTL extension target in ledgers (~30 days at 5s/ledger).
+pub const TTL_EXTEND_TO: u32 = 518_400;
 
 #[contracttype]
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -49,16 +56,37 @@ pub struct PriceData {
     pub station_id: soroban_sdk::String,
 }
 
+/// Storage keys. `Price` and `LastTimestamp` are stored as direct persistent
+/// entries (one row per fuel type) instead of a single instance map, so a
+/// price update only touches the affected fuel type.
 #[contracttype]
 #[derive(Clone)]
 pub enum DataKey {
+    /// Designated admin that may rotate the oracle public key (instance storage).
+    Admin,
+    /// Authorized ed25519 public key that signs price updates (instance storage).
     OraclePubKey,
-    Prices,
-    LastTimestamps,
+    /// Certified price for a fuel type (persistent storage).
+    Price(FuelType),
+    /// Last accepted update timestamp per fuel type, for replay protection (persistent storage).
+    LastTimestamp(FuelType),
 }
 
 #[contract]
 pub struct FuelPriceOracle;
+
+/// Extends the TTL of the contract instance (and code) when it drops below the
+/// threshold, preventing instance data from expiring on-chain.
+fn extend_instance_ttl(env: &Env) {
+    env.storage().instance().extend_ttl(TTL_THRESHOLD, TTL_EXTEND_TO);
+}
+
+/// Extends the TTL of a single persistent storage key.
+fn extend_persistent_ttl(env: &Env, key: &DataKey) {
+    env.storage()
+        .persistent()
+        .extend_ttl(key, TTL_THRESHOLD, TTL_EXTEND_TO);
+}
 
 fn build_message(
     env: &Env,
@@ -86,22 +114,25 @@ fn validate_timestamp(env: &Env, fuel_type: FuelType, timestamp: u64) {
         "Price timestamp expired"
     );
 
-    let last_timestamps = env
+    let last_ts_key = DataKey::LastTimestamp(fuel_type);
+    if let Some(last_ts) = env
         .storage()
-        .instance()
-        .get::<_, Map<FuelType, u64>>(&DataKey::LastTimestamps)
-        .unwrap_or_else(|| Map::new(env));
-
-    if let Some(last_ts) = last_timestamps.get(fuel_type) {
+        .persistent()
+        .get::<_, u64>(&last_ts_key)
+    {
+        extend_persistent_ttl(env, &last_ts_key);
         assert!(timestamp > last_ts, "Replay attack: stale timestamp");
     }
 }
 
 #[contractimpl]
 impl FuelPriceOracle {
-    /// Initialize oracle with authorized public key and seed prices (scaled fixed-point).
+    /// Initialize oracle with a designated admin, authorized public key, and
+    /// seed prices (scaled fixed-point).
+    #[allow(clippy::too_many_arguments)]
     pub fn init(
         env: Env,
+        admin: Address,
         oracle_pubkey: BytesN<32>,
         seed_magna_mxn: u64,
         seed_premium_mxn: u64,
@@ -113,60 +144,51 @@ impl FuelPriceOracle {
         assert!(
             env.storage()
                 .instance()
-                .get::<_, BytesN<32>>(&DataKey::OraclePubKey)
+                .get::<_, Address>(&DataKey::Admin)
                 .is_none(),
             "Already initialized"
         );
+        admin.require_auth();
 
+        env.storage().instance().set(&DataKey::Admin, &admin);
         env.storage()
             .instance()
             .set(&DataKey::OraclePubKey, &oracle_pubkey);
+        extend_instance_ttl(&env);
 
         let now = env.ledger().timestamp();
         let station = soroban_sdk::String::from_str(&env, "CRE-MX-SEED");
 
-        let mut prices = Map::<FuelType, PriceData>::new(&env);
-        let mut last_ts = Map::<FuelType, u64>::new(&env);
-
         let seeds = [
-            (
-                FuelType::Magna,
-                seed_magna_mxn,
-                seed_magna_usdc,
-            ),
-            (
-                FuelType::Premium,
-                seed_premium_mxn,
-                seed_premium_usdc,
-            ),
-            (
-                FuelType::Diesel,
-                seed_diesel_mxn,
-                seed_diesel_usdc,
-            ),
+            (FuelType::Magna, seed_magna_mxn, seed_magna_usdc),
+            (FuelType::Premium, seed_premium_mxn, seed_premium_usdc),
+            (FuelType::Diesel, seed_diesel_mxn, seed_diesel_usdc),
         ];
 
         for (fuel_type, price_mxn, price_usdc) in seeds {
-            prices.set(
-                fuel_type,
-                PriceData {
+            let price_key = DataKey::Price(fuel_type);
+            let last_ts_key = DataKey::LastTimestamp(fuel_type);
+
+            env.storage().persistent().set(
+                &price_key,
+                &PriceData {
                     price_mxn,
                     price_usdc,
                     timestamp: now,
                     station_id: station.clone(),
                 },
             );
-            last_ts.set(fuel_type, now);
+            env.storage().persistent().set(&last_ts_key, &now);
+            extend_persistent_ttl(&env, &price_key);
+            extend_persistent_ttl(&env, &last_ts_key);
         }
-
-        env.storage().instance().set(&DataKey::Prices, &prices);
-        env.storage()
-            .instance()
-            .set(&DataKey::LastTimestamps, &last_ts);
     }
 
     /// Update certified price for a fuel type. Signature covers
     /// [fuel_type, price_mxn, price_usdc, timestamp, station_id].
+    ///
+    /// Emits a `price_up` event with the accepted price data.
+    #[allow(deprecated)] // env.events().publish — kept for the exact topic/data shape in the spec
     pub fn update_price(
         env: Env,
         fuel_type_sym: Symbol,
@@ -186,6 +208,7 @@ impl FuelPriceOracle {
             .instance()
             .get::<_, BytesN<32>>(&DataKey::OraclePubKey)
             .unwrap_or_else(|| panic!("Oracle not initialized"));
+        extend_instance_ttl(&env);
 
         let message = build_message(
             &env,
@@ -199,32 +222,26 @@ impl FuelPriceOracle {
         env.crypto()
             .ed25519_verify(&oracle_pubkey, &message, &signature);
 
-        let mut prices = env
-            .storage()
-            .instance()
-            .get::<_, Map<FuelType, PriceData>>(&DataKey::Prices)
-            .unwrap_or_else(|| panic!("Oracle not initialized"));
+        let price_key = DataKey::Price(fuel_type);
+        let last_ts_key = DataKey::LastTimestamp(fuel_type);
 
-        prices.set(
-            fuel_type,
-            PriceData {
+        env.storage().persistent().set(
+            &price_key,
+            &PriceData {
                 price_mxn,
                 price_usdc,
                 timestamp,
                 station_id: station_id.clone(),
             },
         );
-        env.storage().instance().set(&DataKey::Prices, &prices);
+        env.storage().persistent().set(&last_ts_key, &timestamp);
+        extend_persistent_ttl(&env, &price_key);
+        extend_persistent_ttl(&env, &last_ts_key);
 
-        let mut last_timestamps = env
-            .storage()
-            .instance()
-            .get::<_, Map<FuelType, u64>>(&DataKey::LastTimestamps)
-            .unwrap_or_else(|| Map::new(&env));
-        last_timestamps.set(fuel_type, timestamp);
-        env.storage()
-            .instance()
-            .set(&DataKey::LastTimestamps, &last_timestamps);
+        env.events().publish(
+            (symbol_short!("price_up"), fuel_type_sym),
+            (price_mxn, price_usdc, timestamp, station_id),
+        );
     }
 
     /// Simplified entry point per spec: updates MAGNA price using scaled values.
@@ -234,15 +251,13 @@ impl FuelPriceOracle {
         timestamp: u64,
         signature: BytesN<64>,
     ) {
-        let prices = env
+        let price_key = DataKey::Price(FuelType::Magna);
+        let current = env
             .storage()
-            .instance()
-            .get::<_, Map<FuelType, PriceData>>(&DataKey::Prices)
-            .unwrap_or_else(|| panic!("Oracle not initialized"));
-
-        let current = prices
-            .get(FuelType::Magna)
+            .persistent()
+            .get::<_, PriceData>(&price_key)
             .unwrap_or_else(|| panic!("Magna price not set"));
+        extend_persistent_ttl(&env, &price_key);
 
         Self::update_price(
             env,
@@ -259,22 +274,47 @@ impl FuelPriceOracle {
         let fuel_type = FuelType::from_symbol(&env, &fuel_type_sym)
             .unwrap_or_else(|| panic!("Invalid fuel type"));
 
-        let prices = env
+        let price_key = DataKey::Price(fuel_type);
+        let price = env
+            .storage()
+            .persistent()
+            .get::<_, PriceData>(&price_key)
+            .unwrap_or_else(|| panic!("Price not found for fuel type"));
+        extend_persistent_ttl(&env, &price_key);
+        extend_instance_ttl(&env);
+
+        price
+    }
+
+    /// Rotate the oracle public key. Only the designated admin may do this.
+    pub fn set_oracle_pubkey(env: Env, admin: Address, new_pubkey: BytesN<32>) {
+        let stored_admin = env
             .storage()
             .instance()
-            .get::<_, Map<FuelType, PriceData>>(&DataKey::Prices)
-            .unwrap_or_else(|| panic!("Oracle not initialized"));
+            .get::<_, Address>(&DataKey::Admin)
+            .unwrap_or_else(|| panic!("Contract not initialized"));
 
-        prices
-            .get(fuel_type)
-            .unwrap_or_else(|| panic!("Price not found for fuel type"))
+        assert!(
+            admin == stored_admin,
+            "Only admin can rotate the oracle public key"
+        );
+        admin.require_auth();
+
+        env.storage()
+            .instance()
+            .set(&DataKey::OraclePubKey, &new_pubkey);
+        extend_instance_ttl(&env);
     }
 
     pub fn get_oracle_pubkey(env: Env) -> BytesN<32> {
-        env.storage()
+        let pubkey = env
+            .storage()
             .instance()
             .get(&DataKey::OraclePubKey)
-            .unwrap_or_else(|| panic!("Oracle not initialized"))
+            .unwrap_or_else(|| panic!("Oracle not initialized"));
+        extend_instance_ttl(&env);
+
+        pubkey
     }
 }
 

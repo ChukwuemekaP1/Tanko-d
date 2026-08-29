@@ -6,8 +6,8 @@ use super::*;
 use std::vec::Vec;
 use ed25519_dalek::{Signer as DalekSigner, SigningKey};
 use sha2::{Digest, Sha256};
-use soroban_sdk::testutils::Ledger;
-use soroban_sdk::{symbol_short, BytesN, Env, String};
+use soroban_sdk::testutils::{Address as _, Events, Ledger};
+use soroban_sdk::{symbol_short, Address, BytesN, Env, String, Symbol, TryFromVal, Val, Vec as SorobanVec};
 
 fn build_message_vec(
     fuel_type: FuelType,
@@ -61,11 +61,13 @@ fn scale_usdc(value: f64) -> u64 {
     (value * USDC_SCALE as f64).round() as u64
 }
 
-fn setup_initialized(env: &Env) -> FuelPriceOracleClient<'_> {
+fn setup_initialized_with_admin(env: &Env) -> (FuelPriceOracleClient<'_>, Address) {
     let contract_id = env.register(FuelPriceOracle, ());
     let client = FuelPriceOracleClient::new(env, &contract_id);
+    let admin = Address::generate(env);
 
     client.init(
+        &admin,
         &pubkey_bytes(env),
         &scale_mxn(24.0),
         &scale_mxn(28.66),
@@ -75,6 +77,11 @@ fn setup_initialized(env: &Env) -> FuelPriceOracleClient<'_> {
         &scale_usdc(1.59),
     );
 
+    (client, admin)
+}
+
+fn setup_initialized(env: &Env) -> FuelPriceOracleClient<'_> {
+    let (client, _admin) = setup_initialized_with_admin(env);
     client
 }
 
@@ -254,4 +261,94 @@ fn test_rejects_replay_timestamp() {
         &sig_replay,
     );
     assert!(result.is_err());
+}
+
+#[test]
+fn test_admin_can_rotate_oracle_pubkey() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let (client, admin) = setup_initialized_with_admin(&env);
+
+    let new_key = BytesN::from_array(&env, &[7u8; 32]);
+    client.set_oracle_pubkey(&admin, &new_key);
+
+    assert_eq!(client.get_oracle_pubkey(), new_key);
+}
+
+#[test]
+fn test_rejects_non_admin_oracle_rotation() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let (client, _admin) = setup_initialized_with_admin(&env);
+
+    let impostor = Address::generate(&env);
+    let new_key = BytesN::from_array(&env, &[9u8; 32]);
+
+    let result = client.try_set_oracle_pubkey(&impostor, &new_key);
+    assert!(result.is_err());
+
+    // The stored key is unchanged.
+    assert_eq!(client.get_oracle_pubkey(), pubkey_bytes(&env));
+}
+
+#[test]
+fn test_update_price_emits_price_up_event() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let client = setup_initialized(&env);
+
+    env.ledger().with_mut(|li| {
+        li.timestamp = 1_748_304_000;
+    });
+
+    let price_mxn = scale_mxn(24.50);
+    let price_usdc = scale_usdc(1.42);
+    let timestamp = 1_748_304_000u64;
+    let station_id = String::from_str(&env, "CRE-MX-001");
+    let signature = sign_payload(
+        &env,
+        FuelType::Magna,
+        price_mxn,
+        price_usdc,
+        timestamp,
+        "CRE-MX-001",
+    );
+
+    client.update_price(
+        &symbol_short!("MAGNA"),
+        &price_mxn,
+        &price_usdc,
+        &timestamp,
+        &station_id,
+        &signature,
+    );
+
+    let events = env.events().all();
+    assert_eq!(events.len(), 1);
+
+    let (_contract_id, topics, data) = events.get(0).unwrap();
+
+    let topic0 = Symbol::try_from_val(&env, &topics.get(0).unwrap()).unwrap();
+    assert_eq!(topic0, symbol_short!("price_up"));
+
+    let topic1 = Symbol::try_from_val(&env, &topics.get(1).unwrap()).unwrap();
+    assert_eq!(topic1, symbol_short!("MAGNA"));
+
+    let data_vec = SorobanVec::<Val>::try_from_val(&env, &data).unwrap();
+    assert_eq!(
+        u64::try_from_val(&env, &data_vec.get(0).unwrap()).unwrap(),
+        price_mxn
+    );
+    assert_eq!(
+        u64::try_from_val(&env, &data_vec.get(1).unwrap()).unwrap(),
+        price_usdc
+    );
+    assert_eq!(
+        u64::try_from_val(&env, &data_vec.get(2).unwrap()).unwrap(),
+        timestamp
+    );
+    assert_eq!(
+        String::try_from_val(&env, &data_vec.get(3).unwrap()).unwrap(),
+        station_id
+    );
 }
